@@ -24,7 +24,10 @@ from mesa.space import MultiGrid
 
 ### Local imports ###
 
-from objects import Radioactivity
+from objects import (
+    Radioactivity,
+    Waste
+)
 from tools.tools_constants import (
     GRID_HEIGHT,
     GRID_WIDTH
@@ -36,14 +39,16 @@ from tools.tools_constants import (
 
 class Area(Model):
     """A model with some number of agents."""
-   # density is used only for illustartion
-    def __init__(self, nb_agents, width=GRID_WIDTH, height=GRID_HEIGHT, density=0.8):
+   # density is used only for illustration
+    def __init__(self, nb_agents, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT, density=0.8):
         super().__init__()
         self.nb_agents = nb_agents
         self.width = width
         self.height = height
         self.grid = MultiGrid(self.width, self.height, True)
         self.schedule = RandomActivation(self)
+        self.waste_density = waste_density
+        self.nb_wastes = int(self.height*self.width*self.waste_density)
         # self.density= width/height #used only for illustration for the slider density
         
         # Create agents
@@ -52,6 +57,25 @@ class Area(Model):
                 a = Radioactivity(unique_id = [i , j], model=self, zone = "z1", radioactivity_level=rd.random()/3)
                 self.schedule.add(a)
                 self.grid.place_agent(a, (j, i))
+
+        for waste in range(self.nb_wastes):
+            a = Waste(unique_id = waste, model = self, type_waste = "green")
+            self.schedule.add(a)
+            correct_position = False
+            while not correct_position:
+                # Randomly place the waste objects on the grid
+                x = self.random.randrange(self.width)
+                y = self.random.randrange(self.height)
+                cellmates = self.grid.get_cell_list_contents((x,y))
+
+                # We check to see if there is already a waste object in the cell
+                bool_contains_waste = False
+                for element in cellmates: 
+                    if type(element) == Waste:
+                        bool_contains_waste = True
+                if not bool_contains_waste:
+                    correct_position = True
+                    self.grid.place_agent(a, (x, y))
 
         # self.datacollector = DataCollector(
         #     model_reporters={"Gini": compute_gini},

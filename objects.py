@@ -26,3 +26,10 @@ class Radioactivity(Agent): # un par case avec un niveau de radioactivité
     def step(self):
         pass
 
+class Waste(Agent):
+    def __init__(self, unique_id, model, type_waste : Literal["green", "yellow", "red"]):
+        super().__init__(unique_id, model)
+        self.type_waste = type_waste
+
+    def step(self):
+        pass
