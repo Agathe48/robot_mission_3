@@ -7,3 +7,9 @@ Group 3:
 - Agathe PLU
 - Agathe POULAIN
 """
+
+### Mesa imports ###
+from mesa import Agent
+from mesa.time import RandomActivation
+from mesa.space import MultiGrid
+

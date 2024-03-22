@@ -7,3 +7,7 @@ Group 3:
 - Agathe PLU
 - Agathe POULAIN
 """
+
+### Mesa imports ###
+from mesa import Model
+
