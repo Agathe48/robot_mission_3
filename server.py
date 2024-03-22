@@ -49,7 +49,12 @@ def agent_portrayal(agent):
             "Layer": 0}
 
         # Set the color with the shade of greens
-        portrayal["Color"] = "#4fae50"
+        if agent.zone == "z1":
+            portrayal["Color"] = "#4fae50"
+        elif agent.zone == "z2":
+            portrayal["Color"] = "#ffe338"
+        else:
+            portrayal["Color"] = "#e34949"
 
     # For the radioactivity objects
     if type(agent) == WasteDisposalZone:
