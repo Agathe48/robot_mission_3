@@ -57,14 +57,29 @@ class Area(Model):
         # Create the grid with radioactivity zones and the waste disposal zone
         for i in range(self.height):
             for j in range(self.width):
-                if (j, i) != pos_waste_disposal:
+                
+                # Green area
+                if j < self.width // 3: 
                     rad = Radioactivity(unique_id = [i , j], model=self, zone = "z1", radioactivity_level=rd.random()/3)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
+                
+                # Yellow area
+                elif self.width // 3 <= j < 2 * self.width // 3: 
+                    rad = Radioactivity(unique_id = [i , j], model=self, zone = "z2", radioactivity_level=rd.random()/3)
+                    self.schedule.add(rad)
+                    self.grid.place_agent(rad, (j, i))
+                
+                # Red area
                 else:
-                    dis = WasteDisposalZone(unique_id = [i , j], model=self)
-                    self.schedule.add(dis)
-                    self.grid.place_agent(dis, pos_waste_disposal)
+                    if (j, i) != pos_waste_disposal:
+                        rad = Radioactivity(unique_id = [i , j], model=self, zone = "z3", radioactivity_level=rd.random()/3)
+                        self.schedule.add(rad)
+                        self.grid.place_agent(rad, (j, i))
+                    else:
+                        dis = WasteDisposalZone(unique_id = [i , j], model=self)
+                        self.schedule.add(dis)
+                        self.grid.place_agent(dis, pos_waste_disposal)
 
         # Create the waste randomly generated in the map
         for waste in range(self.nb_wastes):
