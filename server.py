@@ -50,11 +50,11 @@ def agent_portrayal(agent):
 
         # Set the color with the shade of greens
         if agent.zone == "z1":
-            portrayal["Color"] = "#4fae50"
+            portrayal["Color"] = "#b4deb8"
         elif agent.zone == "z2":
-            portrayal["Color"] = "#ffe338"
+            portrayal["Color"] = "#fdec82"
         else:
-            portrayal["Color"] = "#e34949"
+            portrayal["Color"] = "#ff9688"
 
     # For the radioactivity objects
     if type(agent) == WasteDisposalZone:
@@ -69,7 +69,7 @@ def agent_portrayal(agent):
         portrayal["Color"] = "brown"
 
     # For the cleaning agents
-    if type(agent) == Waste:
+    if type(agent) == ...:
         portrayal = {
             "Shape": "circle",
             "Filled": "true",
@@ -97,8 +97,8 @@ grid = CanvasGrid(
     portrayal_method = agent_portrayal,
     grid_width = GRID_WIDTH,
     grid_height = GRID_HEIGHT,
-    canvas_width = 300,
-    canvas_height = 300 * GRID_HEIGHT / GRID_WIDTH
+    canvas_width = 600,
+    canvas_height = 600 * GRID_HEIGHT / GRID_WIDTH
 )
 
 # chart = ChartModule([{"Label": "Gini",

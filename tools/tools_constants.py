@@ -8,6 +8,6 @@ Group 3:
 - Agathe POULAIN
 """
 
-GRID_SIZE = (5, 9)
+GRID_SIZE = (10, 18)
 GRID_WIDTH = GRID_SIZE[1]
 GRID_HEIGHT = GRID_SIZE[0]
