@@ -44,7 +44,7 @@ class Area(Model):
         self.height = height
         self.grid = MultiGrid(self.width, self.height, True)
         self.schedule = RandomActivation(self)
-        # self.denstiy= width/height #used only for illustration for the slider density
+        # self.density= width/height #used only for illustration for the slider density
         
         # Create agents
         for i in range(self.height):

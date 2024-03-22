@@ -14,13 +14,17 @@ Group 3:
 
 ### Mesa imports ###
 
-import mesa
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import CanvasGrid, ChartModule
 
 ### Local imports ###
 
-from model import Area
+from model import (
+    Area
+)
+from objects import (
+    Radioactivity
+)
 from tools.tools_constants import (
     GRID_HEIGHT,
     GRID_WIDTH
@@ -32,38 +36,36 @@ from tools.tools_constants import (
 
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "square",
-                 "Filled": "true",
-                 "r": 0.5}
+    if type(agent) == Radioactivity:
+        portrayal = {
+            "Shape": "rect",
+            "Filled": "true",
+            "w": 1,
+            "h": 1,
+            "Layer": 0}
 
-    portrayal["Color"] = "red"
-    portrayal["Layer"] = 0
+        # Change here the color with the shade of greens
+        portrayal["Color"] = "green"
 
-    # if agent.wealth > 0:
-    #     portrayal["Color"] = "red"
-    #     portrayal["Layer"] = 0
-    # else:
-    #     portrayal["Color"] = "grey"
-    #     portrayal["Layer"] = 1
-    #     portrayal["r"] = 0.2
     return portrayal
 
-grid = CanvasGrid(portrayal_method = agent_portrayal, 
-                  grid_width = GRID_WIDTH, 
-                  grid_height = GRID_HEIGHT, 
-                  canvas_width = 300, 
-                  canvas_height = 200)
+grid = CanvasGrid(
+    portrayal_method = agent_portrayal,
+    grid_width = GRID_WIDTH,
+    grid_height = GRID_HEIGHT,
+    canvas_width = 300, 
+    canvas_height = 200
+)
 
 # chart = ChartModule([{"Label": "Gini",
 #                       "Color": "Black"}],
 #                     data_collector_name='datacollector')
 
-server = ModularServer(Area,
-                #    [grid, chart],
-                    [grid],
-                   "Area",
-                   {"nb_agents":1, "width":GRID_WIDTH, "height":GRID_HEIGHT}) #, "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1)})
+server = ModularServer(
+    model_cls=Area,
+    visualization_elements=[grid],
+    name="Area",
+    model_params={"nb_agents":1, "width":GRID_WIDTH, "height":GRID_HEIGHT}) #, "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1)})
 
-
-server.port = 8523 # The default
+server.port = 8523
 server.launch()
