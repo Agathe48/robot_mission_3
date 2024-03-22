@@ -24,7 +24,8 @@ from model import (
 )
 from objects import (
     Radioactivity,
-    Waste
+    Waste,
+    WasteDisposalZone
 )
 from tools.tools_constants import (
     GRID_HEIGHT,
@@ -50,13 +51,25 @@ def agent_portrayal(agent):
         # Set the color with the shade of greens
         portrayal["Color"] = "#4fae50"
 
+    # For the radioactivity objects
+    if type(agent) == WasteDisposalZone:
+        portrayal = {
+            "Shape": "rect",
+            "Filled": "true",
+            "w": 1,
+            "h": 1,
+            "Layer": 1}
+
+        # Set the color with the shade of greens
+        portrayal["Color"] = "brown"
+
     # For the cleaning agents
     if type(agent) == Waste:
         portrayal = {
             "Shape": "circle",
             "Filled": "true",
             "r": 0.5,
-            "Layer": 1}
+            "Layer": 2}
 
         # Set the color of the agent according to its type
         portrayal["Color"] = "red"
@@ -68,7 +81,7 @@ def agent_portrayal(agent):
             "Filled": "true",
             "w": 0.25,
             "h": 0.25,
-            "Layer": 2}
+            "Layer": 3}
 
         # Set the color of the waste according to its type
         portrayal["Color"] = agent.type_waste

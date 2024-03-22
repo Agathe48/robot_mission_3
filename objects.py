@@ -33,3 +33,10 @@ class Waste(Agent):
 
     def step(self):
         pass
+
+class WasteDisposalZone(Agent):
+    def __init__(self, unique_id, model):
+        super().__init__(unique_id, model)
+
+    def step(self):
+        pass
