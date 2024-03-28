@@ -39,14 +39,15 @@ from agents import (
     YellowAgent,
     RedAgent
 )
+
 #############
 ### Model ###
 #############
 
 class Area(Model):
     """A model with some number of agents."""
-   # density is used only for illustration
-    def __init__(self, dict_nb_agents: dict, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT, density=0.8):
+
+    def __init__(self, dict_nb_agents: dict, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT):
         super().__init__()
         self.dict_nb_agents = dict_nb_agents
         self.width = width
@@ -55,7 +56,22 @@ class Area(Model):
         self.schedule = RandomActivation(self)
         self.waste_density = waste_density
 
-        ### Create the grid with zones ###
+        # Initialize the grid with the zones
+        self.init_grid()
+
+        # Initialize the waste on the grid
+        self.init_wastes()
+        
+        # Initialize the agents on the grid
+        self.init_agents()
+
+        # self.datacollector = DataCollector(
+        #     model_reporters={"Gini": compute_gini},
+        #     agent_reporters={"Wealth": "wealth"})
+        
+        # self.running = True
+
+    def init_grid(self):
 
         # Define the position of the waste disposal zone (in the right column of the grid)
         pos_waste_disposal = (self.width-1, rd.randint(0, self.height-1))
@@ -88,8 +104,8 @@ class Area(Model):
                         self.schedule.add(dis)
                         self.grid.place_agent(dis, pos_waste_disposal)
 
-        ### Place wastes on the grid ###
-
+    def init_wastes(self):
+        # Place the wastes on the grid
         self.nb_wastes_total = int(self.height*self.width*self.waste_density)
         number_tiles_per_zone = int(self.width/3*self.height)
 
@@ -148,13 +164,9 @@ class Area(Model):
                     if not bool_contains_waste:
                         correct_position = True
                         self.grid.place_agent(was, (x, y))
-
-        # self.datacollector = DataCollector(
-        #     model_reporters={"Gini": compute_gini},
-        #     agent_reporters={"Wealth": "wealth"})
+                        
+    def init_agents(self):
         
-        # self.running = True
-
         list_agent_types_colors = [
             [self.dict_nb_agents["green"], GreenAgent, (0, self.width//3)],
             [self.dict_nb_agents["yellow"], YellowAgent,  (self.width//3, 2*self.width//3)],
@@ -168,7 +180,10 @@ class Area(Model):
             agent_class = element[1]
             allowed_zone = element[2]
             for agent in range(nb_agent_types):
-                ag = agent_class(unique_id = self.next_id(), model = self)
+                ag = agent_class(
+                    unique_id = self.next_id(),
+                    model = self,
+                    grid_size= (self.width, self.height))
                 self.schedule.add(ag)
                 correct_position = False
                 while not correct_position:
@@ -185,16 +200,29 @@ class Area(Model):
                     if not bool_contains_agent:
                         correct_position = True
                         self.grid.place_agent(ag, (x, y))
-    
 
     def step(self):
         self.schedule.step()
         # self.datacollector.collect(self)
         
     def run_model(self, step_count=100):
+        print("ALORS")
         model = Area(nb_agents = 1)  # 50 agents in our example
         for i in range(step_count):
+            print("OUOU")
             self.step()
 
-
-        
+    def do(self, agent, action):
+        # IF ACTION == MOVE
+        ## CHECK IF THE ACTION IS FEASIBLE
+        # ...
+        ## IF FEASIBLE, PERFORM THE ACTION
+        agent_position = agent.pos
+        percepts = {
+            agent_position: self.grid.get_cell_list_contents(agent_position),
+            (agent_position[0], agent_position[1] + 1) : self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1)),
+            (agent_position[0], agent_position[1] - 1): self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1)),
+            (agent_position[0] - 1, agent_position[1]): self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1])),
+            (agent_position[0] + 1, agent_position[1]): self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
+        }
+        return percepts

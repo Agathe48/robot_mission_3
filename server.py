@@ -130,9 +130,10 @@ server = ModularServer(
     visualization_elements=[grid],
     name="Area",
     model_params={
-        "dict_nb_agents": {"green": 3, "yellow": 2, "red": 2},
+        "dict_nb_agents": {"green": 8, "yellow": 2, "red": 2},
         "width":GRID_WIDTH,
         "height":GRID_HEIGHT}) #, "density": mesa.visualization.Slider("Agent density", 0.8, 0.1, 1.0, 0.1)})
 
 server.port = 8523
 server.launch()
+

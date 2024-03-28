@@ -8,6 +8,10 @@ Group 3:
 - Agathe POULAIN
 """
 
+###############
+### Imports ###
+###############
+
 from typing import Literal
 import random as rd
 
@@ -15,6 +19,11 @@ import random as rd
 from mesa import Agent
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
+
+
+###############
+### Objects ###
+###############
 
 class Radioactivity(Agent): # un par case avec un niveau de radioactivité
     """ An objet for the radioactivity of the area."""

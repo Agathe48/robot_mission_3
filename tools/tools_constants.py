@@ -11,3 +11,9 @@ Group 3:
 GRID_SIZE = (10, 18)
 GRID_WIDTH = GRID_SIZE[1]
 GRID_HEIGHT = GRID_SIZE[0]
+
+DICT_NUMBER_TYPE_CONTENT = {
+    0: "Empty tile",
+    1: "Waste",
+    2: "Waste disposal zone"
+}
