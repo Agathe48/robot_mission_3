@@ -92,7 +92,7 @@ def agent_portrayal(agent):
             "Filled": "true",
             "w": 0.25,
             "h": 0.25,
-            "Layer": 2}
+            "Layer": 3}
 
         # Set the color of the waste according to its type
         portrayal["Color"] = agent.type_waste
