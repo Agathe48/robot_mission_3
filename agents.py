@@ -48,6 +48,8 @@ class CleaningAgent(Agent):
         self.percepts = self.model.do(self, action=action)
         self.update()
 
+
+    # Mouvement
     def random_movement(self):
         pass
 
@@ -66,6 +68,60 @@ class CleaningAgent(Agent):
     def go_up(self):
         x, y = self.pos
         self.model.grid.move_agent(self, (x, y - 1))
+
+    # Picking up waste
+    def pick_up(self):
+        x,y = self.pos
+        this_cell = self.model.grid.get_cell_list_contents([(x,y)])
+
+        current_waste_count = sum(isinstance(obj, Waste) for obj in this_cell)
+        if current_waste_count <= 1:
+            for obj in this_cell:
+                if isinstance(obj, Waste):
+                    self.model.schedule.remove_agent(obj)
+                    break
+
+    # Dropping waste
+    def drop(self):
+        x,y = self.pos
+        waste = Waste()
+        this_cell = self.model.grid.get_cell_list_contents([(x,y)])
+        if this_cell.is_empty():
+            self.model.grid.place_agent(waste, (x,y))
+        else:
+            # Find nearby empty cell to drop waste
+            neighbors = self.model.grid.get_neighborhood((x, y), moore = False , include_center=False)
+            empty_cells = [cell for cell in neighbors if self.model.grid.is_cell_empty(cell)]
+
+            if empty_cells:
+                # Move to the first empty cell found
+                new_position = self.random.choice(empty_cells)
+                self.model.grid.move_agent(self, new_position)
+                # Drop waste at the new position
+                self.drop()
+
+    """
+    # Another version of dropping waste
+    def drop_waste(self):
+        x, y = self.pos
+        if self.model.grid.is_cell_empty((x, y)):
+            waste = Waste()  # Create a new Waste object
+            self.model.grid.place_agent(waste, (x, y))
+    """
+
+    # Transforming waste
+    def transform(self):
+        x, y = self.pos
+        this_cell = self.model.grid.get_cell_list_contents([(x, y)])
+        for obj in this_cell:
+            if isinstance(obj, Waste):
+                if obj.type_waste == "green":
+                    obj.type_waste = "yellow"
+                elif obj.type_waste == "yellow":
+                    obj.type_waste = "red"
+                break
+
+
 
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
@@ -153,12 +209,39 @@ class GreenAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size):
         super().__init__(unique_id, model, grid_size)
+        self.green_waste_count = 0
+        self.yellow_waste_count = 0
+"""
+    def deliberate(self):
+        if self.green_waste_count < 2 :
+            self.pick_up()
+        elif self.green_waste_count == 2:
+            self.transform()
+        elif self.yellow_waste_count == 1:
+            self.move_to_z1_frontiere()
+        else:
+            self.random_movement()
+
+    def move_to_z1_frontiere(self):
+        x, y = self.pos
+        zone = self.model.grid.get_cell_list_contents([(x, y)])[0].zone
+
+        # Move right until the next cell is in zone z2
+        while zone != "z2":
+            self.go_right()
+            x += 1
+            zone = self.model.grid.get_cell_list_contents([(x, y)])[0].zone
+"""      
 
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size):
         super().__init__(unique_id, model, grid_size)
+        self.yellow_waste_count = 0
+        self.red_waste_count = 0
 
 class RedAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size):
         super().__init__(unique_id, model, grid_size)
+        self.red_waste_count = 0
+
