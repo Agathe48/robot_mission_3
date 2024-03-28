@@ -14,6 +14,8 @@ GRID_HEIGHT = GRID_SIZE[0]
 
 DICT_NUMBER_TYPE_CONTENT = {
     0: "Empty tile",
-    1: "Waste",
-    2: "Waste disposal zone"
+    1: "Waste Green",
+    2: "Waste Yellow",
+    3: "Waste Red",
+    4: "Waste disposal zone"
 }

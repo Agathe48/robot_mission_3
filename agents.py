@@ -35,7 +35,7 @@ from objects import (
 
 class CleaningAgent(Agent):
 
-    def __init__(self, unique_id, model, grid_size):
+    def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
 
     def random_movement(self):
@@ -69,23 +69,8 @@ class CleaningAgent(Agent):
         if y_tile < y:
             return "up"
 
-class GreenAgent(CleaningAgent):
-
-    def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
-        self.grid_size = grid_size
-        self.knowledge = AgentKnowledge(grid = np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = self.model.do(self, action=None)
-
-    def step(self):
-        self.update()
-        # action = self.deliberate(self.knowledge)
-        action = None # TO REMOVE
-        self.percepts = self.model.do(self, action=action)
-
-
     def update(self):
-        print("Knowledge before of Agent", self.unique_id, self.knowledge)
+        # print("Knowledge before of Agent", self.unique_id, self.knowledge)
         print("Percepts of Agent", self.unique_id, self.percepts)
 
         grid_knowledge = self.knowledge.get_grid()
@@ -98,20 +83,25 @@ class GreenAgent(CleaningAgent):
 
         for key in self.percepts:
             list_objects_tile = self.percepts[key]
-            print("LIST OBJECT TILE", list_objects_tile)
             if len(list_objects_tile) == 0:
                 grid_knowledge[key[0]][key[1]] = 0
             for element in list_objects_tile:
-                print(element, type(element))
 
                 if type(element) == Waste:
-                    grid_knowledge[key[0]][key[1]] = 1
+                    if element.type_waste == "green":
+                        grid_knowledge[key[0]][key[1]] = 1
+                    elif element.type_waste == "yellow":
+                        grid_knowledge[key[0]][key[1]] = 2
+                    elif element.type_waste == "red":
+                        grid_knowledge[key[0]][key[1]] = 3
 
                 if type(element) == WasteDisposalZone:
-                    grid_knowledge[key[0]][key[1]] = 2
+                    grid_knowledge[key[0]][key[1]] = 4
 
-                if type(element) == Agent:
+                if type(element) in [GreenAgent, YellowAgent, RedAgent]:
+                    print("Youyou")
                     direction = self.convert_pos_to_tile(key)
+                    print("DIRECTION", direction)
                                     
                     if direction == "left":
                         dict_boolean_knowledge["left"] = True
@@ -141,9 +131,23 @@ class GreenAgent(CleaningAgent):
 
         print("Knowledge after of Agent", self.unique_id, self.knowledge)
 
+class GreenAgent(CleaningAgent):
+
+    def __init__(self, unique_id, model, grid_size):
+        super().__init__(unique_id, model)
+        self.grid_size = grid_size
+        self.knowledge = AgentKnowledge(grid = np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
+    def step(self):
+        # action = self.deliberate(self.knowledge)
+        action = None # TO REMOVE
+        self.percepts = self.model.do(self, action=action)
+        self.update()
+
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
+        super().__init__(unique_id, model)
 
     def step(self):
         pass
@@ -151,7 +155,7 @@ class YellowAgent(CleaningAgent):
 class RedAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
+        super().__init__(unique_id, model)
 
     def step(self):
         pass

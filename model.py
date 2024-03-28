@@ -37,7 +37,8 @@ from tools.tools_constants import (
 from agents import (
     GreenAgent,
     YellowAgent,
-    RedAgent
+    RedAgent,
+    CleaningAgent
 )
 
 #############
@@ -139,8 +140,6 @@ class Area(Model):
             [self.nb_wastes_red, "red", (2*self.width//3, self.width)],
         ]
 
-        print(self.nb_wastes_green, self.nb_wastes_yellow, self.nb_wastes_red)
-
         # Create the waste randomly generated in the map
         for element in list_waste_types_colors:
             nb_wastes_types = element[0]
@@ -172,7 +171,6 @@ class Area(Model):
             [self.dict_nb_agents["yellow"], YellowAgent,  (self.width//3, 2*self.width//3)],
             [self.dict_nb_agents["red"], RedAgent, (2*self.width//3, self.width)],
         ]
-        print(self.dict_nb_agents["green"], self.dict_nb_agents["yellow"], self.dict_nb_agents["red"])
 
         # Create the cleaning agents randomly generated in the map
         for element in list_agent_types_colors:
@@ -206,23 +204,26 @@ class Area(Model):
         # self.datacollector.collect(self)
         
     def run_model(self, step_count=100):
-        print("ALORS")
-        model = Area(nb_agents = 1)  # 50 agents in our example
         for i in range(step_count):
-            print("OUOU")
             self.step()
 
-    def do(self, agent, action):
+    def do(self, agent: CleaningAgent, action):
         # IF ACTION == MOVE
         ## CHECK IF THE ACTION IS FEASIBLE
         # ...
         ## IF FEASIBLE, PERFORM THE ACTION
         agent_position = agent.pos
         percepts = {
-            agent_position: self.grid.get_cell_list_contents(agent_position),
-            (agent_position[0], agent_position[1] + 1) : self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1)),
-            (agent_position[0], agent_position[1] - 1): self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1)),
-            (agent_position[0] - 1, agent_position[1]): self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1])),
-            (agent_position[0] + 1, agent_position[1]): self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
+            agent_position: self.grid.get_cell_list_contents(agent_position)
         }
+
+        if agent_position[0] - 1 >= 0:
+            percepts[(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))
+        if agent_position[0] + 1 < self.width:
+            percepts[(agent_position[0] + 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
+        if agent_position[1] - 1 >= 0:
+            percepts[(agent_position[0], agent_position[1] - 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1))
+        if agent_position[1] + 1 < self.height:
+            percepts[(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
+        
         return percepts
