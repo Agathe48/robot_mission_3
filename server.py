@@ -120,7 +120,7 @@ server = ModularServer(
     visualization_elements=[grid],
     name="Area",
     model_params={
-        "dict_nb_agents": {"green": 8, "yellow": 0, "red": 0},
+        "dict_nb_agents": {"green": 3, "yellow": 2, "red": 2},
         "width":GRID_WIDTH,
         "height":GRID_HEIGHT
     }

@@ -24,8 +24,9 @@ from mesa.space import MultiGrid
 ### Local imports ###
 from tools.tools_knowledge import AgentKnowledge
 from objects import (
-    Waste, 
-    WasteDisposalZone
+    Waste,
+    WasteDisposalZone,
+    Radioactivity
 )
 
 
@@ -35,8 +36,17 @@ from objects import (
 
 class CleaningAgent(Agent):
 
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, grid_size):
         super().__init__(unique_id, model)
+        self.grid_size = grid_size
+        self.knowledge = AgentKnowledge(grid = np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
+    def step(self):
+        # action = self.deliberate(self.knowledge)
+        action = None # TO REMOVE
+        self.percepts = self.model.do(self, action=action)
+        self.update()
 
     def random_movement(self):
         pass
@@ -73,7 +83,7 @@ class CleaningAgent(Agent):
         # print("Knowledge before of Agent", self.unique_id, self.knowledge)
         print("Percepts of Agent", self.unique_id, self.percepts)
 
-        grid_knowledge = self.knowledge.get_grid()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_boolean_knowledge = {
             "left": False,
             "right": False,
@@ -116,7 +126,15 @@ class CleaningAgent(Agent):
                         dict_boolean_knowledge["down"] = True
                         self.knowledge.set_down(boolean_down = True)
 
-        self.knowledge.set_grid(grid=grid_knowledge)
+                if type(element) == Radioactivity:
+                    if element.zone == "z1":
+                        grid_radioactivity[key[0]][key[1]] = 1
+                    elif element.zone == "z2":
+                        grid_radioactivity[key[0]][key[1]] = 2
+                    elif element.zone == "z3":
+                        grid_radioactivity[key[0]][key[1]] = 3
+
+        self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
 
         for key in dict_boolean_knowledge:
             if not dict_boolean_knowledge[key]:
@@ -134,28 +152,13 @@ class CleaningAgent(Agent):
 class GreenAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model)
-        self.grid_size = grid_size
-        self.knowledge = AgentKnowledge(grid = np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = {}
-
-    def step(self):
-        # action = self.deliberate(self.knowledge)
-        action = None # TO REMOVE
-        self.percepts = self.model.do(self, action=action)
-        self.update()
+        super().__init__(unique_id, model, grid_size)
 
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model)
-
-    def step(self):
-        pass
+        super().__init__(unique_id, model, grid_size)
 
 class RedAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model)
-
-    def step(self):
-        pass
+        super().__init__(unique_id, model, grid_size)

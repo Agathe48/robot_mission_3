@@ -8,10 +8,23 @@ Group 3:
 - Agathe POULAIN
 """
 
+###############
+### Imports ###
+###############
+
+### Python imports ###
+
+import numpy as np
+
+#############
+### Class ###
+#############
+
 class AgentKnowledge:
 
     def __init__(self, grid, nb_wastes=0):
-        self.grid = grid
+        self.grid_knowledge = grid
+        self.grid_radioactivity = np.copy(grid)
         self.nb_wastes = nb_wastes
         self.transformed_waste = False
         self.left = False
@@ -25,8 +38,8 @@ class AgentKnowledge:
     def get_nb_wastes(self):
         return self.nb_wastes
 
-    def get_grid(self):
-        return self.grid
+    def get_grids(self):
+        return self.grid_knowledge, self.grid_radioactivity
     
     def get_left(self):
         return self.left
@@ -46,8 +59,9 @@ class AgentKnowledge:
     def set_nb_wastes(self, nb_wastes):
         self.nb_wastes  = nb_wastes
     
-    def set_grid(self, grid):
-        self.grid = grid
+    def set_grids(self, grid_knowledge, grid_radioactivity):
+        self.grid_knowledge = grid_knowledge
+        self.grid_radioactivity = grid_radioactivity
 
     def set_left(self, boolean_left):
         self.left = boolean_left
@@ -62,5 +76,5 @@ class AgentKnowledge:
         self.down = boolean_down
 
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid={self.grid}, nb_wastes={self.nb_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down})"
+        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, nb_wastes={self.nb_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down})"
         
