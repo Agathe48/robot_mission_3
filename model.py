@@ -34,6 +34,11 @@ from tools.tools_constants import (
     GRID_WIDTH
 )
 
+from agents import (
+    GreenAgent,
+    YellowAgent,
+    RedAgent
+)
 #############
 ### Model ###
 #############
@@ -41,9 +46,9 @@ from tools.tools_constants import (
 class Area(Model):
     """A model with some number of agents."""
    # density is used only for illustration
-    def __init__(self, nb_agents, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT, density=0.8):
+    def __init__(self, dict_nb_agents: dict, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT, density=0.8):
         super().__init__()
-        self.nb_agents = nb_agents
+        self.dict_nb_agents = dict_nb_agents
         self.width = width
         self.height = height
         self.grid = MultiGrid(self.width, self.height, True)
@@ -62,24 +67,24 @@ class Area(Model):
                 
                 # Green area
                 if j < self.width // 3: 
-                    rad = Radioactivity(unique_id = [i , j], model=self, zone = "z1", radioactivity_level=rd.random()/3)
+                    rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z1", radioactivity_level=rd.random()/3)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
                 
                 # Yellow area
                 elif self.width // 3 <= j < 2 * self.width // 3: 
-                    rad = Radioactivity(unique_id = [i , j], model=self, zone = "z2", radioactivity_level=rd.random()/3)
+                    rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z2", radioactivity_level=rd.random()/3)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
                 
                 # Red area
                 else:
                     if (j, i) != pos_waste_disposal:
-                        rad = Radioactivity(unique_id = [i , j], model=self, zone = "z3", radioactivity_level=rd.random()/3)
+                        rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z3", radioactivity_level=rd.random()/3)
                         self.schedule.add(rad)
                         self.grid.place_agent(rad, (j, i))
                     else:
-                        dis = WasteDisposalZone(unique_id = [i , j], model=self)
+                        dis = WasteDisposalZone(unique_id = self.next_id(), model=self)
                         self.schedule.add(dis)
                         self.grid.place_agent(dis, pos_waste_disposal)
 
@@ -126,7 +131,7 @@ class Area(Model):
             waste_color = element[1]
             allowed_zone = element[2]
             for waste in range(nb_wastes_types):
-                was = Waste(unique_id = waste, model = self, type_waste = waste_color)
+                was = Waste(unique_id = self.next_id(), model = self, type_waste = waste_color)
                 self.schedule.add(was)
                 correct_position = False
                 while not correct_position:
@@ -149,6 +154,38 @@ class Area(Model):
         #     agent_reporters={"Wealth": "wealth"})
         
         # self.running = True
+
+        list_agent_types_colors = [
+            [self.dict_nb_agents["green"], GreenAgent, (0, self.width//3)],
+            [self.dict_nb_agents["yellow"], YellowAgent,  (self.width//3, 2*self.width//3)],
+            [self.dict_nb_agents["red"], RedAgent, (2*self.width//3, self.width)],
+        ]
+        print(self.dict_nb_agents["green"], self.dict_nb_agents["yellow"], self.dict_nb_agents["red"])
+
+        # Create the cleaning agents randomly generated in the map
+        for element in list_agent_types_colors:
+            nb_agent_types = element[0]
+            agent_class = element[1]
+            allowed_zone = element[2]
+            for agent in range(nb_agent_types):
+                ag = agent_class(unique_id = self.next_id(), model = self)
+                self.schedule.add(ag)
+                correct_position = False
+                while not correct_position:
+                    # Randomly place the waste objects on the grid
+                    x = self.random.randrange(allowed_zone[0], allowed_zone[1])
+                    y = self.random.randrange(self.height)
+                    cellmates = self.grid.get_cell_list_contents((x,y))
+
+                    # We check to see if there is already an agent in the cell
+                    bool_contains_agent = False
+                    for element in cellmates: 
+                        if type(element) == agent_class:
+                            bool_contains_agent = True
+                    if not bool_contains_agent:
+                        correct_position = True
+                        self.grid.place_agent(ag, (x, y))
+    
 
     def step(self):
         self.schedule.step()
