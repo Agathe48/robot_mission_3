@@ -37,8 +37,6 @@ class CleaningAgent(Agent):
         x, y = self.pos
         self.model.grid.move_agent(self, (x, y - 1))
 
-    def pick_up_waste(self):
-        pass
 
     
 
