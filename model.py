@@ -90,14 +90,14 @@ class Area(Model):
                 
                 # Yellow area
                 elif self.width // 3 <= j < 2 * self.width // 3: 
-                    rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z2", radioactivity_level=rd.random()/3)
+                    rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z2", radioactivity_level=(rd.random()/3) + 0.33)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
                 
                 # Red area
                 else:
                     if (j, i) != pos_waste_disposal:
-                        rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z3", radioactivity_level=rd.random()/3)
+                        rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z3", radioactivity_level=(rd.random()/3) + 0.66)
                         self.schedule.add(rad)
                         self.grid.place_agent(rad, (j, i))
                     else:
