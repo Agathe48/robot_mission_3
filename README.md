@@ -25,6 +25,8 @@ The project has been realized by the group 3 composed of:
         - [The YellowAgent](#the-yellowagent)
         - [The RedAgent](#the-redagent)
         - [The Agent's knowledge](#the-agents-knowledge)
+        - [The update method](#the-update-method)
+        - [The deliberate method](#the-deliberate-method)
     - [Our Model](#our-model)
     - [The visualization](#the-visualization)
  
@@ -86,25 +88,61 @@ The `Radioactivity` object represents the radioactivity of an area. It has two a
 
 ### The Waste 
 
-
+The `Waste` object represents the waste. It has one attribute: `type_waste` which defines the type of the waste and can only take three values ("green", "yellow", "red"). 
 
 ### The WasteDisposalZone
 
+The `WasteDisposalZone` object represents a cell in the last right column of the grid, chosen randomly from the cells in that column.
+
 ## Our Agents
+
+TODO
 
 ### The CleaningAgent
 
+TODO
+
 ### The GreenAgent
+
+TODO
 
 ### The YellowAgent
 
+TODO
+
 ### The RedAgent
+
+TODO
 
 ### The agent's knowledge
 
+The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. It has the following attributes:
 
+- `grid_knowledge`: Represents the agent's knowledge of the grid.
+- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity.
+- `nb_wastes`: Represents the number of wastes the agent has.
+- `transformed_waste`: Represents whether the agent has transformed waste.
+- `left`, `right`, `up`, `down`: Boolean variable representing the presence of other agent in the agent's surrounding cells.
+
+The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
+
+TODO : ADD THE WDZ ATTRIBUTES
+
+### The update method
+
+TODO
+
+### The deliberate method
+
+TODO
 
 ## Our Model
 
+TODO
+
+--> parler de l'init des waste (avec la densité et comment on gère pour qu'il ne reste pas de déchet vert ou jaune unique à la fin dès l'init des wastes)
+
+
 ## The visualization
 
+TODO
