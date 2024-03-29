@@ -44,77 +44,101 @@ class CleaningAgent(Agent):
 
     def step(self):
         # action = self.deliberate(self.knowledge)
-        action = None # TO REMOVE
+        action = None # TO REMOVEs
         self.percepts = self.model.do(self, action=action)
         self.update()
 
-
-    # Mouvement
     def random_movement(self):
-        pass
+        '''
+        Perform a random movement for the Cleaning Agent at each step on the map.
 
-    def go_left(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x - 1, y))
+        This function allows the Cleaning Agent to move randomly in any cardinal direction,
+        without constraints based on the position of other agents or zone limits.
 
-    def go_right(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x + 1, y))
+        Returns:
+            None
+        '''
 
-    def go_down(self):
         x, y = self.pos
-        self.model.grid.move_agent(self, (x, y + 1))
+        possible_moves = []
 
-    def go_up(self):
+        # Check if moving left is possible
+        if x > 0:
+            possible_moves.append("left")
+
+        # Check if moving right is possible
+        if x < self.grid_size[0] - 1:
+            possible_moves.append("right")
+
+        # Check if moving up is possible
+        if y > 0:
+            possible_moves.append("up")
+
+        # Check if moving down is possible
+        if y < self.grid_size[1] - 1:
+            possible_moves.append("down")
+
+        if possible_moves:
+            # Randomly choose one of the possible moves
+            move = self.random.choice(possible_moves)
+
+            # Move the agent accordingly
+            if move == "left":
+                self.model.grid.move_agent(self, (x - 1, y))
+            elif move == "right":
+                self.model.grid.move_agent(self, (x + 1, y))
+            elif move == "up":
+                self.model.grid.move_agent(self, (x, y + 1))
+            elif move == "down":
+                self.model.grid.move_agent(self, (x, y - 1))
+
+
+    def move_agent (self, move) :
+        '''
+        Move the agent in the specified direction.
+
+        Args:
+            move (str): The direction of movement. Can be one of 'left', 'right', 'up', or 'down'.
+
+        Returns:
+            None
+        '''
         x, y = self.pos
-        self.model.grid.move_agent(self, (x, y - 1))
-    
+        if move == "left":
+            self.model.grid.move_agent(self, (x - 1, y))
+        elif move == "right":
+            self.model.grid.move_agent(self, (x + 1, y))
+        elif move == "up":
+            self.model.grid.move_agent(self, (x, y + 1))
+        elif move == "down":
+            self.model.grid.move_agent(self, (x, y - 1))
+
+
     # Picking up waste
     def pick_up(self):
         x,y = self.pos
         this_cell = self.model.grid.get_cell_list_contents([(x,y)])
 
         current_waste_count = self.knowledge.get_nb_wastes()
-        if current_waste_count <= 1:
-            for obj in this_cell:
-                if isinstance(obj, Waste):
-                    self.model.schedule.remove_agent(obj)
-                    self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
-                    break
+    
+        for obj in this_cell:
+            if isinstance(obj, Waste):
+                self.model.schedule.remove_agent(obj)
+                self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
+                
+
 
     # Dropping waste
     def drop(self):
         x,y = self.pos
         waste = Waste()
         this_cell = self.model.grid.get_cell_list_contents([(x,y)])
-        if this_cell.is_empty():
-            self.model.grid.place_agent(waste, (x,y))
-            self.knowledge.set_nb_wastes(nb_wastes = 0)
-            # self.knowledge.set_transformed_waste(boolean_transform_waste = False)
-            # update the grid
-            # self.update()
-
-        else:
-            # Find nearby empty cell to drop waste
-            neighbors = self.model.grid.get_neighborhood((x, y), moore = False , include_center=False)
-            empty_cells = [cell for cell in neighbors if self.model.grid.is_cell_empty(cell)]
-
-            if empty_cells:
-                # Move to the first empty cell found
-                new_position = self.random.choice(empty_cells)
-                self.model.grid.move_agent(self, new_position)
-                # Drop waste at the new position
-                self.drop()
+        
+        self.model.grid.place_agent(waste, (x,y))
+        self.knowledge.set_nb_wastes(nb_wastes = 0)
+        self.knowledge.set_transformed_waste(boolean_transform_waste = False)
+        
  
-    
-    # Another version of dropping waste
-    # def drop_waste(self):
-        # x, y = self.pos
-        # if self.model.grid.is_cell_empty((x, y)):
-            # waste = Waste()  # Create a new Waste object
-            #self.model.grid.place_agent(waste, (x, y))
-    
-  
     # Transforming waste
     def transform(self):
         x, y = self.pos
@@ -130,6 +154,10 @@ class CleaningAgent(Agent):
                     self.knowledge.set_transformed_waste(boolean_transform_waste = True)
                     self.knowledge.set_nb_wastes(nb_wastes = 1)
                 break
+
+    # Wait action
+    def wait(self):
+        pass
 
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos

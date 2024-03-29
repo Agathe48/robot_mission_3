@@ -206,7 +206,8 @@ class Area(Model):
     def run_model(self, step_count=100):
         for i in range(step_count):
             self.step()
-
+    
+    
     def do(self, agent: CleaningAgent, action):
         # IF ACTION == MOVE
         ## CHECK IF THE ACTION IS FEASIBLE
@@ -226,4 +227,11 @@ class Area(Model):
         if agent_position[1] + 1 < self.height:
             percepts[(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
         
+        ## Uncomment those lines to visualize the random movement of cleaning agents at each step on the map
+        # if isinstance(agent, CleaningAgent):
+        #     agent.random_movement()
+        
+        # How to call an agent and give him a direction to move
+        # agent.move_agent("down")
+
         return percepts
