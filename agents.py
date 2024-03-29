@@ -109,6 +109,10 @@ class CleaningAgent(Agent):
                     self.knowledge.set_nb_wastes(nb_wastes = 1)
                 break
 
+    # Wait action
+    def wait(self):
+        pass
+
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
         x_tile, y_tile = pos
