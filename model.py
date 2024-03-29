@@ -206,9 +206,20 @@ class Area(Model):
     def run_model(self, step_count=100):
         for i in range(step_count):
             self.step()
-    
-    
+
     def do(self, agent: CleaningAgent, action):
+
+        ACTIONS = {
+            "pick_up": 0,
+            "drop": 1,
+            "transform": 2,
+            "random move": 3,
+            "go left": 4,
+            "go right": 5,
+            "go up": 6,
+            "go down": 7,
+            "wait": 8 
+            }
         # IF ACTION == MOVE
         ## CHECK IF THE ACTION IS FEASIBLE
         # ...
@@ -217,6 +228,56 @@ class Area(Model):
         percepts = {
             agent_position: self.grid.get_cell_list_contents(agent_position)
         }
+        if action == 0:
+            current_waste = self.knowledge.get_nb_wastes()
+            if current_waste <=1:
+                agent.pick_up()
+            
+        elif action == 1:
+            if self.grid.is_cell_empty(agent_position):
+                agent.drop() 
+
+        elif action == 2:
+            if self.knowledge.get_nb_wastes() == 2:  # Check if the agent has two wastes
+                agent.transform()
+
+        elif action == 3:
+            next_cell_contents = self.grid.get_cell_list_contents(agent_position)
+            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                agent.random_movement()
+
+        elif action == 4:
+            next_x = agent_position[0] - 1
+            next_y = agent_position[1]
+            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                agent.go_left()
+
+        elif action == 5:
+            next_x = agent_position[0] + 1
+            next_y = agent_position[1]
+            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                agent.go_right()
+
+        elif action == 6:
+            next_x = agent_position[0]
+            next_y = agent_position[1] - 1
+            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                agent.go_up()
+        
+        elif action == 7:
+            next_x = agent_position[0]
+            next_y = agent_position[1] + 1
+            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                agent.go_down()
+
+        elif action == 8:
+            agent.wait()
+
+        
 
         if agent_position[0] - 1 >= 0:
             percepts[(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))
@@ -227,11 +288,4 @@ class Area(Model):
         if agent_position[1] + 1 < self.height:
             percepts[(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
         
-        ## Uncomment those lines to visualize the random movement of cleaning agents at each step on the map
-        # if isinstance(agent, CleaningAgent):
-        #     agent.random_movement()
-        
-        # How to call an agent and give him a direction to move
-        # agent.move_agent("down")
-
         return percepts
