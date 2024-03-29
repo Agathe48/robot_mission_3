@@ -80,6 +80,7 @@ class CleaningAgent(Agent):
                 if isinstance(obj, Waste):
                     self.model.schedule.remove_agent(obj)
                     self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
+                    self.update()
                     break
 
     # Dropping waste
@@ -90,9 +91,9 @@ class CleaningAgent(Agent):
         if this_cell.is_empty():
             self.model.grid.place_agent(waste, (x,y))
             self.knowledge.set_nb_wastes(nb_wastes = 0)
-            # self.knowledge.set_transformed_waste(boolean_transform_waste = False)
+            self.knowledge.set_transformed_waste(boolean_transform_waste = False)
             # update the grid
-            # self.update()
+            self.update()
 
         else:
             # Find nearby empty cell to drop waste
