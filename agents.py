@@ -44,31 +44,76 @@ class CleaningAgent(Agent):
 
     def step(self):
         # action = self.deliberate(self.knowledge)
-        action = None # TO REMOVE
+        action = None # TO REMOVEs
         self.percepts = self.model.do(self, action=action)
         self.update()
 
-
-    # Mouvement
     def random_movement(self):
-        pass
+        '''
+        Perform a random movement for the Cleaning Agent at each step on the map.
 
-    def go_left(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x - 1, y))
+        This function allows the Cleaning Agent to move randomly in any cardinal direction,
+        without constraints based on the position of other agents or zone limits.
 
-    def go_right(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x + 1, y))
+        Returns:
+            None
+        '''
 
-    def go_down(self):
         x, y = self.pos
-        self.model.grid.move_agent(self, (x, y + 1))
+        possible_moves = []
 
-    def go_up(self):
+        # Check if moving left is possible
+        if x > 0:
+            possible_moves.append("left")
+
+        # Check if moving right is possible
+        if x < self.grid_size[0] - 1:
+            possible_moves.append("right")
+
+        # Check if moving up is possible
+        if y > 0:
+            possible_moves.append("up")
+
+        # Check if moving down is possible
+        if y < self.grid_size[1] - 1:
+            possible_moves.append("down")
+
+        if possible_moves:
+            # Randomly choose one of the possible moves
+            move = self.random.choice(possible_moves)
+
+            # Move the agent accordingly
+            if move == "left":
+                self.model.grid.move_agent(self, (x - 1, y))
+            elif move == "right":
+                self.model.grid.move_agent(self, (x + 1, y))
+            elif move == "up":
+                self.model.grid.move_agent(self, (x, y + 1))
+            elif move == "down":
+                self.model.grid.move_agent(self, (x, y - 1))
+
+
+    def move_agent (self, move) :
+        '''
+        Move the agent in the specified direction.
+
+        Args:
+            move (str): The direction of movement. Can be one of 'left', 'right', 'up', or 'down'.
+
+        Returns:
+            None
+        '''
         x, y = self.pos
-        self.model.grid.move_agent(self, (x, y - 1))
-    
+        if move == "left":
+            self.model.grid.move_agent(self, (x - 1, y))
+        elif move == "right":
+            self.model.grid.move_agent(self, (x + 1, y))
+        elif move == "up":
+            self.model.grid.move_agent(self, (x, y + 1))
+        elif move == "down":
+            self.model.grid.move_agent(self, (x, y - 1))
+
+
     # Picking up waste
     def pick_up(self):
         x,y = self.pos
@@ -81,6 +126,7 @@ class CleaningAgent(Agent):
                     self.model.schedule.remove_agent(obj)
                     self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
                     break
+
 
     # Dropping waste
     def drop(self):
