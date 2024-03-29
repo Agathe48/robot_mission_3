@@ -75,47 +75,24 @@ class CleaningAgent(Agent):
         this_cell = self.model.grid.get_cell_list_contents([(x,y)])
 
         current_waste_count = self.knowledge.get_nb_wastes()
-        if current_waste_count <= 1:
-            for obj in this_cell:
-                if isinstance(obj, Waste):
-                    self.model.schedule.remove_agent(obj)
-                    self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
-                    # self.update()
-                    break
+    
+        for obj in this_cell:
+            if isinstance(obj, Waste):
+                self.model.schedule.remove_agent(obj)
+                self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
+                
 
     # Dropping waste
     def drop(self):
         x,y = self.pos
         waste = Waste()
         this_cell = self.model.grid.get_cell_list_contents([(x,y)])
-        if this_cell.is_empty():
-            self.model.grid.place_agent(waste, (x,y))
-            self.knowledge.set_nb_wastes(nb_wastes = 0)
-            self.knowledge.set_transformed_waste(boolean_transform_waste = False)
-            # update the grid
-            # self.update()
-
-        else:
-            # Find nearby empty cell to drop waste
-            neighbors = self.model.grid.get_neighborhood((x, y), moore = False , include_center=False)
-            empty_cells = [cell for cell in neighbors if self.model.grid.is_cell_empty(cell)]
-
-            if empty_cells:
-                # Move to the first empty cell found
-                new_position = self.random.choice(empty_cells)
-                self.model.grid.move_agent(self, new_position)
-                # Drop waste at the new position
-                self.drop()
+        
+        self.model.grid.place_agent(waste, (x,y))
+        self.knowledge.set_nb_wastes(nb_wastes = 0)
+        self.knowledge.set_transformed_waste(boolean_transform_waste = False)
+        
  
-    
-    # Another version of dropping waste
-    # def drop_waste(self):
-        # x, y = self.pos
-        # if self.model.grid.is_cell_empty((x, y)):
-            # waste = Waste()  # Create a new Waste object
-            #self.model.grid.place_agent(waste, (x, y))
-    
-  
     # Transforming waste
     def transform(self):
         x, y = self.pos
