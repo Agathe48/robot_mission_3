@@ -68,7 +68,7 @@ class CleaningAgent(Agent):
     def go_up(self):
         x, y = self.pos
         self.model.grid.move_agent(self, (x, y - 1))
-
+    """
     # Picking up waste
     def pick_up(self):
         x,y = self.pos
@@ -100,14 +100,14 @@ class CleaningAgent(Agent):
                 # Drop waste at the new position
                 self.drop()
 
-    """
+    
     # Another version of dropping waste
     def drop_waste(self):
         x, y = self.pos
         if self.model.grid.is_cell_empty((x, y)):
             waste = Waste()  # Create a new Waste object
             self.model.grid.place_agent(waste, (x, y))
-    """
+    
 
     # Transforming waste
     def transform(self):
@@ -120,9 +120,7 @@ class CleaningAgent(Agent):
                 elif obj.type_waste == "yellow":
                     obj.type_waste = "red"
                 break
-
-
-
+    """
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
         x_tile, y_tile = pos
