@@ -20,6 +20,8 @@ DICT_NUMBER_TYPE_CONTENT = {
     4: "Waste disposal zone"
 }
 
+
+
 ###############
 ### ACTIONS ###
 ###############

@@ -42,14 +42,19 @@ from tools.tools_constants import (
     ACT_WAIT
 )
 
-
-
 from agents import (
     GreenAgent,
     YellowAgent,
     RedAgent,
     CleaningAgent
 )
+
+
+DICT_CLASS_COLOR = {
+    GreenAgent: "green",
+    YellowAgent: "yellow",
+    RedAgent: "red"
+}
 
 #############
 ### Model ###
@@ -220,60 +225,98 @@ class Area(Model):
         for i in range(step_count):
             self.step()
 
-    def do(self, agent: CleaningAgent, action):
-        # IF ACTION == MOVE
-        ## CHECK IF THE ACTION IS FEASIBLE
-        # ...
-        ## IF FEASIBLE, PERFORM THE ACTION
+    def do(self, agent: CleaningAgent, list_possible_actions):
         agent_position = agent.pos
+
+        # Get the current cellmates of the agent
+        cellmates = self.grid.get_cell_list_contents(agent_position)
+
+        # Get the color of the agent
+        color = DICT_CLASS_COLOR[type(agent)]
+
+        for action in list_possible_actions:
+            if action == ACT_PICK_UP:
+                # Check if the waste is still there
+                has_performed_action = False
+                counter = 0
+                current_waste_count = agent.knowledge.get_nb_wastes()
+
+                while not has_performed_action and counter < len(cellmates):
+                    obj = cellmates[counter]
+                    if (isinstance(obj, Waste) and obj.type_waste == color) :
+                        # Remove the waste from the grid and update the agent knowledge
+                        # We keep the waste in the scheduler to keep trace of it
+                        self.grid.remove_agent(obj)
+                        agent.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
+                        has_performed_action = True
+                    counter += 1
+
+                if has_performed_action:
+                    break
+
+            elif action == ACT_DROP:
+                # Check if there is no waste in the cell
+                if not any(isinstance(obj, Waste) for obj in cellmates):
+                    # Get the transformed waste object and place it on the grid
+                    transformed_waste = agent.knowledge.get_transformed_waste()
+                    self.grid.place_agent(transformed_waste, agent_position)
+                    # Update agent knowledge with no transformed waste
+                    agent.knowledge.set_transformed_waste(object_transform_waste = None)
+                    break
+
+            elif action == ACT_TRANSFORM:
+                # If agent is green, transform the waste to yellow
+                if color == "green":
+                    waste = Waste(type_waste="yellow")
+                # If agent is yellow, transform the waste to red
+                elif color == "yellow":
+                    waste = Waste(type_waste="red")
+                # Update the agent knowledge with the transformed waste object and create the object in the scheduler
+                agent.knowledge.set_transformed_waste(boolean_transform_waste = waste)
+                self.schedule.add(waste)
+                break
+
+            elif action == ACT_GO_LEFT:
+                next_x = agent_position[0] - 1
+                next_y = agent_position[1]
+                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                    self.grid.move_agent(agent, (next_x, next_y))
+                    break
+
+            elif action == ACT_GO_RIGHT:
+                next_x = agent_position[0] + 1
+                next_y = agent_position[1]
+                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                    self.grid.move_agent(agent, (next_x, next_y))
+                    break
+
+            elif action == ACT_GO_UP:
+                next_x = agent_position[0]
+                next_y = agent_position[1] - 1
+                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                    self.grid.move_agent(agent, (next_x, next_y))
+                    break
+            
+            elif action == ACT_GO_DOWN:
+                next_x = agent_position[0]
+                next_y = agent_position[1] + 1
+                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                    self.grid.move_agent(agent, (next_x, next_y))
+                    break
+
+            elif action == ACT_WAIT:
+                pass
+                break
+
+        agent_position = agent.pos
+        # Initialize the percepts
         percepts = {
             agent_position: self.grid.get_cell_list_contents(agent_position)
         }
-        if action == ACT_PICK_UP:
-            current_waste = self.knowledge.get_nb_wastes()
-            if current_waste <=1:
-                agent.pick_up()
-            
-        elif action == ACT_DROP:
-            if self.grid.is_cell_empty(agent_position):
-                agent.drop() 
-
-        elif action == ACT_TRANSFORM:
-            if self.knowledge.get_nb_wastes() == 2:  # Check if the agent has two wastes
-                agent.transform()
-
-        elif action == ACT_GO_LEFT:
-            next_x = agent_position[0] - 1
-            next_y = agent_position[1]
-            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
-            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                agent.go_left()
-
-        elif action == ACT_GO_RIGHT:
-            next_x = agent_position[0] + 1
-            next_y = agent_position[1]
-            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
-            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                agent.go_right()
-
-        elif action == ACT_GO_UP:
-            next_x = agent_position[0]
-            next_y = agent_position[1] - 1
-            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
-            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                agent.go_up()
-        
-        elif action == ACT_GO_DOWN:
-            next_x = agent_position[0]
-            next_y = agent_position[1] + 1
-            next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
-            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                agent.go_down()
-
-        elif action == ACT_WAIT:
-            agent.wait()
-
-        
 
         if agent_position[0] - 1 >= 0:
             percepts[(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))

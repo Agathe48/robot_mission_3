@@ -13,16 +13,27 @@ Group 3:
 ###############
 
 ### Python imports ###
+
 import numpy as np
 from typing import Literal
 import random
 
 ### Mesa imports ###
+
 from mesa import Agent
-from mesa.time import RandomActivation
-from mesa.space import MultiGrid
 
 ### Local imports ###
+
+from tools.tools_constants import (
+    ACT_PICK_UP,
+    ACT_DROP,
+    ACT_TRANSFORM,
+    ACT_GO_LEFT,
+    ACT_GO_RIGHT,
+    ACT_GO_UP,
+    ACT_GO_DOWN,
+    ACT_WAIT
+)
 from tools.tools_knowledge import AgentKnowledge
 from objects import (
     Waste,
@@ -50,10 +61,9 @@ class CleaningAgent(Agent):
         self.percepts = {}
 
     def step(self):
-        # action = self.deliberate(self.knowledge)
-        action = None # TO REMOVE
-        self.percepts = self.model.do(self, action=action)
         self.update()
+        list_possible_actions = self.deliberate()
+        self.percepts = self.model.do(self, list_possible_actions=list_possible_actions)
 
     # Mouvement
     def random_movement(self):
@@ -65,62 +75,7 @@ class CleaningAgent(Agent):
             if self.model.grid.is_cell_empty((new_x, new_y)):
                 self.model.grid.move_agent(self, (new_x, new_y))
                 break
-
-    def go_left(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x - 1, y))
-
-    def go_right(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x + 1, y))
-
-    def go_down(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x, y + 1))
-
-    def go_up(self):
-        x, y = self.pos
-        self.model.grid.move_agent(self, (x, y - 1))
-    
-    # Picking up waste
-    def pick_up(self):
-        x,y = self.pos
-        this_cell = self.model.grid.get_cell_list_contents([(x,y)])
-
-        current_waste_count = self.knowledge.get_nb_wastes()
-    
-        for obj in this_cell:
-            if isinstance(obj, Waste):
-                self.model.schedule.remove_agent(obj)
-                self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
-                
-    # Dropping waste
-    def drop(self):
-        x,y = self.pos
-        waste = Waste()        
-        self.model.grid.place_agent(waste, (x,y))
-        self.knowledge.set_nb_wastes(nb_wastes = 0)
-        self.knowledge.set_transformed_waste(boolean_transform_waste = False)
         
-    # Transforming waste
-    def transform(self):
-        x, y = self.pos
-        this_cell = self.model.grid.get_cell_list_contents([(x, y)])
-        for obj in this_cell:
-            if isinstance(obj, Waste):
-                if obj.type_waste == "green":
-                    obj.type_waste = "yellow"
-                    self.knowledge.set_transformed_waste(boolean_transform_waste = True)
-                    self.knowledge.set_nb_wastes(nb_wastes = 1)
-                elif obj.type_waste == "yellow":
-                    obj.type_waste = "red"
-                    self.knowledge.set_transformed_waste(boolean_transform_waste = True)
-                    self.knowledge.set_nb_wastes(nb_wastes = 1)
-                break
-
-    # Wait action
-    def wait(self):
-        pass
 
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
@@ -209,7 +164,71 @@ class GreenAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         self.green_waste_count = 0
-        self.yellow_waste_count = 0     
+        self.yellow_waste_count = 0  
+
+        
+    def deliberate(self):
+        list_possible_actions = []
+
+        # Get data from knowledge
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        left = self.knowledge.get_left()
+        right = self.knowledge.get_right()
+        up = self.knowledge.get_up()
+        down = self.knowledge.get_down()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        nb_wastes = self.knowledge.get_nb_wastes()
+
+        # Check up and down cells for agents
+        temp= []
+        if not up:
+            temp.append(ACT_GO_UP)
+        if not down:
+            temp.append(ACT_GO_DOWN)
+
+        # Check if there is a waste to transform
+        if self.knowledge.get_nb_wastes() == 2:
+            list_possible_actions.append(ACT_TRANSFORM)
+
+        # Check if agent has a transformed waste and if it can go right or drop it
+        if transformed_waste != None:
+            # Check if cell at the right is in zone 2
+            if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
+                # Check if the current cell does not already contain a waste
+                if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
+                    list_possible_actions.append(ACT_DROP)
+                else :
+                    if len(temp) > 0 :
+                        # Randomize the order of possible moves
+                        random.shuffle(temp)
+                        for action in temp:
+                            list_possible_actions.append(action)
+                    else :
+                        list_possible_actions.append(ACT_WAIT)
+            else:
+                # Move to the right to drop the waste
+                list_possible_actions.append(ACT_GO_RIGHT)
+        
+        # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
+        if nb_wastes <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
+            list_possible_actions.append(ACT_PICK_UP)
+
+        # Check for other agent in surronding cells
+        if not left :
+            temp.append(ACT_GO_LEFT)
+        if not right:
+            temp.append(ACT_GO_RIGHT)
+
+        if len(temp) > 0 :
+            # Randomize the order of possible moves
+            random.shuffle(temp)
+            for action in temp:
+                list_possible_actions.append(action)
+
+        list_possible_actions.append(ACT_WAIT)
+
+        return list_possible_actions
+   
 
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -217,10 +236,28 @@ class YellowAgent(CleaningAgent):
         self.yellow_waste_count = 0
         self.red_waste_count = 0
 
+        
+    def deliberate(self):
+        list_possible_actions = []
+
+        list_possible_actions.append(ACT_WAIT)
+
+        return list_possible_actions
+
+
 class RedAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         self.red_waste_count = 0
+
+        
+    def deliberate(self):
+        list_possible_actions = []
+
+        list_possible_actions.append(ACT_WAIT)
+
+        return list_possible_actions
+
 
 
 
