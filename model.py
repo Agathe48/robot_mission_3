@@ -251,6 +251,7 @@ class Area(Model):
                     counter += 1
 
                 if has_performed_action:
+                    print("Agent", agent.unique_id, "picked up a waste")
                     break
 
             elif action == ACT_DROP:
@@ -261,18 +262,20 @@ class Area(Model):
                     self.grid.place_agent(transformed_waste, agent_position)
                     # Update agent knowledge with no transformed waste
                     agent.knowledge.set_transformed_waste(object_transform_waste = None)
+                    print("Agent", agent.unique_id, "dropped a waste")
                     break
 
             elif action == ACT_TRANSFORM:
                 # If agent is green, transform the waste to yellow
                 if color == "green":
-                    waste = Waste(type_waste="yellow")
+                    waste = Waste(unique_id = self.next_id(), model = self, type_waste="yellow")
                 # If agent is yellow, transform the waste to red
                 elif color == "yellow":
-                    waste = Waste(type_waste="red")
+                    waste = Waste(unique_id = self.next_id(), model = self, type_waste="red")
                 # Update the agent knowledge with the transformed waste object and create the object in the scheduler
-                agent.knowledge.set_transformed_waste(boolean_transform_waste = waste)
+                agent.knowledge.set_transformed_waste(object_transform_waste = waste)
                 self.schedule.add(waste)
+                print("Agent", agent.unique_id, "transformed a waste")
                 break
 
             elif action == ACT_GO_LEFT:
@@ -281,6 +284,7 @@ class Area(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
+                    print("Agent", agent.unique_id, "went left")
                     break
 
             elif action == ACT_GO_RIGHT:
@@ -289,26 +293,30 @@ class Area(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
+                    print("Agent", agent.unique_id, "went right")
                     break
 
             elif action == ACT_GO_UP:
-                next_x = agent_position[0]
-                next_y = agent_position[1] - 1
-                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
-                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                    self.grid.move_agent(agent, (next_x, next_y))
-                    break
-            
-            elif action == ACT_GO_DOWN:
                 next_x = agent_position[0]
                 next_y = agent_position[1] + 1
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
+                    print("Agent", agent.unique_id, "went up")
+                    break
+            
+            elif action == ACT_GO_DOWN:
+                next_x = agent_position[0]
+                next_y = agent_position[1] - 1
+                next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
+                if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
+                    self.grid.move_agent(agent, (next_x, next_y))
+                    print("Agent", agent.unique_id, "went down")
                     break
 
             elif action == ACT_WAIT:
                 pass
+                print("Agent", agent.unique_id, "waited")   
                 break
 
         agent_position = agent.pos

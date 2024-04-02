@@ -228,7 +228,7 @@ class GreenAgent(CleaningAgent):
                 list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-
+        print(list_possible_actions)
         return list_possible_actions
    
 
