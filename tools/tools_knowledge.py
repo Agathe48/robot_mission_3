@@ -22,11 +22,11 @@ import numpy as np
 
 class AgentKnowledge:
 
-    def __init__(self, grid, nb_wastes=0):
-        self.grid_knowledge = grid
-        self.grid_radioactivity = np.copy(grid)
+    def __init__(self, grid_knowledge, grid_radioactivity, nb_wastes=0):
+        self.grid_knowledge = grid_knowledge
+        self.grid_radioactivity = grid_radioactivity
         self.nb_wastes = nb_wastes
-        self.transformed_waste = False
+        self.transformed_waste = None
         self.left = False
         self.right = False
         self.up = False
@@ -53,8 +53,8 @@ class AgentKnowledge:
     def get_down(self):
         return self.down
 
-    def set_transformed_waste(self, boolean_transform_waste):
-        self.transformed_waste = boolean_transform_waste
+    def set_transformed_waste(self, object_transform_waste):
+        self.transformed_waste = object_transform_waste
 
     def set_nb_wastes(self, nb_wastes):
         self.nb_wastes  = nb_wastes
