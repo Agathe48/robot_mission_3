@@ -217,7 +217,9 @@ class GreenAgent(CleaningAgent):
         if not left :
             temp.append(ACT_GO_LEFT)
         if not right:
-            temp.append(ACT_GO_RIGHT)
+            # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
+            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2 :
+                temp.append(ACT_GO_RIGHT)
 
         if len(temp) > 0 :
             # Randomize the order of possible moves
