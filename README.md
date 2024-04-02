@@ -20,13 +20,14 @@ The project has been realized by the group 3 composed of:
         - [The Waste](#the-waste)
         - [The WasteDisposalZone](#the-wastedisposalzone)
     - [Our Agents](#our-agents)
+        - [The Agent's knowledge](#the-agents-knowledge)
         - [The CleaningAgent](#the-cleaningagent)
+            - [The update method](#the-update-method)
+            - [The deliberate method](#the-deliberate-method)
         - [The GreenAgent](#the-greenagent)
         - [The YellowAgent](#the-yellowagent)
         - [The RedAgent](#the-redagent)
-        - [The Agent's knowledge](#the-agents-knowledge)
-        - [The update method](#the-update-method)
-        - [The deliberate method](#the-deliberate-method)
+
     - [Our Model](#our-model)
     - [The visualization](#the-visualization)
  
@@ -77,6 +78,8 @@ The main code can be launched by running the following command:
 python run.py
 ```
 
+TODO : PARTIE SERVER.PY>V
+
 
 ## Our Objects
 
@@ -98,7 +101,29 @@ The `WasteDisposalZone` object represents a cell in the last right column of the
 
 TODO
 
+### The agent's knowledge
+
+The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. It has the following attributes:
+
+- `grid_knowledge`: Represents the agent's knowledge of the grid.
+- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity.
+- `nb_wastes`: Represents the number of wastes the agent has.
+- `transformed_waste`: Represents whether the agent has transformed waste.
+- `left`, `right`, `up`, `down`: Boolean variable representing the presence of other agent in the agent's surrounding cells.
+
+The class provides methods to __get__ and __set__ these attributes. The __str__ method provides a string representation of the object's state.
+
+TODO : ADD THE WDZ ATTRIBUTES
+
 ### The CleaningAgent
+
+TODO
+
+#### The update method
+
+TODO
+
+#### The deliberate method
 
 TODO
 
@@ -114,27 +139,6 @@ TODO
 
 TODO
 
-### The agent's knowledge
-
-The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. It has the following attributes:
-
-- `grid_knowledge`: Represents the agent's knowledge of the grid.
-- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity.
-- `nb_wastes`: Represents the number of wastes the agent has.
-- `transformed_waste`: Represents whether the agent has transformed waste.
-- `left`, `right`, `up`, `down`: Boolean variable representing the presence of other agent in the agent's surrounding cells.
-
-The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
-
-TODO : ADD THE WDZ ATTRIBUTES
-
-### The update method
-
-TODO
-
-### The deliberate method
-
-TODO
 
 ## Our Model
 

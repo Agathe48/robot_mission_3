@@ -31,8 +31,18 @@ from objects import (
 )
 from tools.tools_constants import (
     GRID_HEIGHT,
-    GRID_WIDTH
+    GRID_WIDTH,
+    ACT_PICK_UP,
+    ACT_DROP,
+    ACT_TRANSFORM,
+    ACT_GO_LEFT,
+    ACT_GO_RIGHT,
+    ACT_GO_UP,
+    ACT_GO_DOWN,
+    ACT_WAIT
 )
+
+
 
 from agents import (
     GreenAgent,
@@ -59,6 +69,7 @@ class Area(Model):
 
         # Initialize the grid with the zones
         self.init_grid()
+        print(self.pos_waste_disposal)
 
         # Initialize the waste on the grid
         self.init_wastes()
@@ -75,7 +86,7 @@ class Area(Model):
     def init_grid(self):
 
         # Define the position of the waste disposal zone (in the right column of the grid)
-        pos_waste_disposal = (self.width-1, rd.randint(0, self.height-1))
+        self.pos_waste_disposal = (self.width-1, rd.randint(0, self.height-1))
 
         # Create the grid with radioactivity zones and the waste disposal zone
 
@@ -96,14 +107,14 @@ class Area(Model):
                 
                 # Red area
                 else:
-                    if (j, i) != pos_waste_disposal:
+                    if (j, i) != self.pos_waste_disposal:
                         rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z3", radioactivity_level=(rd.random()/3) + 0.66)
                         self.schedule.add(rad)
                         self.grid.place_agent(rad, (j, i))
                     else:
                         dis = WasteDisposalZone(unique_id = self.next_id(), model=self)
                         self.schedule.add(dis)
-                        self.grid.place_agent(dis, pos_waste_disposal)
+                        self.grid.place_agent(dis, self.pos_waste_disposal)
 
     def init_wastes(self):
         # Place the wastes on the grid
@@ -181,7 +192,9 @@ class Area(Model):
                 ag = agent_class(
                     unique_id = self.next_id(),
                     model = self,
-                    grid_size= (self.width, self.height))
+                    grid_size= (self.width, self.height),
+                    pos_waste_disposal = self.pos_waste_disposal 
+                    )
                 self.schedule.add(ag)
                 correct_position = False
                 while not correct_position:
@@ -208,18 +221,6 @@ class Area(Model):
             self.step()
 
     def do(self, agent: CleaningAgent, action):
-
-        ACTIONS = {
-            "pick_up": 0,
-            "drop": 1,
-            "transform": 2,
-            "random move": 3,
-            "go left": 4,
-            "go right": 5,
-            "go up": 6,
-            "go down": 7,
-            "wait": 8 
-            }
         # IF ACTION == MOVE
         ## CHECK IF THE ACTION IS FEASIBLE
         # ...
@@ -228,53 +229,48 @@ class Area(Model):
         percepts = {
             agent_position: self.grid.get_cell_list_contents(agent_position)
         }
-        if action == 0:
+        if action == ACT_PICK_UP:
             current_waste = self.knowledge.get_nb_wastes()
             if current_waste <=1:
                 agent.pick_up()
             
-        elif action == 1:
+        elif action == ACT_DROP:
             if self.grid.is_cell_empty(agent_position):
                 agent.drop() 
 
-        elif action == 2:
+        elif action == ACT_TRANSFORM:
             if self.knowledge.get_nb_wastes() == 2:  # Check if the agent has two wastes
                 agent.transform()
 
-        elif action == 3:
-            next_cell_contents = self.grid.get_cell_list_contents(agent_position)
-            if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
-                agent.random_movement()
-
-        elif action == 4:
+        elif action == ACT_GO_LEFT:
             next_x = agent_position[0] - 1
             next_y = agent_position[1]
             next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
             if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                 agent.go_left()
 
-        elif action == 5:
+        elif action == ACT_GO_RIGHT:
             next_x = agent_position[0] + 1
             next_y = agent_position[1]
             next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
             if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                 agent.go_right()
 
-        elif action == 6:
+        elif action == ACT_GO_UP:
             next_x = agent_position[0]
             next_y = agent_position[1] - 1
             next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
             if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                 agent.go_up()
         
-        elif action == 7:
+        elif action == ACT_GO_DOWN:
             next_x = agent_position[0]
             next_y = agent_position[1] + 1
             next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
             if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                 agent.go_down()
 
-        elif action == 8:
+        elif action == ACT_WAIT:
             agent.wait()
 
         

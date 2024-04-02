@@ -37,10 +37,16 @@ from objects import (
 
 class CleaningAgent(Agent):
 
-    def __init__(self, unique_id, model, grid_size):
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model)
         self.grid_size = grid_size
-        self.knowledge = AgentKnowledge(grid = np.zeros((grid_size[0], grid_size[1])))
+        # Initialise waste diposal zone position in knowledge
+        grid_knowledge = np.zeros((grid_size[0], grid_size[1]))
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = AgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        print(self.knowledge)
         self.percepts = {}
 
     def step(self):
@@ -48,7 +54,6 @@ class CleaningAgent(Agent):
         action = None # TO REMOVE
         self.percepts = self.model.do(self, action=action)
         self.update()
-
 
     # Mouvement
     def random_movement(self):
@@ -60,8 +65,6 @@ class CleaningAgent(Agent):
             if self.model.grid.is_cell_empty((new_x, new_y)):
                 self.model.grid.move_agent(self, (new_x, new_y))
                 break
-
-
 
     def go_left(self):
         x, y = self.pos
@@ -91,7 +94,6 @@ class CleaningAgent(Agent):
                 self.model.schedule.remove_agent(obj)
                 self.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
                 
-
     # Dropping waste
     def drop(self):
         x,y = self.pos
@@ -100,7 +102,6 @@ class CleaningAgent(Agent):
         self.knowledge.set_nb_wastes(nb_wastes = 0)
         self.knowledge.set_transformed_waste(boolean_transform_waste = False)
         
- 
     # Transforming waste
     def transform(self):
         x, y = self.pos
@@ -205,20 +206,24 @@ class CleaningAgent(Agent):
 
 class GreenAgent(CleaningAgent):
 
-    def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         self.green_waste_count = 0
         self.yellow_waste_count = 0     
 
 class YellowAgent(CleaningAgent):
-    def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         self.yellow_waste_count = 0
         self.red_waste_count = 0
 
 class RedAgent(CleaningAgent):
-
-    def __init__(self, unique_id, model, grid_size):
-        super().__init__(unique_id, model, grid_size)
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         self.red_waste_count = 0
+
+
+
+        
+
 

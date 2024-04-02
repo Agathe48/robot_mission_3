@@ -22,9 +22,9 @@ import numpy as np
 
 class AgentKnowledge:
 
-    def __init__(self, grid, nb_wastes=0):
-        self.grid_knowledge = grid
-        self.grid_radioactivity = np.copy(grid)
+    def __init__(self, grid_knowledge, grid_radioactivity, nb_wastes=0):
+        self.grid_knowledge = grid_knowledge
+        self.grid_radioactivity = grid_radioactivity
         self.nb_wastes = nb_wastes
         self.transformed_waste = False
         self.left = False
