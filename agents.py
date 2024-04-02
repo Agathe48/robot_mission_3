@@ -91,7 +91,7 @@ class CleaningAgent(Agent):
 
     def update(self):
         # print("Knowledge before of Agent", self.unique_id, self.knowledge)
-        print("Percepts of Agent", self.unique_id, self.percepts)
+        # print("Percepts of Agent", self.unique_id, self.percepts)
 
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_boolean_knowledge = {
@@ -157,7 +157,7 @@ class CleaningAgent(Agent):
                 if key == "down":
                     self.knowledge.set_down(boolean_down = False)
 
-        print("Knowledge after of Agent", self.unique_id, self.knowledge)
+        # print("Knowledge after of Agent", self.unique_id, self.knowledge)
 
 class GreenAgent(CleaningAgent):
 

@@ -19,7 +19,6 @@ import random as rd
 ### Mesa imports ###
 
 from mesa import Model
-from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 
 ### Local imports ###
@@ -41,13 +40,13 @@ from tools.tools_constants import (
     ACT_GO_DOWN,
     ACT_WAIT
 )
-
 from agents import (
     GreenAgent,
     YellowAgent,
     RedAgent,
     CleaningAgent
 )
+from schedule import CustomRandomScheduler
 
 
 DICT_CLASS_COLOR = {
@@ -68,8 +67,8 @@ class Area(Model):
         self.dict_nb_agents = dict_nb_agents
         self.width = width
         self.height = height
-        self.grid = MultiGrid(self.width, self.height, True)
-        self.schedule = RandomActivation(self)
+        self.grid = MultiGrid(self.width, self.height, torus=False)
+        self.schedule = CustomRandomScheduler(self)
         self.waste_density = waste_density
 
         # Initialize the grid with the zones
