@@ -32,7 +32,8 @@ from tools.tools_constants import (
     ACT_GO_RIGHT,
     ACT_GO_UP,
     ACT_GO_DOWN,
-    ACT_WAIT
+    ACT_WAIT,
+    GRID_HEIGHT
 )
 from tools.tools_knowledge import AgentKnowledge
 from objects import (
@@ -182,15 +183,21 @@ class GreenAgent(CleaningAgent):
         # Check up and down cells for agents
         temp= []
         if not up:
-            temp.append(ACT_GO_UP)
+            # Check if the agent is not already at the top of the grid
+            if self.pos[1] != GRID_HEIGHT-1:
+                temp.append(ACT_GO_UP)
         if not down:
-            temp.append(ACT_GO_DOWN)
+            # Check if the agent is not already at the bottom of the grid
+            if self.pos[1] != 0:
+                temp.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
+        print("youyou1", self.knowledge.get_nb_wastes())
         if self.knowledge.get_nb_wastes() == 2:
             list_possible_actions.append(ACT_TRANSFORM)
 
         # Check if agent has a transformed waste and if it can go right or drop it
+        print("YOUYOU ", transformed_waste)
         if transformed_waste != None:
             # Check if cell at the right is in zone 2
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
@@ -215,7 +222,9 @@ class GreenAgent(CleaningAgent):
 
         # Check for other agent in surronding cells
         if not left :
-            temp.append(ACT_GO_LEFT)
+            # Check if the agent is not already at the left of the grid
+            if self.pos[0] != 0:
+                temp.append(ACT_GO_LEFT)
         if not right:
             # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2 :

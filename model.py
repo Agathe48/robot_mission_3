@@ -233,6 +233,9 @@ class Area(Model):
         # Get the color of the agent
         color = DICT_CLASS_COLOR[type(agent)]
 
+        transformed_waste = agent.knowledge.get_transformed_waste()
+        print("Agent", agent.unique_id, "is in position", agent_position, "and has the transformed waste", transformed_waste)
+
         for action in list_possible_actions:
             if action == ACT_PICK_UP:
                 # Check if the waste is still there
@@ -274,6 +277,7 @@ class Area(Model):
                     waste = Waste(unique_id = self.next_id(), model = self, type_waste="red")
                 # Update the agent knowledge with the transformed waste object and create the object in the scheduler
                 agent.knowledge.set_transformed_waste(object_transform_waste = waste)
+                agent.knowledge.set_nb_wastes(nb_wastes = 0)
                 self.schedule.add(waste)
                 print("Agent", agent.unique_id, "transformed a waste")
                 break
