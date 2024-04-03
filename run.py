@@ -26,4 +26,4 @@ from model import (
 model = Area(
     dict_nb_agents={"green": 1, "yellow": 1, "red": 1}
 )
-model.run_model(step_count = 3)
+model.run_model(step_count = 1000)

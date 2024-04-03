@@ -20,22 +20,9 @@ DICT_NUMBER_TYPE_CONTENT = {
     4: "Waste disposal zone"
 }
 
-
-
 ###############
 ### ACTIONS ###
 ###############
-
-DICT_ACTIONS = {
-    "pick_up": 0,
-    "drop": 1,
-    "transform": 2,
-    "go_left": 3,
-    "go_right": 4,
-    "go_up": 5,
-    "go_down": 6,
-    "wait": 7 
-    }
 
 ACT_PICK_UP = "pick_up"
 ACT_DROP = "drop"
@@ -45,6 +32,3 @@ ACT_GO_RIGHT = "go_right"
 ACT_GO_UP = "go_up"
 ACT_GO_DOWN = "go_down"
 ACT_WAIT = "wait"
-
-
-

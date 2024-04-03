@@ -8,14 +8,6 @@ Group 3:
 - Agathe POULAIN
 """
 
-###############
-### Imports ###
-###############
-
-### Python imports ###
-
-import numpy as np
-
 #############
 ### Class ###
 #############
@@ -51,9 +43,32 @@ class AgentKnowledge:
         return self.up
     
     def get_down(self):
+        """
+        Return the boolean according if the agent can go down.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
         return self.down
 
     def set_transformed_waste(self, object_transform_waste):
+        """
+        Set transformed waste in knowledge.
+
+        Parameters
+        ----------
+        object_transform_waste: Waste
+            The transformed waste.
+
+        Returns
+        -------
+        None
+        """
         self.transformed_waste = object_transform_waste
 
     def set_picked_up_wastes(self, picked_up_wastes):

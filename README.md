@@ -23,12 +23,14 @@ The project has been realized by the group 3 composed of:
         - [The Agent's knowledge](#the-agents-knowledge)
         - [The CleaningAgent](#the-cleaningagent)
             - [The update method](#the-update-method)
-            - [The deliberate method](#the-deliberate-method)
         - [The GreenAgent](#the-greenagent)
+            - [The deliberate method](#the-deliberate-method)
         - [The YellowAgent](#the-yellowagent)
+            - [The deliberate method](#the-deliberate-method)
         - [The RedAgent](#the-redagent)
-
+            - [The deliberate method](#the-deliberate-method)
     - [Our Model](#our-model)
+    - [The scheduler](#the-scheduler)
     - [The visualization](#the-visualization)
  
 
@@ -78,16 +80,23 @@ The main code can be launched by running the following command:
 python run.py
 ```
 
-TODO : PARTIE SERVER.PY>V
+It can also be launched with the visualisation by running the following command:
 
+```bash
+python server.py
+```
 
 ## Our Objects
 
-Our objects are agent types without any behaviour, they are defined in `objects.py` .
+Our objects are agent types without any behaviour, and they are defined in `objects.py`.
 
 ### The Radioactivity
 
-The `Radioactivity` object represents the radioactivity of an area. It has two attributes: `zone`, which defines the area it belongs to and can only take three values ("z1", "z2", "z3"), and `radioactivity_level`, which defines its level of radioactivity. The `Radioactivity` object is placed in each cell of the grid to define our different areas. Its `radioactivity_level` attribute then is used by our agents to determine which zone they are in.
+The `Radioactivity` object represents the radioactivity of an area. It has two attributes:
+- `zone`, which defines the area it belongs to and can only take three values ("z1", "z2", "z3")
+- `radioactivity_level`, which defines its level of radioactivity. It is a random number comprised between 0 and 0.33 for z1, 0.33 and 0.66 for z2 and 0.66 and 1 pour z3.
+
+The `Radioactivity` object is placed in each cell of the grid to define our different areas. Its `zone` attribute then is used by our agents to determine which zone they are in.
 
 ### The Waste 
 
@@ -103,27 +112,21 @@ TODO
 
 ### The agent's knowledge
 
-The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. It has the following attributes:
+The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. This class is defined in `toolst/tools_knowledge.py`. It has the following attributes:
 
-- `grid_knowledge`: Represents the agent's knowledge of the grid.
-- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity.
-- `nb_wastes`: Represents the number of wastes the agent has.
-- `transformed_waste`: Represents whether the agent has transformed waste.
-- `left`, `right`, `up`, `down`: Boolean variable representing the presence of other agent in the agent's surrounding cells.
+- `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone.
+- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the zone.
+- `picked_up_wastes`: Represents a list of the Waste agent that our cleaning agent has picked up.
+- `transformed_waste`: Represents whether the agent has transformed waste. Its values are `None` or the new transformed waste object.
+- `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move is the corresponding direction. It depends on the presence of other agent in the agent's surrounding cells and on the size of the grid.
 
-The class provides methods to __get__ and __set__ these attributes. The __str__ method provides a string representation of the object's state.
-
-TODO : ADD THE WDZ ATTRIBUTES
+The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
 ### The CleaningAgent
 
-TODO
+The `CleaningAgent` class inherit from the Mesa `Agent` class and we used it to define common behaviors for the Green, Yellow and Red cleaning agents.
 
 #### The update method
-
-TODO
-
-#### The deliberate method
 
 TODO
 
@@ -131,11 +134,23 @@ TODO
 
 TODO
 
+#### The deliberate method
+
+TODO
+
 ### The YellowAgent
 
 TODO
 
+#### The deliberate method
+
+TODO
+
 ### The RedAgent
+
+TODO
+
+#### The deliberate method
 
 TODO
 
@@ -146,7 +161,14 @@ TODO
 
 --> parler de l'init des waste (avec la densité et comment on gère pour qu'il ne reste pas de déchet vert ou jaune unique à la fin dès l'init des wastes)
 
+## The scheduler
+
+TODO
 
 ## The visualization
 
-TODO
+The visualization is defined in the `server.py`. Each agent and object is there represented according to the following codes:
+- the `Radioactivity` objects are rectangles in the layer 0 in the corresponding color (light green, light yellow, light red): they map the grid.
+- the `WasteDisposalZone` object is a brown rectangle in the layer 1.
+- the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
+- the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.

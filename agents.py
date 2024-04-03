@@ -60,8 +60,11 @@ class CleaningAgent(Agent):
         self.percepts = {}
 
     def step(self):
+        # Update agent's knowledge
         self.update()
+        # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
+        # Perform the action and update the percepts
         self.percepts = self.model.do(
             self, list_possible_actions=list_possible_actions)
       
@@ -177,7 +180,7 @@ class GreenAgent(CleaningAgent):
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
-        # Check up and down cells for agents
+        # Check up and down available directions
         temp = []
         if up:
             temp.append(ACT_GO_UP)
@@ -195,8 +198,8 @@ class GreenAgent(CleaningAgent):
                 # Check if the current cell does not already contain a waste
                 if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
                     list_possible_actions.append(ACT_DROP)
-                else :
-                    if len(temp) > 0 :
+                else:
+                    if len(temp) > 0:
                         # Randomize the order of possible moves
                         random.shuffle(temp)
                         for action in temp:
@@ -216,7 +219,7 @@ class GreenAgent(CleaningAgent):
                 temp.append(ACT_GO_LEFT)
         if right:
             # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
-            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2 :
+            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2:
                 temp.append(ACT_GO_RIGHT)
 
         if len(temp) > 0 :
