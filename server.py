@@ -94,12 +94,23 @@ def agent_portrayal(agent):
             "r": 0.5,
             "Layer": 3
         }
+
+        picked_up_wastes = agent.knowledge.get_picked_up_wastes()
+        transformed_waste = agent.knowledge.get_transformed_waste()
+        if len(picked_up_wastes) >= 1:
+            portrayal["text"] = len(picked_up_wastes)
+        if not transformed_waste is None:
+            portrayal["text"] = "T"
+
         if type(agent) == GreenAgent:
             portrayal["Color"] = "#073d00"
+            portrayal["text_color"] = "white"
         elif type(agent) == YellowAgent:
             portrayal["Color"] = "#ffa800"
+            portrayal["text_color"] = "black"
         elif type(agent) == RedAgent:
             portrayal["Color"] = "#a90000"
+            portrayal["text_color"] = "white"
 
     return portrayal
 
