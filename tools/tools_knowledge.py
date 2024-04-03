@@ -27,10 +27,10 @@ class AgentKnowledge:
         self.grid_radioactivity = grid_radioactivity
         self.picked_up_wastes = []
         self.transformed_waste = None
-        self.left = False
-        self.right = False
-        self.up = False
-        self.down = False
+        self.left = True
+        self.right = True
+        self.up = True
+        self.down = True
 
     def get_transformed_waste(self):
         return self.transformed_waste

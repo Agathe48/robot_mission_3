@@ -40,6 +40,7 @@ class CustomRandomScheduler(BaseScheduler):
         super().__init__(model, agents)
 
     def step(self):
+        print("------ NEW STEP ------")
         list_green_agents = list(self.model.get_agents_of_type(GreenAgent))
         list_yellow_agents = list(self.model.get_agents_of_type(YellowAgent))
         list_red_agents = list(self.model.get_agents_of_type(RedAgent))
@@ -52,4 +53,5 @@ class CustomRandomScheduler(BaseScheduler):
             # Shuffle the agents from the same type
             rd.shuffle(list_type_agent)
             for agent in list_type_agent:
+                print("-----------------------------")
                 agent.step()

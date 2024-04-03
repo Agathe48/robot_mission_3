@@ -32,8 +32,7 @@ from tools.tools_constants import (
     ACT_GO_RIGHT,
     ACT_GO_UP,
     ACT_GO_DOWN,
-    ACT_WAIT,
-    GRID_HEIGHT
+    ACT_WAIT
 )
 from tools.tools_knowledge import AgentKnowledge
 from objects import (
@@ -65,18 +64,7 @@ class CleaningAgent(Agent):
         list_possible_actions = self.deliberate()
         self.percepts = self.model.do(
             self, list_possible_actions=list_possible_actions)
-
-    # Mouvement
-    def random_movement(self):
-        possible_moves = [(1, 0), (-1, 0), (0, 1), (0, -1)]  # Right, Left, Down, Up
-        random.shuffle(possible_moves)  # Randomize the order of possible moves
-        x, y = self.pos
-        for dx, dy in possible_moves:
-            new_x, new_y = x + dx, y + dy
-            if self.model.grid.is_cell_empty((new_x, new_y)):
-                self.model.grid.move_agent(self, (new_x, new_y))
-                break
-        
+      
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
         x_tile, y_tile = pos
@@ -95,10 +83,10 @@ class CleaningAgent(Agent):
 
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_boolean_knowledge = {
-            "left": False,
-            "right": False,
-            "up": False,
-            "down": False
+            "left": True,
+            "right": True,
+            "up": True,
+            "down": True
         }
 
         for key in self.percepts:
@@ -145,31 +133,31 @@ class CleaningAgent(Agent):
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
 
         for key in dict_boolean_knowledge:
-            if not dict_boolean_knowledge[key]:
+            if dict_boolean_knowledge[key]:
                 if key == "left":
-                    self.knowledge.set_left(boolean_left = False)
+                    self.knowledge.set_left(boolean_left = True)
                 if key == "right":
-                    self.knowledge.set_right(boolean_right = False)
+                    self.knowledge.set_right(boolean_right = True)
                 if key == "up":
-                    self.knowledge.set_up(boolean_up = False)
+                    self.knowledge.set_up(boolean_up = True)
                 if key == "down":
-                    self.knowledge.set_down(boolean_down = False)
+                    self.knowledge.set_down(boolean_down = True)
 
         # print("Knowledge after of Agent", self.unique_id, self.knowledge)
 
     def update_positions_around_agent(self, direction, dict_boolean_knowledge):
         if direction == "left":
-            dict_boolean_knowledge["left"] = True
-            self.knowledge.set_left(boolean_left = True)
+            dict_boolean_knowledge["left"] = False
+            self.knowledge.set_left(boolean_left = False)
         if direction == "right":
-            dict_boolean_knowledge["right"] = True
-            self.knowledge.set_right(boolean_right = True)
+            dict_boolean_knowledge["right"] = False
+            self.knowledge.set_right(boolean_right = False)
         if direction == "up":
-            dict_boolean_knowledge["up"] = True
-            self.knowledge.set_up(boolean_up = True)
+            dict_boolean_knowledge["up"] = False
+            self.knowledge.set_up(boolean_up = False)
         if direction == "down":
-            dict_boolean_knowledge["down"] = True
-            self.knowledge.set_down(boolean_down = True)
+            dict_boolean_knowledge["down"] = False
+            self.knowledge.set_down(boolean_down = False)
         return dict_boolean_knowledge
 
 class GreenAgent(CleaningAgent):
@@ -191,9 +179,9 @@ class GreenAgent(CleaningAgent):
 
         # Check up and down cells for agents
         temp = []
-        if not up:
+        if up:
             temp.append(ACT_GO_UP)
-        if not down:
+        if down:
             temp.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
@@ -224,9 +212,9 @@ class GreenAgent(CleaningAgent):
             list_possible_actions.append(ACT_PICK_UP)
 
         # Check for other agent in surronding cells
-        if not left :
+        if left:
                 temp.append(ACT_GO_LEFT)
-        if not right:
+        if right:
             # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2 :
                 temp.append(ACT_GO_RIGHT)
@@ -238,7 +226,7 @@ class GreenAgent(CleaningAgent):
                 list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        print(list_possible_actions)
+        print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
    
 
@@ -260,9 +248,9 @@ class YellowAgent(CleaningAgent):
 
         # Check up and down cells for agents
         temp = []
-        if not up:
+        if up:
             temp.append(ACT_GO_UP)
-        if not down:
+        if down:
             temp.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
@@ -293,14 +281,14 @@ class YellowAgent(CleaningAgent):
             list_possible_actions.append(ACT_PICK_UP)
 
         # Check for other agent in surronding cells
-        if not left:
+        if left:
             # Check if cell at the left is in zone 2
             if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
                 temp.append(ACT_GO_LEFT)
             # Check if the cell is in zone 1 and if it contains an yellow waste
             elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
                 temp.append(ACT_GO_LEFT)
-        if not right:
+        if right:
             # Check if cell at the right is in zone 2 (yellow agent can't go in zone 3)
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 3 :
                 temp.append(ACT_GO_RIGHT)
@@ -312,7 +300,7 @@ class YellowAgent(CleaningAgent):
                 list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        print(list_possible_actions)
+        print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
 
 class RedAgent(CleaningAgent):
@@ -322,6 +310,67 @@ class RedAgent(CleaningAgent):
     def deliberate(self):
         list_possible_actions = []
 
-        list_possible_actions.append(ACT_WAIT)
+        # Get data from knowledge
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        left = self.knowledge.get_left()
+        right = self.knowledge.get_right()
+        up = self.knowledge.get_up()
+        down = self.knowledge.get_down()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
+        # Check up and down cells for agents
+        temp = []
+        if up:
+            temp.append(ACT_GO_UP)
+        if down:
+            temp.append(ACT_GO_DOWN)
+        
+        # If we picked up a waste, go to waste disposal zone to drop it
+        if len(picked_up_wastes) == 1:
+            if grid_knowledge[self.pos[0]][self.pos[1]] == 4:
+                list_possible_actions.append(ACT_DROP)
+            else:
+                # The agent goes to the waste disposal zone column
+                if right:
+                    list_possible_actions.append(ACT_GO_RIGHT)
+                else:
+                    waste_disposal_zone_position = np.where(grid_knowledge == 4)
+                    # If the Waste dispozal zone is above the agent
+                    if waste_disposal_zone_position[1] > self.pos[1]:
+                        if up:
+                            list_possible_actions.append(ACT_GO_UP)
+                        # If the agent can't go up, it waits
+                        else:
+                            list_possible_actions.append(ACT_WAIT)
+                    # If the Waste dispozal zone is below the agent
+                    else:
+                        if down:
+                            list_possible_actions.append(ACT_GO_DOWN)
+                        # If the agent can't go down, it waits
+                        else:
+                            list_possible_actions.append(ACT_WAIT)
+
+        # Check if there is a waste to pick up and if we can pick up a waste
+        if len(picked_up_wastes) <= 0 and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
+            list_possible_actions.append(ACT_PICK_UP)
+
+        # Check for other agent in surronding cells
+        if left:
+            # Check if cell at the left is in zone 3
+            if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 2:
+                temp.append(ACT_GO_LEFT)
+            # Check if the cell is in zone 2 and if it contains a red waste
+            elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
+                temp.append(ACT_GO_LEFT)
+        if right:
+            temp.append(ACT_GO_RIGHT)
+
+        if len(temp) > 0 :
+            # Randomize the order of possible moves
+            random.shuffle(temp)
+            for action in temp:
+                list_possible_actions.append(action)
+
+        list_possible_actions.append(ACT_WAIT)
+        print("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions

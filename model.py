@@ -265,11 +265,16 @@ class Area(Model):
             elif action == ACT_DROP:
                 # Check if there is no waste in the cell
                 if not any(isinstance(obj, Waste) for obj in cellmates):
-                    # Get the transformed waste object and place it on the grid
-                    self.grid.place_agent(transformed_waste, agent_position)
-                    # Update agent knowledge with no transformed waste
-                    agent.knowledge.set_transformed_waste(object_transform_waste = None)
-                    print("Agent", agent.unique_id, "dropped a waste")
+                    if color != "red":
+                        # Get the transformed waste object and place it on the grid
+                        self.grid.place_agent(transformed_waste, agent_position)
+                        # Update agent knowledge with no transformed waste
+                        agent.knowledge.set_transformed_waste(object_transform_waste = None)
+                        print("Agent", agent.unique_id, "dropped a waste")
+                    else:
+                        self.schedule.remove(picked_up_wastes[0])
+                        agent.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+                        print("Red agent", agent.unique_id, "destroyed a waste")
                     break
 
             elif action == ACT_TRANSFORM:
@@ -285,7 +290,6 @@ class Area(Model):
                 self.schedule.add(waste)
 
                 # Remove the former wastes from the scheduler
-                print("AAAAAAAAAA", self.schedule.agents, picked_up_wastes)
                 for waste in picked_up_wastes:
                     self.schedule.remove(waste)
                 # Reset the wastes in the knowledge
