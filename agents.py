@@ -176,8 +176,6 @@ class GreenAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-        self.green_waste_count = 0
-        self.yellow_waste_count = 0  
 
     def deliberate(self):
         list_possible_actions = []
@@ -247,34 +245,83 @@ class GreenAgent(CleaningAgent):
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-        self.yellow_waste_count = 0
-        self.red_waste_count = 0
-
         
     def deliberate(self):
         list_possible_actions = []
 
+        # Get data from knowledge
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        left = self.knowledge.get_left()
+        right = self.knowledge.get_right()
+        up = self.knowledge.get_up()
+        down = self.knowledge.get_down()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+
+        # Check up and down cells for agents
+        temp = []
+        if not up:
+            temp.append(ACT_GO_UP)
+        if not down:
+            temp.append(ACT_GO_DOWN)
+
+        # Check if there is a waste to transform
+        if len(picked_up_wastes) == 2:
+            list_possible_actions.append(ACT_TRANSFORM)
+
+        # Check if agent has a transformed waste and if it can go right or drop it
+        if transformed_waste != None:
+            # Check if cell at the right is in zone 3
+            if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 3:
+                # Check if the current cell does not already contain a waste
+                if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
+                    list_possible_actions.append(ACT_DROP)
+                else :
+                    if len(temp) > 0 :
+                        # Randomize the order of possible moves
+                        random.shuffle(temp)
+                        for action in temp:
+                            list_possible_actions.append(action)
+                    else :
+                        list_possible_actions.append(ACT_WAIT)
+            else:
+                # Move to the right to drop the waste
+                list_possible_actions.append(ACT_GO_RIGHT)
+        
+        # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
+        if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2 and transformed_waste == None:
+            list_possible_actions.append(ACT_PICK_UP)
+
+        # Check for other agent in surronding cells
+        if not left:
+            # Check if cell at the left is in zone 2
+            if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
+                temp.append(ACT_GO_LEFT)
+            # Check if the cell is in zone 1 and if it contains an yellow waste
+            elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
+                temp.append(ACT_GO_LEFT)
+        if not right:
+            # Check if cell at the right is in zone 2 (yellow agent can't go in zone 3)
+            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 3 :
+                temp.append(ACT_GO_RIGHT)
+
+        if len(temp) > 0 :
+            # Randomize the order of possible moves
+            random.shuffle(temp)
+            for action in temp:
+                list_possible_actions.append(action)
+
         list_possible_actions.append(ACT_WAIT)
-
+        print(list_possible_actions)
         return list_possible_actions
-
 
 class RedAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-        self.red_waste_count = 0
 
-        
     def deliberate(self):
         list_possible_actions = []
 
         list_possible_actions.append(ACT_WAIT)
 
         return list_possible_actions
-
-
-
-
-        
-
-
