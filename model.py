@@ -73,7 +73,6 @@ class Area(Model):
 
         # Initialize the grid with the zones
         self.init_grid()
-        print(self.pos_waste_disposal)
 
         # Initialize the waste on the grid
         self.init_wastes()
@@ -137,13 +136,13 @@ class Area(Model):
             
             self.nb_wastes_yellow = rd.randint(
                 max(0, self.nb_wastes_total - 2*number_tiles_per_zone), 
-                min(self.nb_wastes_total - self.nb_wastes_green - 1, number_tiles_per_zone - 1))
+                max(0, min(self.nb_wastes_total - self.nb_wastes_green - 1, number_tiles_per_zone - 1)))
 
             # Check that we have an even number of yellow and green pairs wastes
             if (self.nb_wastes_yellow + self.nb_wastes_green//2) % 2 != 0:
                 self.nb_wastes_yellow += 1
             
-            self.nb_wastes_red = self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow
+            self.nb_wastes_red = max(0, self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow)
             
             # If there are not too many wastes in one single zone
             if self.nb_wastes_red <= number_tiles_per_zone - 1:
@@ -216,6 +215,9 @@ class Area(Model):
                         correct_position = True
                         self.grid.place_agent(ag, (x, y))
 
+                ag.percepts = self.do(
+                    ag, list_possible_actions=[ACT_WAIT])
+
     def step(self):
         self.schedule.step()
         # self.datacollector.collect(self)
@@ -234,14 +236,15 @@ class Area(Model):
         color = DICT_CLASS_COLOR[type(agent)]
 
         transformed_waste = agent.knowledge.get_transformed_waste()
+        picked_up_wastes = agent.knowledge.get_picked_up_wastes()
         print("Agent", agent.unique_id, "is in position", agent_position, "and has the transformed waste", transformed_waste)
+        print("Agent", agent.unique_id, "is in position", agent_position, "and has the picked up wastes", picked_up_wastes)
 
         for action in list_possible_actions:
             if action == ACT_PICK_UP:
                 # Check if the waste is still there
                 has_performed_action = False
                 counter = 0
-                current_waste_count = agent.knowledge.get_nb_wastes()
 
                 while not has_performed_action and counter < len(cellmates):
                     obj = cellmates[counter]
@@ -249,19 +252,20 @@ class Area(Model):
                         # Remove the waste from the grid and update the agent knowledge
                         # We keep the waste in the scheduler to keep trace of it
                         self.grid.remove_agent(obj)
-                        agent.knowledge.set_nb_wastes(nb_wastes = current_waste_count + 1)
+                        picked_up_wastes.append(obj)
+                        agent.knowledge.set_picked_up_wastes(
+                            picked_up_wastes=picked_up_wastes)
                         has_performed_action = True
                     counter += 1
 
                 if has_performed_action:
-                    print("Agent", agent.unique_id, "picked up a waste")
+                    print("Agent", agent.unique_id, "picked up the waste", obj)
                     break
 
             elif action == ACT_DROP:
                 # Check if there is no waste in the cell
                 if not any(isinstance(obj, Waste) for obj in cellmates):
                     # Get the transformed waste object and place it on the grid
-                    transformed_waste = agent.knowledge.get_transformed_waste()
                     self.grid.place_agent(transformed_waste, agent_position)
                     # Update agent knowledge with no transformed waste
                     agent.knowledge.set_transformed_waste(object_transform_waste = None)
@@ -275,10 +279,18 @@ class Area(Model):
                 # If agent is yellow, transform the waste to red
                 elif color == "yellow":
                     waste = Waste(unique_id = self.next_id(), model = self, type_waste="red")
+
                 # Update the agent knowledge with the transformed waste object and create the object in the scheduler
                 agent.knowledge.set_transformed_waste(object_transform_waste = waste)
-                agent.knowledge.set_nb_wastes(nb_wastes = 0)
                 self.schedule.add(waste)
+
+                # Remove the former wastes from the scheduler
+                print("AAAAAAAAAA", self.schedule.agents, picked_up_wastes)
+                for waste in picked_up_wastes:
+                    self.schedule.remove(waste)
+                # Reset the wastes in the knowledge
+                agent.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+
                 print("Agent", agent.unique_id, "transformed a waste")
                 break
 
@@ -319,7 +331,6 @@ class Area(Model):
                     break
 
             elif action == ACT_WAIT:
-                pass
                 print("Agent", agent.unique_id, "waited")   
                 break
 
@@ -331,11 +342,19 @@ class Area(Model):
 
         if agent_position[0] - 1 >= 0:
             percepts[(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))
+        else:
+            percepts[(agent_position[0] - 1, agent_position[1])] = None
         if agent_position[0] + 1 < self.width:
             percepts[(agent_position[0] + 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
+        else:
+            percepts[(agent_position[0] + 1, agent_position[1])] = None
         if agent_position[1] - 1 >= 0:
             percepts[(agent_position[0], agent_position[1] - 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1))
+        else:
+            percepts[(agent_position[0], agent_position[1] - 1)] = None
         if agent_position[1] + 1 < self.height:
             percepts[(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
-        
+        else :
+            percepts[(agent_position[0], agent_position[1] + 1)] = None
+            
         return percepts

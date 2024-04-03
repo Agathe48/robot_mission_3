@@ -58,13 +58,13 @@ class CleaningAgent(Agent):
         self.knowledge = AgentKnowledge(
             grid_knowledge=grid_knowledge,
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
-        print(self.knowledge)
         self.percepts = {}
 
     def step(self):
         self.update()
         list_possible_actions = self.deliberate()
-        self.percepts = self.model.do(self, list_possible_actions=list_possible_actions)
+        self.percepts = self.model.do(
+            self, list_possible_actions=list_possible_actions)
 
     # Mouvement
     def random_movement(self):
@@ -77,7 +77,6 @@ class CleaningAgent(Agent):
                 self.model.grid.move_agent(self, (new_x, new_y))
                 break
         
-
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         x, y = self.pos
         x_tile, y_tile = pos
@@ -85,14 +84,14 @@ class CleaningAgent(Agent):
             return "right"
         if x_tile < x:
             return "left"
-        if y_tile > y:
-            return "down"
         if y_tile < y:
+            return "down"
+        if y_tile > y:
             return "up"
 
     def update(self):
         # print("Knowledge before of Agent", self.unique_id, self.knowledge)
-        # print("Percepts of Agent", self.unique_id, self.percepts)
+        print("Percepts of Agent", self.unique_id, self.percepts)
 
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_boolean_knowledge = {
@@ -104,46 +103,44 @@ class CleaningAgent(Agent):
 
         for key in self.percepts:
             list_objects_tile = self.percepts[key]
-            if len(list_objects_tile) == 0:
-                grid_knowledge[key[0]][key[1]] = 0
-            for element in list_objects_tile:
+            direction = self.convert_pos_to_tile(key)
 
-                if type(element) == Waste: 
-                    if element.type_waste == "green":
-                        grid_knowledge[key[0]][key[1]] = 1
-                    elif element.type_waste == "yellow":
-                        grid_knowledge[key[0]][key[1]] = 2
-                    elif element.type_waste == "red":
-                        grid_knowledge[key[0]][key[1]] = 3
+            if not list_objects_tile is None:
+                # When there is no Waste or WasteDisposalZone, set to 0
+                if not any(isinstance(obj, Waste) or isinstance(obj, WasteDisposalZone) for obj in list_objects_tile):
+                    grid_knowledge[key[0]][key[1]] = 0
 
-                if type(element) == WasteDisposalZone:
-                    grid_knowledge[key[0]][key[1]] = 4
+                for element in list_objects_tile:
+                    if type(element) == Waste: 
+                        if element.type_waste == "green":
+                            grid_knowledge[key[0]][key[1]] = 1
+                        elif element.type_waste == "yellow":
+                            grid_knowledge[key[0]][key[1]] = 2
+                        elif element.type_waste == "red":
+                            grid_knowledge[key[0]][key[1]] = 3
 
-                if type(element) in [GreenAgent, YellowAgent, RedAgent]:
-                    print("Youyou")
-                    direction = self.convert_pos_to_tile(key)
-                    print("DIRECTION", direction)
-                                    
-                    if direction == "left":
-                        dict_boolean_knowledge["left"] = True
-                        self.knowledge.set_left(boolean_left = True)
-                    if direction == "right":
-                        dict_boolean_knowledge["right"] = True
-                        self.knowledge.set_right(boolean_right = True)
-                    if direction == "up":
-                        dict_boolean_knowledge["up"] = True
-                        self.knowledge.set_up(boolean_up = True)
-                    if direction == "down":
-                        dict_boolean_knowledge["down"] = True
-                        self.knowledge.set_down(boolean_down = True)
+                    if type(element) == WasteDisposalZone:
+                        grid_knowledge[key[0]][key[1]] = 4
 
-                if type(element) == Radioactivity:
-                    if element.zone == "z1":
-                        grid_radioactivity[key[0]][key[1]] = 1
-                    elif element.zone == "z2":
-                        grid_radioactivity[key[0]][key[1]] = 2
-                    elif element.zone == "z3":
-                        grid_radioactivity[key[0]][key[1]] = 3
+                    if type(element) in [GreenAgent, YellowAgent, RedAgent]:
+                        dict_boolean_knowledge = self.update_positions_around_agent(
+                            direction=direction,
+                            dict_boolean_knowledge=dict_boolean_knowledge
+                        )
+
+                    if type(element) == Radioactivity:
+                        if element.zone == "z1":
+                            grid_radioactivity[key[0]][key[1]] = 1
+                        elif element.zone == "z2":
+                            grid_radioactivity[key[0]][key[1]] = 2
+                        elif element.zone == "z3":
+                            grid_radioactivity[key[0]][key[1]] = 3
+
+            else:
+                dict_boolean_knowledge = self.update_positions_around_agent(
+                    direction=direction,
+                    dict_boolean_knowledge=dict_boolean_knowledge
+                )
 
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
 
@@ -160,6 +157,21 @@ class CleaningAgent(Agent):
 
         # print("Knowledge after of Agent", self.unique_id, self.knowledge)
 
+    def update_positions_around_agent(self, direction, dict_boolean_knowledge):
+        if direction == "left":
+            dict_boolean_knowledge["left"] = True
+            self.knowledge.set_left(boolean_left = True)
+        if direction == "right":
+            dict_boolean_knowledge["right"] = True
+            self.knowledge.set_right(boolean_right = True)
+        if direction == "up":
+            dict_boolean_knowledge["up"] = True
+            self.knowledge.set_up(boolean_up = True)
+        if direction == "down":
+            dict_boolean_knowledge["down"] = True
+            self.knowledge.set_down(boolean_down = True)
+        return dict_boolean_knowledge
+
 class GreenAgent(CleaningAgent):
 
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -167,7 +179,6 @@ class GreenAgent(CleaningAgent):
         self.green_waste_count = 0
         self.yellow_waste_count = 0  
 
-        
     def deliberate(self):
         list_possible_actions = []
 
@@ -178,26 +189,20 @@ class GreenAgent(CleaningAgent):
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
-        nb_wastes = self.knowledge.get_nb_wastes()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
         # Check up and down cells for agents
-        temp= []
+        temp = []
         if not up:
-            # Check if the agent is not already at the top of the grid
-            if self.pos[1] != GRID_HEIGHT-1:
-                temp.append(ACT_GO_UP)
+            temp.append(ACT_GO_UP)
         if not down:
-            # Check if the agent is not already at the bottom of the grid
-            if self.pos[1] != 0:
-                temp.append(ACT_GO_DOWN)
+            temp.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
-        print("youyou1", self.knowledge.get_nb_wastes())
-        if self.knowledge.get_nb_wastes() == 2:
+        if len(picked_up_wastes) == 2:
             list_possible_actions.append(ACT_TRANSFORM)
 
         # Check if agent has a transformed waste and if it can go right or drop it
-        print("YOUYOU ", transformed_waste)
         if transformed_waste != None:
             # Check if cell at the right is in zone 2
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
@@ -217,13 +222,11 @@ class GreenAgent(CleaningAgent):
                 list_possible_actions.append(ACT_GO_RIGHT)
         
         # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
-        if nb_wastes <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
+        if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
             list_possible_actions.append(ACT_PICK_UP)
 
         # Check for other agent in surronding cells
         if not left :
-            # Check if the agent is not already at the left of the grid
-            if self.pos[0] != 0:
                 temp.append(ACT_GO_LEFT)
         if not right:
             # Check if cell at the right is in zone 2 (green agent can't go in zone 2)

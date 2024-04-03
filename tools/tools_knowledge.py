@@ -22,10 +22,10 @@ import numpy as np
 
 class AgentKnowledge:
 
-    def __init__(self, grid_knowledge, grid_radioactivity, nb_wastes=0):
+    def __init__(self, grid_knowledge, grid_radioactivity):
         self.grid_knowledge = grid_knowledge
         self.grid_radioactivity = grid_radioactivity
-        self.nb_wastes = nb_wastes
+        self.picked_up_wastes = []
         self.transformed_waste = None
         self.left = False
         self.right = False
@@ -35,8 +35,8 @@ class AgentKnowledge:
     def get_transformed_waste(self):
         return self.transformed_waste
 
-    def get_nb_wastes(self):
-        return self.nb_wastes
+    def get_picked_up_wastes(self):
+        return self.picked_up_wastes
 
     def get_grids(self):
         return self.grid_knowledge, self.grid_radioactivity
@@ -56,8 +56,8 @@ class AgentKnowledge:
     def set_transformed_waste(self, object_transform_waste):
         self.transformed_waste = object_transform_waste
 
-    def set_nb_wastes(self, nb_wastes):
-        self.nb_wastes  = nb_wastes
+    def set_picked_up_wastes(self, picked_up_wastes):
+        self.picked_up_wastes = picked_up_wastes
     
     def set_grids(self, grid_knowledge, grid_radioactivity):
         self.grid_knowledge = grid_knowledge
@@ -76,5 +76,5 @@ class AgentKnowledge:
         self.down = boolean_down
 
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, nb_wastes={self.nb_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down})"
+        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down})"
         
