@@ -219,7 +219,12 @@ class Area(Model):
                     ag, list_possible_actions=[ACT_WAIT])
 
     def step(self):
-        self.schedule.step()
+        # if there is no waste left, the model stops
+        if any(type(agent) == Waste for agent in self.schedule.agents):
+            self.schedule.step()
+        else:
+            print("END OF THE SIMULATION")
+            return True
         # self.datacollector.collect(self)
         
     def run_model(self, step_count=100):

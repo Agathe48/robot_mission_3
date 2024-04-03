@@ -15,6 +15,21 @@ Group 3:
 class AgentKnowledge:
 
     def __init__(self, grid_knowledge, grid_radioactivity):
+        """
+        Initialization of the agent's knowledge.
+
+        Parameters
+        ----------
+        grid_knowledge : np.ndarray
+            Represents the agent's knowledge of the grid.
+
+        grid_radioactivity : np.ndarray
+            Represents the agent's knowledge of the grid's radioactivity. 
+
+        Returns
+        -------
+        None
+        """
         self.grid_knowledge = grid_knowledge
         self.grid_radioactivity = grid_radioactivity
         self.picked_up_wastes = []
@@ -25,21 +40,87 @@ class AgentKnowledge:
         self.down = True
 
     def get_transformed_waste(self):
+        """
+        Return the transformed wastes if it is possible.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        Waste | None
+        """
         return self.transformed_waste
 
     def get_picked_up_wastes(self):
+        """
+        Return the list of the picked up wastes.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list[Waste]
+        """
         return self.picked_up_wastes
 
     def get_grids(self):
+        """
+        Return the grid_knowledge and the grid_radioactivity.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        np.ndarray, np.ndarray
+        """
         return self.grid_knowledge, self.grid_radioactivity
     
     def get_left(self):
+        """
+        Return the boolean according if the agent can go left.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
         return self.left
     
     def get_right(self):
+        """
+        Return the boolean according if the agent can go right.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
         return self.right
     
     def get_up(self):
+        """
+        Return the boolean according if the agent can go up.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
         return self.up
     
     def get_down(self):
@@ -62,7 +143,7 @@ class AgentKnowledge:
 
         Parameters
         ----------
-        object_transform_waste: Waste
+        object_transform_waste: Waste | None
             The transformed waste.
 
         Returns
@@ -72,22 +153,97 @@ class AgentKnowledge:
         self.transformed_waste = object_transform_waste
 
     def set_picked_up_wastes(self, picked_up_wastes):
+        """
+        Set picked up waste in knowledge.
+
+        Parameters
+        ----------
+        picked_up_wastes: Waste
+            The picked up waste.
+
+        Returns
+        -------
+        None
+        """
         self.picked_up_wastes = picked_up_wastes
     
     def set_grids(self, grid_knowledge, grid_radioactivity):
+        """
+        Set grid_knowledge and grid_radioactivity in knowledge.
+
+        Parameters
+        ----------
+        grid_knowledge : np.ndarray
+            Represents the agent's knowledge of the grid.
+
+        grid_radioactivity : np.ndarray
+            Represents the agent's knowledge of the grid's radioactivity.
+
+        Returns
+        -------
+        None
+        """
         self.grid_knowledge = grid_knowledge
         self.grid_radioactivity = grid_radioactivity
 
     def set_left(self, boolean_left):
+        """
+        Set boolean regarding the left action in knowledge.
+
+        Parameters
+        ----------
+        boolean_left : bool
+            Boolean according if the agent can go left.
+
+        Returns
+        -------
+        None
+        """
         self.left = boolean_left
 
     def set_right(self, boolean_right):
+        """
+        Set boolean regarding the right action in knowledge.
+
+        Parameters
+        ----------
+        boolean_right : bool
+            Boolean according if the agent can go right.
+
+        Returns
+        -------
+        None
+        """
         self.right = boolean_right
     
     def set_up(self, boolean_up):
+        """
+        Set boolean regarding the up action in knowledge.
+
+        Parameters
+        ----------
+        boolean_up : bool
+            Boolean according if the agent can go up.
+
+        Returns
+        -------
+        None
+        """
         self.up = boolean_up
 
     def set_down(self, boolean_down):
+        """
+        Set boolean regarding the down action in knowledge.
+
+        Parameters
+        ----------
+        boolean_down : bool
+            Boolean according if the agent can go down.
+
+        Returns
+        -------
+        None
+        """
         self.down = boolean_down
 
     def __str__(self) -> str:

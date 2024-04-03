@@ -24,6 +24,14 @@ from model import (
 #############
 
 model = Area(
-    dict_nb_agents={"green": 1, "yellow": 1, "red": 1}
+    dict_nb_agents={"green": 2, "yellow": 2, "red": 2}
 )
-model.run_model(step_count = 1000)
+
+counter_step = 0
+while True:
+    bool_exit = model.step()
+    counter_step += 1
+    if bool_exit:
+        break
+
+print("The simulation has stopped and has lasted for", counter_step, "steps.")

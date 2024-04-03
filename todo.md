@@ -9,4 +9,6 @@
     self.nb_wastes_yellow = rd.randint(
   File "C:\Software\Dev\Python_396\lib\random.py", line 338, in randint
     return self.randrange(a, b+1)
-- [ ] dans le mouvement, favoriser la direction où il y a un déchet
+- [x] dans le mouvement, favoriser la direction où il y a un déchet
+- [ ] dans le mouvement, faire en sorte que l'agent vert n'aille pas sur un déchet jaune, que l'agent jaune n'aille pas sur un déchet rouge (à coordonner avec la tache suivante)
+- [ ] donner un mouvement plus intelligent aux agents (quadrillage?)

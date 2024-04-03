@@ -181,11 +181,11 @@ class GreenAgent(CleaningAgent):
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
         # Check up and down available directions
-        temp = []
+        list_available_act_directions = []
         if up:
-            temp.append(ACT_GO_UP)
+            list_available_act_directions.append(ACT_GO_UP)
         if down:
-            temp.append(ACT_GO_DOWN)
+            list_available_act_directions.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
         if len(picked_up_wastes) == 2:
@@ -199,10 +199,10 @@ class GreenAgent(CleaningAgent):
                 if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
                     list_possible_actions.append(ACT_DROP)
                 else:
-                    if len(temp) > 0:
+                    if len(list_available_act_directions) > 0:
                         # Randomize the order of possible moves
-                        random.shuffle(temp)
-                        for action in temp:
+                        random.shuffle(list_available_act_directions)
+                        for action in list_available_act_directions:
                             list_possible_actions.append(action)
                     else :
                         list_possible_actions.append(ACT_WAIT)
@@ -216,22 +216,47 @@ class GreenAgent(CleaningAgent):
 
         # Check for other agent in surronding cells
         if left:
-                temp.append(ACT_GO_LEFT)
+            list_available_act_directions.append(ACT_GO_LEFT)
         if right:
             # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2:
-                temp.append(ACT_GO_RIGHT)
+                list_available_act_directions.append(ACT_GO_RIGHT)
 
-        if len(temp) > 0 :
+        if len(list_available_act_directions) > 0:
+            list_best_directions = []
+            for act_direction in list_available_act_directions:
+                # Check if there is a waste in the right cell and favor this direction
+                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 1:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the left cell and favor this direction
+                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the up cell and favor this direction
+                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 1:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the down cell and favor this direction
+                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 1:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+
+            # Randomize the order of possible best moves
+            if len(list_best_directions) > 0:
+                random.shuffle(list_best_directions)
+                for action in list_best_directions:
+                    list_possible_actions.append(action)
+
             # Randomize the order of possible moves
-            random.shuffle(temp)
-            for action in temp:
-                list_possible_actions.append(action)
+            if len(list_available_act_directions) > 0:
+                random.shuffle(list_available_act_directions)
+                for action in list_available_act_directions:
+                    list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
         print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
-   
 
 class YellowAgent(CleaningAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -250,11 +275,11 @@ class YellowAgent(CleaningAgent):
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
         # Check up and down cells for agents
-        temp = []
+        list_available_act_directions = []
         if up:
-            temp.append(ACT_GO_UP)
+            list_available_act_directions.append(ACT_GO_UP)
         if down:
-            temp.append(ACT_GO_DOWN)
+            list_available_act_directions.append(ACT_GO_DOWN)
 
         # Check if there is a waste to transform
         if len(picked_up_wastes) == 2:
@@ -268,10 +293,10 @@ class YellowAgent(CleaningAgent):
                 if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
                     list_possible_actions.append(ACT_DROP)
                 else :
-                    if len(temp) > 0 :
+                    if len(list_available_act_directions) > 0 :
                         # Randomize the order of possible moves
-                        random.shuffle(temp)
-                        for action in temp:
+                        random.shuffle(list_available_act_directions)
+                        for action in list_available_act_directions:
                             list_possible_actions.append(action)
                     else :
                         list_possible_actions.append(ACT_WAIT)
@@ -287,20 +312,46 @@ class YellowAgent(CleaningAgent):
         if left:
             # Check if cell at the left is in zone 2
             if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
-                temp.append(ACT_GO_LEFT)
+                list_available_act_directions.append(ACT_GO_LEFT)
             # Check if the cell is in zone 1 and if it contains an yellow waste
             elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
-                temp.append(ACT_GO_LEFT)
+                list_available_act_directions.append(ACT_GO_LEFT)
         if right:
             # Check if cell at the right is in zone 2 (yellow agent can't go in zone 3)
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 3 :
-                temp.append(ACT_GO_RIGHT)
+                list_available_act_directions.append(ACT_GO_RIGHT)
 
-        if len(temp) > 0 :
+        if len(list_available_act_directions) > 0:
+            list_best_directions = []
+            for act_direction in list_available_act_directions:
+                # Check if there is a waste in the right cell and favor this direction
+                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 2:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the left cell and favor this direction
+                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the up cell and favor this direction
+                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 2:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the down cell and favor this direction
+                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 2:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+
+            # Randomize the order of possible best moves
+            if len(list_best_directions) > 0:
+                random.shuffle(list_best_directions)
+                for action in list_best_directions:
+                    list_possible_actions.append(action)
+
             # Randomize the order of possible moves
-            random.shuffle(temp)
-            for action in temp:
-                list_possible_actions.append(action)
+            if len(list_available_act_directions) > 0:
+                random.shuffle(list_available_act_directions)
+                for action in list_available_act_directions:
+                    list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
         print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
@@ -322,11 +373,11 @@ class RedAgent(CleaningAgent):
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
 
         # Check up and down cells for agents
-        temp = []
+        list_available_act_directions = []
         if up:
-            temp.append(ACT_GO_UP)
+            list_available_act_directions.append(ACT_GO_UP)
         if down:
-            temp.append(ACT_GO_DOWN)
+            list_available_act_directions.append(ACT_GO_DOWN)
         
         # If we picked up a waste, go to waste disposal zone to drop it
         if len(picked_up_wastes) == 1:
@@ -361,18 +412,44 @@ class RedAgent(CleaningAgent):
         if left:
             # Check if cell at the left is in zone 3
             if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 2:
-                temp.append(ACT_GO_LEFT)
+                list_available_act_directions.append(ACT_GO_LEFT)
             # Check if the cell is in zone 2 and if it contains a red waste
             elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
-                temp.append(ACT_GO_LEFT)
+                list_available_act_directions.append(ACT_GO_LEFT)
         if right:
-            temp.append(ACT_GO_RIGHT)
+            list_available_act_directions.append(ACT_GO_RIGHT)
 
-        if len(temp) > 0 :
+        if len(list_available_act_directions) > 0:
+            list_best_directions = []
+            for act_direction in list_available_act_directions:
+                # Check if there is a waste in the right cell and favor this direction
+                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 3:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the left cell and favor this direction
+                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the up cell and favor this direction
+                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 3:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+                # Check if there is a waste in the down cell and favor this direction
+                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 3:
+                    list_best_directions.append(act_direction)
+                    list_available_act_directions.remove(act_direction)
+
+            # Randomize the order of possible best moves
+            if len(list_best_directions) > 0:
+                random.shuffle(list_best_directions)
+                for action in list_best_directions:
+                    list_possible_actions.append(action)
+
             # Randomize the order of possible moves
-            random.shuffle(temp)
-            for action in temp:
-                list_possible_actions.append(action)
+            if len(list_available_act_directions) > 0:
+                random.shuffle(list_available_act_directions)
+                for action in list_available_act_directions:
+                    list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
         print("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)

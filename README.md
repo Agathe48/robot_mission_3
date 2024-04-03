@@ -22,7 +22,6 @@ The project has been realized by the group 3 composed of:
     - [Our Agents](#our-agents)
         - [The Agent's knowledge](#the-agents-knowledge)
         - [The CleaningAgent](#the-cleaningagent)
-            - [The update method](#the-update-method)
         - [The GreenAgent](#the-greenagent)
             - [The deliberate method](#the-deliberate-method)
         - [The YellowAgent](#the-yellowagent)
@@ -108,14 +107,14 @@ The `WasteDisposalZone` object represents a cell in the last right column of the
 
 ## Our Agents
 
-TODO
+The implementation of our different cleaning agents is in the `agents.py` file.
 
 ### The agent's knowledge
 
 The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. This class is defined in `toolst/tools_knowledge.py`. It has the following attributes:
 
 - `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone.
-- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the zone.
+- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the different zones.
 - `picked_up_wastes`: Represents a list of the Waste agent that our cleaning agent has picked up.
 - `transformed_waste`: Represents whether the agent has transformed waste. Its values are `None` or the new transformed waste object.
 - `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move is the corresponding direction. It depends on the presence of other agent in the agent's surrounding cells and on the size of the grid.
@@ -124,23 +123,28 @@ The class provides methods to get and set these attributes. The __str__ method p
 
 ### The CleaningAgent
 
-The `CleaningAgent` class inherit from the Mesa `Agent` class and we used it to define common behaviors for the Green, Yellow and Red cleaning agents.
+The `CleaningAgent` class inherit from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update` and `update_positions_around_agent`.
 
-#### The update method
+The `step` method implements the procedural loop of our agent. It begins by updating the agent's knowledge using the `update` method. Next, the `deliberate` method is called to return a list of possible actions. Finally, the `do` method is invoked in the environment to execute the chosen action.
 
-TODO
+The `convert_pos_to_tile` method takes as input a position and returns a direction (`left`, `right`, `up` or `down`) based on the agent's current location relative to the input position.
+
+The `update` method updates each attributes of the agent's knowledge according to the percept.
+
+The `update_positions_around_agent` method is used in the `update` to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
+
 
 ### The GreenAgent
 
-TODO
+The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 #### The deliberate method
 
-TODO
+The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. 
 
 ### The YellowAgent
 
-TODO
+The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the yellow agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 #### The deliberate method
 
@@ -148,7 +152,7 @@ TODO
 
 ### The RedAgent
 
-TODO
+The `RedAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the red agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 #### The deliberate method
 
@@ -163,7 +167,7 @@ TODO
 
 ## The scheduler
 
-TODO
+A custom class of random scheduler `CustomRandomScheduler` has been defined in the file `schedule.py`. This new class inherits from the base class of *mesa* `BaseScheduler`, but its `step()` function is slightly modified to activate the cleaning agents in a random order, according to their type. More precisely, the order of activation of the types of agents is random (random between green, yellow and red), and for each type, the order of activation of agents is random.
 
 ## The visualization
 
