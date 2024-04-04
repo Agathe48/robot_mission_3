@@ -199,11 +199,21 @@ In `init_wastes` we create all wastes. To do so, we first define the total numbe
 
 In `init_agents` create and place the cleaning agent according to their colors and respective areas. We choose to initialy place cleaning agent in their color zone. We also do not allow two agents to be in the same cell, this will stay true during the simulations.
 
-TODO : step + run_model + do
+The `step` method does the scheduler step while there is still waste to clean up, otherwise the simulation will terminate.
 
- 
-Moreover, the model is in charge of the execution of actions, with a method called do. This method should have as arguments the agent performing the action and the description of the action. It should check whether the action is feasible (each action has requirements, and even if the agent believes its action is feasible, it might be mistaken), then perform the changes entailed by the action.
+The `run_model` method executes the `step` method for a given number of steps.
 
+The `do` method takes as arguments the agent performing the action and the list of all possible actions. It iterates through this list, checking if the current action is feasible. If it is feasible, the method breaks, ensuring that only one action is performed. If the current action is not feasible, the method moves on to the next action in the list. When an action is performed using the `do` method, the method also executes the changes associated with that action:
+- `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a green waste, if the agent is a `YellowAgent` it creates a red waste. It then set the agent's knowledge (trasnformed_waste to the current waste) and add it to the scheduler. It will also remove from the scheduler the two waste from the agent's knowledge picked_up_waste and the set up the picked_up_waste as an empty list.
+- `ACT_PICK_UP`, it removes the waste agent from the grid and update the agent's knowledge picked_up_waste with the new waste.
+- `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be place on the grid and the agent's knowledge transformed_waste will be set back to None. If  the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler and set the agent's knowledge picked_up_waste back to an empty list.
+- `ACT_GO_LEFT`, it will check for other agent in the left cell and move the agent if it is empty.
+- `ACT_GO_RIGHT`, it will check for other agent in the right cell and move the agent if it is empty.
+- `ACT_GO_UP`, it will check for other agent in the upper cell and move the agent if it is empty.
+- `ACT_GO_DOWN`, it will check for other agent in the lower cell and move the agent if it is empty.
+- `ACT_WAIT`, it waits.
+
+The `do` method returns the percepts. It is a dictionary of four keys (left, right, up and down). It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). 
 
 ## The scheduler
 
