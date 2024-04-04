@@ -73,6 +73,9 @@ pip install -r requirements.txt
 
 ### Launch the code
 
+The grid size and the waste density are defined and can be modified in `tools/tools_constants.py`.
+
+
 The main code can be launched by running the following command:
 
 ```bash
@@ -93,7 +96,7 @@ Our objects are agent types without any behaviour, and they are defined in `obje
 
 The `Radioactivity` object represents the radioactivity of an area. It has two attributes:
 - `zone`, which defines the area it belongs to and can only take three values ("z1", "z2", "z3")
-- `radioactivity_level`, which defines its level of radioactivity. It is a random number comprised between 0 and 0.33 for z1, 0.33 and 0.66 for z2 and 0.66 and 1 pour z3.
+- `radioactivity_level`, which defines its level of radioactivity. It is a random number comprised between 0 and 0.33 for z1, 0.33 and 0.66 for z2 and 0.66 and 1 for z3.
 
 The `Radioactivity` object is placed in each cell of the grid to define our different areas. Its `zone` attribute then is used by our agents to determine which zone they are in.
 
@@ -111,19 +114,19 @@ The implementation of our different cleaning agents is in the `agents.py` file.
 
 ### The agent's knowledge
 
-The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. This class is defined in `toolst/tools_knowledge.py`. It has the following attributes:
+The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. This class is defined in `tools/tools_knowledge.py`. It has the following attributes:
 
-- `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone.
-- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the different zones.
-- `picked_up_wastes`: Represents a list of the Waste agent that our cleaning agent has picked up.
+- `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone. It is a numpy array with the same dimensions as the grid.
+- `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the different zones. It is a numpy array with the same dimensions as the grid.
+- `picked_up_wastes`: Represents a list of the Waste agents that our cleaning agent has picked up.
 - `transformed_waste`: Represents whether the agent has transformed waste. Its values are `None` or the new transformed waste object.
-- `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move is the corresponding direction. It depends on the presence of other agent in the agent's surrounding cells and on the size of the grid.
+- `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move in the corresponding direction. It depends on the presence of an other agent in the agent's surrounding cells and on the limits of the grid.
 
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
 ### The CleaningAgent
 
-The `CleaningAgent` class inherit from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update` and `update_positions_around_agent`.
+The `CleaningAgent` class inherits from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update` and `update_positions_around_agent`.
 
 The `step` method implements the procedural loop of our agent. It begins by updating the agent's knowledge using the `update` method. Next, the `deliberate` method is called to return a list of possible actions. Finally, the `do` method is invoked in the environment to execute the chosen action.
 
@@ -131,7 +134,7 @@ The `convert_pos_to_tile` method takes as input a position and returns a directi
 
 The `update` method updates each attributes of the agent's knowledge according to the percept.
 
-The `update_positions_around_agent` method is used in the `update` to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
+The `update_positions_around_agent` method is used in the `update` method to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
 
 
 ### The GreenAgent
@@ -140,9 +143,9 @@ The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented 
 
 #### The deliberate method
 
-The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first one which can be executed.
+The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first of the list which can be executed.
 
-The actions has been defined in `tools_constants` by strings. Here is the full list:
+The actions have been defined in `tools_constants` by strings. Here is the full list:
 - `ACT_TRANSFORM`, to transform two wastes in a waste from the superior color
 - `ACT_PICK_UP`, to pick up a waste
 - `ACT_DROP`, to drop a tranformed waste
@@ -152,13 +155,13 @@ The actions has been defined in `tools_constants` by strings. Here is the full l
 - `ACT_GO_DOWN`, to go down
 - `ACT_WAIT`, to wait
 
-If the agent possesses two green wastes, the top priority action is to transform the waste.
+If the agent possesses two green wastes, the top priority action is to transform them.
 
-If the agent possesses a yellow transformed waste, he will ask to go right until his right tile is on zone 2, ie the border. When he is on the border, he will ask to drop his waste if the current tile is empty, otherwise he will go up or down randomly, if nothing is blocking his way (thanks to the attributes`up` and `down` from knowledge). 
+If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, ie the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes`up` and `down` from knowledge). 
 
-If the agent is on a tile with a green waste and if he doesn't have two wastes or a transformed waste, he will ask to perform the pick up action. If he can't move or drop his waste, he will wait.
+If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick up action. If it can't move or drop its waste, it will wait.
 
-If the agent has less than two picked up waste, no transformed waste and is on a cell containing a waste, then he will pick up the waste.
+If the agent has less than two picked up wastes, no transformed waste and is on a cell containing a waste, then it will pick up the waste.
 
 Otherwise, we will add moving to differents directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
 
@@ -182,38 +185,37 @@ This method's behavior is still quite similar to the tow other agents' deliberat
 
 ## Our Model
 
-The implementation of our model is in the `model.py` file. The `RobotMission` class inherit from the Mesa `Model` class and defines the RobotMission model itself, and uses the agents, the
-scheduler and the environment. 
+The implementation of our model is in the `model.py` file. The `RobotMission` class inherits from the Mesa `Model` class and defines the RobotMission model itself, and uses the agents, the scheduler and the environment. 
 
-We began by defining several methods to set up the grid and all agents: `init_grid`, `init_wastes` and `init_agents`.
+We begin by defining several methods to set up the grid and all agents: `init_grid`, `init_wastes` and `init_agents`.
 
-In `init_grid` we established the position of the waste disposal zone and created  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we created a `WasteDisposalZone` object.
+In `init_grid` we establish the position of the waste disposal zone and created  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we created a `WasteDisposalZone` object.
 
-In `init_wastes` we create all wastes. To do so, we first define the total number of waste in the grid (grid height * grid width * waste density, the density is set in `tools/tools_constants.py`) and the number of cells per zone (grid width/3 * grid height). We then randomly place green, yellow and red wastes in their respective zones. However, we do not initially place a red waste in the waste disposal zone.
+In `init_wastes` we create all wastes. To do so, we first define the total number of wastes in the grid (grid height * grid width * waste density, the density is set in `tools/tools_constants.py`) and the number of cells per zone (grid width/3 * grid height). We then randomly place green, yellow and red wastes in their respective zones. However, we do not initially place a red waste in the waste disposal zone.
 
-- The number of green wastes is randomly determined within a range. The upper bound of this range is the minimum between the number of cells in the green area and the total number of wastes. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the other two areas do not have sufficient space to accommodate all remaining wastes. Then we check if that number is even so that we can clean the whole map. Otherwise we add or substract one green waste.
+- The number of green wastes is randomly determined within a range. The upper bound of this range is the minimum between the number of cells in the green area and the total number of wastes. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that wastes are placed in the zone if the other two areas do not have sufficient space to accommodate all remaining wastes. Then we check if that number is even so that we can clean the whole map. Otherwise we add or substract one green waste.
 
 - The number of yellow wastes is randomly determined within a range. The upper bound of this range is the maximum between 0 and the minimum between the remaining wastes and the number of cells in the zone. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the red area does not have sufficient space to accommodate all remaining wastes. Then we check if that number plus the number of green wastes' pairs is even, otherwise we add or substract one yellow waste.
 
 - The number of red wastes is determined by the number of remaining wastes to place.
 
-In `init_agents` create and place the cleaning agent according to their colors and respective areas. We choose to initialy place cleaning agent in their color zone. We also do not allow two agents to be in the same cell, this will stay true during the simulations.
+In `init_agents` we create and place the cleaning agent according to their colors and respective areas. We choose to initially place cleaning agent in their color zone. We also do not allow two agents to be in the same cell, this will stay true during the simulations.
 
-The `step` method does the scheduler step while there is still waste to clean up, otherwise the simulation will terminate.
+The `step` method does the scheduler step while there are still wastes to clean up, otherwise the simulation will terminate.
 
-The `run_model` method executes the `step` method for a given number of steps.
+The `run_model` method executes the `step` method for a given number of sSteps.
 
 The `do` method takes as arguments the agent performing the action and the list of all possible actions. It iterates through this list, checking if the current action is feasible. If it is feasible, the method breaks, ensuring that only one action is performed. If the current action is not feasible, the method moves on to the next action in the list. When an action is performed using the `do` method, the method also executes the changes associated with that action:
 - `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a green waste, if the agent is a `YellowAgent` it creates a red waste. It then set the agent's knowledge (trasnformed_waste to the current waste) and add it to the scheduler. It will also remove from the scheduler the two waste from the agent's knowledge picked_up_waste and the set up the picked_up_waste as an empty list.
-- `ACT_PICK_UP`, it removes the waste agent from the grid and update the agent's knowledge picked_up_waste with the new waste.
-- `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be place on the grid and the agent's knowledge transformed_waste will be set back to None. If  the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler and set the agent's knowledge picked_up_waste back to an empty list.
-- `ACT_GO_LEFT`, it will check for other agent in the left cell and move the agent if it is empty.
-- `ACT_GO_RIGHT`, it will check for other agent in the right cell and move the agent if it is empty.
-- `ACT_GO_UP`, it will check for other agent in the upper cell and move the agent if it is empty.
-- `ACT_GO_DOWN`, it will check for other agent in the lower cell and move the agent if it is empty.
+- `ACT_PICK_UP`, it removes the waste agent from the grid and updates the agent's knowledge picked_up_waste with the new waste.
+- `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be placed on the grid and the agent's knowledge transformed_waste will be set back to None. If  the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler and set the agent's knowledge picked_up_waste back to an empty list.
+- `ACT_GO_LEFT`, it will check for another agent in the left cell and move the agent if it is empty.
+- `ACT_GO_RIGHT`, it will check for another agent in the right cell and move the agent if it is empty.
+- `ACT_GO_UP`, it will check for another agent in the upper cell and move the agent if it is empty.
+- `ACT_GO_DOWN`, it will check for another agent in the lower cell and move the agent if it is empty.
 - `ACT_WAIT`, it waits.
 
-The `do` method returns the percepts. It is a dictionary of four keys (left, right, up and down). It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). 
+The `do` method returns the percepts. It is a dictionary of four keys (left, right, up and down). It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). This percepts is created after an action is performed to take into account the possible new position of the agent. 
 
 ## The scheduler
 
