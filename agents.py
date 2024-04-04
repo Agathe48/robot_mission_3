@@ -15,7 +15,7 @@ Group 3:
 ### Python imports ###
 
 import numpy as np
-from typing import Literal
+from typing import Literal 
 import random
 
 ### Mesa imports ###
@@ -47,8 +47,29 @@ from objects import (
 ##############
 
 class CleaningAgent(Agent):
-
+    
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Agent object with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
         super().__init__(unique_id, model)
         self.grid_size = grid_size
         # Initialise waste diposal zone position in knowledge
@@ -60,6 +81,17 @@ class CleaningAgent(Agent):
         self.percepts = {}
 
     def step(self):
+        """
+        Performs a step in the agent's decision-making process.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         # Update agent's knowledge
         self.update()
         # Determine all possible actions based on current knowledge
@@ -69,6 +101,20 @@ class CleaningAgent(Agent):
             self, list_possible_actions=list_possible_actions)
       
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
+        """
+        Converts a position to a directional tile.
+
+        Parameters
+        ----------
+        pos : tuple
+            A tuple representing the position to be converted (x, y).
+
+        Returns
+        -------
+        str
+            A string representing the direction ('right', 'left', 'down', 'up').
+        """
+
         x, y = self.pos
         x_tile, y_tile = pos
         if x_tile > x:
@@ -81,7 +127,18 @@ class CleaningAgent(Agent):
             return "up"
 
     def update(self):
-        # print("Knowledge before of Agent", self.unique_id, self.knowledge)
+        """
+        Updates the agent's knowledge based on its percepts
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None 
+        """
+
         print("Percepts of Agent", self.unique_id, self.percepts)
 
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
@@ -149,6 +206,22 @@ class CleaningAgent(Agent):
         # print("Knowledge after of Agent", self.unique_id, self.knowledge)
 
     def update_positions_around_agent(self, direction, dict_boolean_knowledge):
+
+        """
+        Updates the boolean knowledge about adjacent positions around the agent.
+
+        Parameters
+        ----------
+        direction : str
+            The direction of the adjacent position.
+        dict_boolean_knowledge : dict
+            A dictionary representing the boolean knowledge about adjacent positions.
+
+        Returns
+        -------
+        dict_boolean_knowledge : dict
+                Updated boolean knowledge dictionary.
+        """
         if direction == "left":
             dict_boolean_knowledge["left"] = False
             self.knowledge.set_left(boolean_left = False)
@@ -164,11 +237,45 @@ class CleaningAgent(Agent):
         return dict_boolean_knowledge
 
 class GreenAgent(CleaningAgent):
-
+    
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Green Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
+
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
     def deliberate(self):
+        """
+        Determines all possible actions based o the current knowledge of the environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+            list_possible_actions : list
+                 A list of possible actions the agent can take based on its knowledge.
+        """
         list_possible_actions = []
 
         # Get data from knowledge
@@ -230,7 +337,7 @@ class GreenAgent(CleaningAgent):
                     list_best_directions.append(act_direction)
                     list_available_act_directions.remove(act_direction)
                 # Check if there is a waste in the left cell and favor this direction
-                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
+                if act_directOtherion == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
                     list_best_directions.append(act_direction)
                     list_available_act_directions.remove(act_direction)
                 # Check if there is a waste in the up cell and favor this direction
@@ -259,10 +366,44 @@ class GreenAgent(CleaningAgent):
         return list_possible_actions
 
 class YellowAgent(CleaningAgent):
+
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Yellow Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+                
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
         
     def deliberate(self):
+        """
+        Determines all possible actions based o the current knowledge of the environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        """
         list_possible_actions = []
 
         # Get data from knowledge
@@ -358,10 +499,44 @@ class YellowAgent(CleaningAgent):
         return list_possible_actions
 
 class RedAgent(CleaningAgent):
+
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Red Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+            None
+        """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
     def deliberate(self):
+        """
+        Determines all possible actions based o the current knowledge of the environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        """
         list_possible_actions = []
 
         # Get data from knowledge

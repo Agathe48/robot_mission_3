@@ -140,7 +140,29 @@ The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented 
 
 #### The deliberate method
 
-The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. 
+The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first one which can be executed.
+
+The actions has been defined in `tools_constants` by strings. Here is the full list:
+- `ACT_TRANSFORM`, to transform two wastes in a waste from the superior color
+- `ACT_PICK_UP`, to pick up a waste
+- `ACT_DROP`, to drop a tranformed waste
+- `ACT_GO_LEFT`, to go left
+- `ACT_GO_RIGHT`, to go right
+- `ACT_GO_UP`, to go up
+- `ACT_GO_DOWN`, to go down
+- `ACT_WAIT`, to wait
+
+If the agent possesses two green wastes, the top priority action is to transform the waste.
+
+If the agent possesses a yellow transformed waste, he will ask to go right until his right tile is on zone 2, ie the border. When he is on the border, he will ask to drop his waste if the current tile is empty, otherwise he will go up or down randomly, if nothing is blocking his way (thanks to the attributes`up` and `down` from knowledge). 
+
+If the agent is on a tile with a green waste and if he doesn't have two wastes or a transformed waste, he will ask to perform the pick up action. If he can't move or drop his waste, he will wait.
+
+If the agent has less than two picked up waste, no transformed waste and is on a cell containing a waste, then he will pick up the waste.
+
+Otherwise, we will add moving to differents directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
+
+The last action of the list will be to wait, so the agent always has an action to preform.
 
 ### The YellowAgent
 
@@ -148,7 +170,7 @@ The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented
 
 #### The deliberate method
 
-TODO
+It has the same behavior as the GreenAgent's deliberate method. One of the few differences is that it can move to the green area to pick up yellow waste at the border.
 
 ### The RedAgent
 
@@ -156,14 +178,32 @@ The `RedAgent` is a class inheriting from the class `CleaningAgent` presented ab
 
 #### The deliberate method
 
-TODO
-
+This method's behavior is still quite similar to the tow other agents' deliberate methods. However, the red agents won't transform wastes, they will only pick up one waste and then put it in the waste disposal zone. To do so, it will go right after picking up a waste and then move up or down to join the waste disposal zone whose position is stored in the agent's knowledge.
 
 ## Our Model
 
-TODO
+The implementation of our model is in the `model.py` file. The `RobotMission` class inherit from the Mesa `Model` class and defines the RobotMission model itself, and uses the agents, the
+scheduler and the environment. 
 
---> parler de l'init des waste (avec la densité et comment on gère pour qu'il ne reste pas de déchet vert ou jaune unique à la fin dès l'init des wastes)
+We began by defining several methods to set up the grid and all agents: `init_grid`, `init_wastes` and `init_agents`.
+
+In `init_grid` we established the position of the waste disposal zone and created  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we created a `WasteDisposalZone` object.
+
+In `init_wastes` we create all wastes. To do so, we first define the total number of waste in the grid (grid height * grid width * waste density, the density is set in `tools/tools_constants.py`) and the number of cells per zone (grid width/3 * grid height). We then randomly place green, yellow and red wastes in their respective zones. However, we do not initially place a red waste in the waste disposal zone.
+
+- The number of green wastes is randomly determined within a range. The upper bound of this range is the minimum between the number of cells in the green area and the total number of wastes. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the other two areas do not have sufficient space to accommodate all remaining wastes. Then we check if that number is even so that we can clean the whole map. Otherwise we add or substract one green waste.
+
+- The number of yellow wastes is randomly determined within a range. The upper bound of this range is the maximum between 0 and the minimum between the remaining wastes and the number of cells in the zone. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the red area does not have sufficient space to accommodate all remaining wastes. Then we check if that number plus the number of green wastes' pairs is even, otherwise we add or substract one yellow waste.
+
+- The number of red wastes is determined by the number of remaining wastes to place.
+
+In `init_agents` create and place the cleaning agent according to their colors and respective areas. We choose to initialy place cleaning agent in their color zone. We also do not allow two agents to be in the same cell, this will stay true during the simulations.
+
+TODO : step + run_model + do
+
+ 
+Moreover, the model is in charge of the execution of actions, with a method called do. This method should have as arguments the agent performing the action and the description of the action. It should check whether the action is feasible (each action has requirements, and even if the agent believes its action is feasible, it might be mistaken), then perform the changes entailed by the action.
+
 
 ## The scheduler
 

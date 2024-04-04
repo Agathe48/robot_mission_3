@@ -31,6 +31,7 @@ from objects import (
 from tools.tools_constants import (
     GRID_HEIGHT,
     GRID_WIDTH,
+    WASTE_DENSITY,
     ACT_PICK_UP,
     ACT_DROP,
     ACT_TRANSFORM,
@@ -49,7 +50,7 @@ from agents import (
 from schedule import CustomRandomScheduler
 
 
-DICT_CLASS_COLOR = {
+DICT_CLASS_COLOR: dict[type[GreenAgent] | type[YellowAgent] | type[RedAgent], str] = {
     GreenAgent: "green",
     YellowAgent: "yellow",
     RedAgent: "red"
@@ -59,10 +60,27 @@ DICT_CLASS_COLOR = {
 ### Model ###
 #############
 
-class Area(Model):
-    """A model with some number of agents."""
+class RobotMission(Model):
+    
+    def __init__(self, dict_nb_agents: dict, waste_density=WASTE_DENSITY, width=GRID_WIDTH, height=GRID_HEIGHT):
+        """
+        Initializes the Environment object with provided parameters.
 
-    def __init__(self, dict_nb_agents: dict, waste_density=0.3, width=GRID_WIDTH, height=GRID_HEIGHT):
+        Parameters
+        ----------
+        dict_nb_agents : dict
+            A dictionary containing the number of agents for each type.
+        waste_density : float
+            The density of waste in the environment.
+        width : int
+            The width of the grid.
+        height : int
+            The height of the grid.
+
+        Returns
+        -------
+        None
+        """
         super().__init__()
         self.dict_nb_agents = dict_nb_agents
         self.width = width
@@ -87,6 +105,17 @@ class Area(Model):
         # self.running = True
 
     def init_grid(self):
+        """
+        Initializes the grid environment with radioactivity zones and a waste disposal zone.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
 
         # Define the position of the waste disposal zone (in the right column of the grid)
         self.pos_waste_disposal = (self.width-1, rd.randint(0, self.height-1))
@@ -120,6 +149,17 @@ class Area(Model):
                         self.grid.place_agent(dis, self.pos_waste_disposal)
 
     def init_wastes(self):
+        """
+        Initializes waste objects on the grid environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         # Place the wastes on the grid
         self.nb_wastes_total = int(self.height*self.width*self.waste_density)
         number_tiles_per_zone = int(self.width/3*self.height)
@@ -127,20 +167,26 @@ class Area(Model):
         wasted_correctly_placed = False
         while not wasted_correctly_placed:
             self.nb_wastes_green = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_tiles_per_zone),
-                min(self.nb_wastes_total-1, number_tiles_per_zone-1))
+                max(0, self.nb_wastes_total - 2*number_tiles_per_zone + 1),
+                min(self.nb_wastes_total, number_tiles_per_zone))
 
             # Check that we have an even number of green wastes
             if self.nb_wastes_green % 2 != 0:
-                self.nb_wastes_green += 1
+                if self.nb_wastes_green == min(self.nb_wastes_total, number_tiles_per_zone):
+                    self.nb_wastes_green -= 1
+                else:
+                    self.nb_wastes_green += 1
             
             self.nb_wastes_yellow = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_tiles_per_zone), 
-                max(0, min(self.nb_wastes_total - self.nb_wastes_green - 1, number_tiles_per_zone - 1)))
+                max(0, self.nb_wastes_total - 2*number_tiles_per_zone + 1), 
+                max(0, min(self.nb_wastes_total - self.nb_wastes_green, number_tiles_per_zone)))
 
             # Check that we have an even number of yellow and green pairs wastes
             if (self.nb_wastes_yellow + self.nb_wastes_green//2) % 2 != 0:
-                self.nb_wastes_yellow += 1
+                if self.nb_wastes_yellow == min(self.nb_wastes_total - self.nb_wastes_green, number_tiles_per_zone):
+                    self.nb_wastes_yellow -= 1
+                else:
+                    self.nb_wastes_yellow += 1
             
             self.nb_wastes_red = max(0, self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow)
             
@@ -179,7 +225,17 @@ class Area(Model):
                         self.grid.place_agent(was, (x, y))
                         
     def init_agents(self):
-        
+        """
+        Initializes cleaning agents on the grid environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         list_agent_types_colors = [
             [self.dict_nb_agents["green"], GreenAgent, (0, self.width//3)],
             [self.dict_nb_agents["yellow"], YellowAgent,  (self.width//3, 2*self.width//3)],
@@ -219,6 +275,18 @@ class Area(Model):
                     ag, list_possible_actions=[ACT_WAIT])
 
     def step(self):
+        """
+        Executes a step in the simulation.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool: 
+            True if there are no more wastes left in the simulation, indicating the end of the simulation.
+        """
         # if there is no waste left, the model stops
         if any(type(agent) == Waste for agent in self.schedule.agents):
             self.schedule.step()
@@ -228,10 +296,37 @@ class Area(Model):
         # self.datacollector.collect(self)
         
     def run_model(self, step_count=100):
+        """
+        Runs the simulation for a specified number of steps.
+
+        Parameters
+        ----------
+        step_count : int (optional)
+            The number of steps to run the simulation. Defaults to 100.
+
+        Returns
+        -------
+        None
+        """
         for i in range(step_count):
             self.step()
 
     def do(self, agent: CleaningAgent, list_possible_actions):
+        """
+        Performs an action for the given agent based on the list of possible actions and updates the percepts.
+
+        Parameters
+        ----------
+        agent : CleaningAgent
+            The cleaning agent performing the action.
+        list_possible_actions : list
+            A list of possible actions for the agent.
+
+        Returns
+        -------
+        percepts: dict
+            A dictionary representing the updated percepts after the action is performed.
+        """
         agent_position = agent.pos
 
         # Get the current cellmates of the agent

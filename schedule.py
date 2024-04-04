@@ -19,7 +19,6 @@ import random as rd
 ### Mesa imports ###
 
 from mesa import Model
-from mesa.agent import Agent
 from mesa.time import BaseScheduler
 
 ### Local imports ###
@@ -37,9 +36,36 @@ from agents import (
 class CustomRandomScheduler(BaseScheduler):
     
     def __init__(self, model: Model, agents = None) -> None:
+        """
+        Initializes the CustomRandomScheduler.
+
+        Parameters
+        ----------
+        model : Model
+            The model associated with this scheduler.
+
+        agents : list of agents, optional
+            List of agents to be scheduled. If None, it will be initialized as an empty list.
+       
+        
+        Returns
+        -------
+        None
+        """
         super().__init__(model, agents)
 
     def step(self):
+        """
+        Activate agents in a random order based on their type (green, yellow, red) at each model step.
+        
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         print("------ NEW STEP ------")
         list_green_agents = list(self.model.get_agents_of_type(GreenAgent))
         list_yellow_agents = list(self.model.get_agents_of_type(YellowAgent))

@@ -8,7 +8,6 @@ Group 3:
 - Agathe POULAIN
 """
 
-
 ###############
 ### Imports ###
 ###############
@@ -16,14 +15,14 @@ Group 3:
 ### Local imports ###
 
 from model import (
-    Area
+    RobotMission
 )
 
 #############
 ### Model ###
 #############
 
-model = Area(
+model = RobotMission(
     dict_nb_agents={"green": 2, "yellow": 2, "red": 2}
 )
 

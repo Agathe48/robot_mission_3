@@ -20,7 +20,7 @@ from mesa.visualization.modules import CanvasGrid, ChartModule
 ### Local imports ###
 
 from model import (
-    Area
+    RobotMission
 )
 from objects import (
     Radioactivity,
@@ -44,6 +44,20 @@ from agents import (
 
 
 def agent_portrayal(agent):
+    """
+    Defines how agents are visually represented in the visualization.
+
+    Parameters
+    ----------
+    agent : Agent
+        An instance of an agent subclass representing an entity in the simulation.
+
+    Returns
+    -------
+    portrayal : dict
+        A dictionary specifying the portrayal of the agent in the visualization.
+    """
+
 
     # For the radioactivity objects
     if type(agent) == Radioactivity:
@@ -127,7 +141,7 @@ grid = CanvasGrid(
 #                     data_collector_name='datacollector')
 
 server = ModularServer(
-    model_cls=Area,
+    model_cls=RobotMission,
     visualization_elements=[grid],
     name="Area",
     model_params={
