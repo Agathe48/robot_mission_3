@@ -33,7 +33,7 @@ from tools.tools_constants import (
     GRID_WIDTH,
     WASTE_DENSITY,
     ACT_PICK_UP,
-    ACT_DROP,
+    ACT_DROP_TRANSFORMED_WASTE,
     ACT_TRANSFORM,
     ACT_GO_LEFT,
     ACT_GO_RIGHT,
@@ -363,7 +363,7 @@ class RobotMission(Model):
                     action_done["object"] = obj
                     break
 
-            elif action == ACT_DROP:
+            elif action == ACT_DROP_TRANSFORMED_WASTE:
                 # Check if there is no waste in the cell
                 if not any(isinstance(obj, Waste) for obj in cellmates):
                     if color != "red":

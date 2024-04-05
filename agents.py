@@ -22,7 +22,7 @@ import random
 
 from tools.tools_constants import (
     ACT_PICK_UP,
-    ACT_DROP,
+    ACT_DROP_TRANSFORMED_WASTE,
     ACT_TRANSFORM,
     ACT_GO_LEFT,
     ACT_GO_RIGHT,
@@ -133,7 +133,7 @@ class CleaningAgent(CommunicatingAgent):
             picked_up_waste.append(my_object)
             self.knowledge.set_picked_up_wastes(picked_up_waste)
 
-        if action == ACT_DROP:
+        if action == ACT_DROP_TRANSFORMED_WASTE:
             if type(self) == RedAgent:
                 self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
             else:
@@ -322,7 +322,7 @@ class GreenAgent(CleaningAgent):
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
                 # Check if the current cell does not already contain a waste
                 if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
-                    list_possible_actions.append(ACT_DROP)
+                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
                 else:
                     if len(list_available_act_directions) > 0:
                         # Randomize the order of possible moves
@@ -450,7 +450,7 @@ class YellowAgent(CleaningAgent):
             if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 3:
                 # Check if the current cell does not already contain a waste
                 if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
-                    list_possible_actions.append(ACT_DROP)
+                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
                 else :
                     if len(list_available_act_directions) > 0 :
                         # Randomize the order of possible moves
@@ -575,7 +575,7 @@ class RedAgent(CleaningAgent):
         # If we picked up a waste, go to waste disposal zone to drop it
         if len(picked_up_wastes) == 1:
             if grid_knowledge[self.pos[0]][self.pos[1]] == 4:
-                list_possible_actions.append(ACT_DROP)
+                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
             else:
                 # The agent goes to the waste disposal zone column
                 if right:
