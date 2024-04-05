@@ -1,7 +1,7 @@
 # Todo
 
 - [ ] dans le mouvement, faire en sorte que l'agent vert n'aille pas sur un déchet jaune, que l'agent jaune n'aille pas sur un déchet rouge (à coordonner avec la tache suivante) (sauf last column quand l'agent cherche a drop)  (LATER)
-- [ ] gérer le cas où la grille n'est pas divisible par 3 (last ou deux last colomne de manière random dans une des trois zone) (dans init grid)  (Oumaima)
+- [x] gérer le cas où la grille n'est pas divisible par 3 (last ou deux last colomne de manière random dans une des trois zone) (dans init grid)  (Oumaima)
 - [ ] métriques à définir et datacollector à implémenter (pour avoir des courbes, ex : suivis du nb de déchets) (Agathe Poulain)
 - [ ] agent chef, qui hérite des autres classes color_agent et modifier l'init du modèle (Agathe Plu, Laure)
 - [ ] Changer dans affichages (rond plus, gros) pour le chef  (Agathe Poulain) 
