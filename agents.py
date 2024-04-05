@@ -95,6 +95,8 @@ class CleaningAgent(CommunicatingAgent):
         # Perform the action and update the percepts
         self.percepts = self.model.do(
             self, list_possible_actions=list_possible_actions)
+        # Update the knowledge of the agent with the consequences of the action
+        self.update_knowledge_with_action(self.percepts["action_done"])
       
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         """
@@ -122,6 +124,26 @@ class CleaningAgent(CommunicatingAgent):
         if y_tile > y:
             return "up"
 
+    def update_knowledge_with_action(self, performed_action):
+        action = performed_action["action"]
+        my_object = performed_action["object"]
+
+        if action == ACT_PICK_UP:
+            picked_up_waste = self.knowledge.get_picked_up_wastes()
+            picked_up_waste.append(my_object)
+            self.knowledge.set_picked_up_wastes(picked_up_waste)
+
+        if action == ACT_DROP:
+            if type(self) == RedAgent:
+                self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+            else:
+                self.knowledge.set_transformed_waste(transformed_waste = None)
+
+        if action == ACT_TRANSFORM:
+            self.knowledge.set_transformed_waste(transformed_waste = my_object)
+            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+
+
     def update(self):
         """
         Updates the agent's knowledge based on its percepts
@@ -145,8 +167,8 @@ class CleaningAgent(CommunicatingAgent):
             "down": True
         }
 
-        for key in self.percepts:
-            list_objects_tile = self.percepts[key]
+        for key in self.percepts["positions"]:
+            list_objects_tile = self.percepts["positions"][key]
             direction = self.convert_pos_to_tile(key)
 
             if not list_objects_tile is None:

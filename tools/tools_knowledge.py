@@ -137,20 +137,20 @@ class AgentKnowledge:
         """
         return self.down
 
-    def set_transformed_waste(self, object_transform_waste):
+    def set_transformed_waste(self, transformed_waste):
         """
         Set transformed waste in knowledge.
 
         Parameters
         ----------
-        object_transform_waste: Waste | None
+        transformed_waste : Waste | None
             The transformed waste.
 
         Returns
         -------
         None
         """
-        self.transformed_waste = object_transform_waste
+        self.transformed_waste = transformed_waste
 
     def set_picked_up_wastes(self, picked_up_wastes):
         """

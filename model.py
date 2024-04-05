@@ -328,6 +328,10 @@ class RobotMission(Model):
             A dictionary representing the updated percepts after the action is performed.
         """
         agent_position = agent.pos
+        action_done = {
+            "action": "",
+            "object": None
+        }
 
         # Get the current cellmates of the agent
         cellmates = self.grid.get_cell_list_contents(agent_position)
@@ -349,17 +353,14 @@ class RobotMission(Model):
                 while not has_performed_action and counter < len(cellmates):
                     obj = cellmates[counter]
                     if (isinstance(obj, Waste) and obj.type_waste == color) :
-                        # Remove the waste from the grid and update the agent knowledge
-                        # We keep the waste in the scheduler to keep trace of it
+                        # Remove the waste from the grid and we keep the waste in the scheduler to keep trace of it
                         self.grid.remove_agent(obj)
-                        picked_up_wastes.append(obj)
-                        agent.knowledge.set_picked_up_wastes(
-                            picked_up_wastes=picked_up_wastes)
                         has_performed_action = True
                     counter += 1
 
                 if has_performed_action:
                     print("Agent", agent.unique_id, "picked up the waste", obj)
+                    action_done["object"] = obj
                     break
 
             elif action == ACT_DROP:
@@ -368,12 +369,9 @@ class RobotMission(Model):
                     if color != "red":
                         # Get the transformed waste object and place it on the grid
                         self.grid.place_agent(transformed_waste, agent_position)
-                        # Update agent knowledge with no transformed waste
-                        agent.knowledge.set_transformed_waste(object_transform_waste = None)
                         print("Agent", agent.unique_id, "dropped a waste")
                     else:
                         self.schedule.remove(picked_up_wastes[0])
-                        agent.knowledge.set_picked_up_wastes(picked_up_wastes = [])
                         print("Red agent", agent.unique_id, "destroyed a waste")
                     break
 
@@ -385,15 +383,12 @@ class RobotMission(Model):
                 elif color == "yellow":
                     waste = Waste(unique_id = self.next_id(), model = self, type_waste="red")
 
-                # Update the agent knowledge with the transformed waste object and create the object in the scheduler
-                agent.knowledge.set_transformed_waste(object_transform_waste = waste)
                 self.schedule.add(waste)
+                action_done["object"] = waste
 
                 # Remove the former wastes from the scheduler
                 for waste in picked_up_wastes:
                     self.schedule.remove(waste)
-                # Reset the wastes in the knowledge
-                agent.knowledge.set_picked_up_wastes(picked_up_wastes = [])
 
                 print("Agent", agent.unique_id, "transformed a waste")
                 break
@@ -435,30 +430,35 @@ class RobotMission(Model):
                     break
 
             elif action == ACT_WAIT:
-                print("Agent", agent.unique_id, "waited")   
+                print("Agent", agent.unique_id, "waited")
                 break
 
+        action_done["action"] = action
         agent_position = agent.pos
+
         # Initialize the percepts
         percepts = {
-            agent_position: self.grid.get_cell_list_contents(agent_position)
+            "positions": {
+                agent_position: self.grid.get_cell_list_contents(agent_position)
+            },
+            "action_done": action_done
         }
 
         if agent_position[0] - 1 >= 0:
-            percepts[(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))
+            percepts["positions"][(agent_position[0] - 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] - 1, agent_position[1]))
         else:
-            percepts[(agent_position[0] - 1, agent_position[1])] = None
+            percepts["positions"][(agent_position[0] - 1, agent_position[1])] = None
         if agent_position[0] + 1 < self.width:
-            percepts[(agent_position[0] + 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
+            percepts["positions"][(agent_position[0] + 1, agent_position[1])] = self.grid.get_cell_list_contents((agent_position[0] + 1, agent_position[1]))
         else:
-            percepts[(agent_position[0] + 1, agent_position[1])] = None
+            percepts["positions"][(agent_position[0] + 1, agent_position[1])] = None
         if agent_position[1] - 1 >= 0:
-            percepts[(agent_position[0], agent_position[1] - 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1))
+            percepts["positions"][(agent_position[0], agent_position[1] - 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] - 1))
         else:
-            percepts[(agent_position[0], agent_position[1] - 1)] = None
+            percepts["positions"][(agent_position[0], agent_position[1] - 1)] = None
         if agent_position[1] + 1 < self.height:
-            percepts[(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
+            percepts["positions"][(agent_position[0], agent_position[1] + 1)] = self.grid.get_cell_list_contents((agent_position[0], agent_position[1] + 1))
         else :
-            percepts[(agent_position[0], agent_position[1] + 1)] = None
+            percepts["positions"][(agent_position[0], agent_position[1] + 1)] = None
             
         return percepts
