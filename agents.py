@@ -18,10 +18,6 @@ import numpy as np
 from typing import Literal 
 import random
 
-### Mesa imports ###
-
-from mesa import Agent
-
 ### Local imports ###
 
 from tools.tools_constants import (
@@ -40,13 +36,13 @@ from objects import (
     WasteDisposalZone,
     Radioactivity
 )
-
+from communication.agent.CommunicatingAgent import CommunicatingAgent
 
 ##############
 ### Agents ###
 ##############
 
-class CleaningAgent(Agent):
+class CleaningAgent(CommunicatingAgent):
     
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
         """
@@ -337,7 +333,7 @@ class GreenAgent(CleaningAgent):
                     list_best_directions.append(act_direction)
                     list_available_act_directions.remove(act_direction)
                 # Check if there is a waste in the left cell and favor this direction
-                if act_directOtherion == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
+                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
                     list_best_directions.append(act_direction)
                     list_available_act_directions.remove(act_direction)
                 # Check if there is a waste in the up cell and favor this direction
