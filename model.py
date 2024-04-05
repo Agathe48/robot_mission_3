@@ -79,7 +79,7 @@ class RobotMission(Model):
 
         Returns
         -------
-        None
+        None 
         """
         super().__init__()
         self.dict_nb_agents = dict_nb_agents
@@ -121,18 +121,35 @@ class RobotMission(Model):
         self.pos_waste_disposal = (self.width-1, rd.randint(0, self.height-1))
 
         # Create the grid with radioactivity zones and the waste disposal zone
+        zone_width = self.width // 3
+        remaining_width = self.width % 3
 
+        extra_width_distribution = [zone_width] * 3
+
+        # If there are 2 extra columns, we need to ensure they aren't added to the same zone
+        if remaining_width == 2:
+            # Choose two different zones randomly
+            zone_indices = [0, 1, 2]
+            rd.shuffle(zone_indices)
+            extra_width_distribution[zone_indices[0]] += 1
+            extra_width_distribution[zone_indices[1]] += 1
+        else:
+            # Distribute the remaining width randomly among the zones
+            zone_index = rd.randint(0, 2)
+            extra_width_distribution[zone_index] += 1
+
+                
         for i in range(self.height):
             for j in range(self.width):
                 
                 # Green area
-                if j < self.width // 3: 
+                if j < extra_width_distribution[0]: 
                     rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z1", radioactivity_level=rd.random()/3)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
                 
                 # Yellow area
-                elif self.width // 3 <= j < 2 * self.width // 3: 
+                elif extra_width_distribution[0] <= j < extra_width_distribution[0]+ extra_width_distribution[1]: 
                     rad = Radioactivity(unique_id = self.next_id(), model=self, zone = "z2", radioactivity_level=(rd.random()/3) + 0.33)
                     self.schedule.add(rad)
                     self.grid.place_agent(rad, (j, i))
