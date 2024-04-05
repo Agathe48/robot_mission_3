@@ -647,3 +647,26 @@ class RedAgent(CleaningAgent):
         list_possible_actions.append(ACT_WAIT)
         print("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
+
+
+
+class ChiefGreenAgent(GreenAgent):
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+    
+    def step(self):
+        super().step()
+    
+class ChiefYellowAgent(YellowAgent):
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+    
+    def step(self):
+        super().step()
+    
+class ChiefRedAgent(RedAgent):
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+    
+    def step(self):
+        super().step()

@@ -62,14 +62,18 @@ DICT_CLASS_COLOR: dict[type[GreenAgent] | type[YellowAgent] | type[RedAgent], st
 
 class RobotMission(Model):
     
-    def __init__(self, dict_nb_agents: dict, waste_density=WASTE_DENSITY, width=GRID_WIDTH, height=GRID_HEIGHT):
+    def __init__(self, nb_green_agents: int, nb_yellow_agents: int, nb_red_agents: int, waste_density=WASTE_DENSITY, width=GRID_WIDTH, height=GRID_HEIGHT):
         """
         Initializes the Environment object with provided parameters.
 
         Parameters
         ----------
-        dict_nb_agents : dict
-            A dictionary containing the number of agents for each type.
+        nb_green_agents : int
+            The number of green agents
+        nb_yellow_agents : int
+            The number of yellow agents
+        nb_red_agents : int
+            The number of red agents
         waste_density : float
             The density of waste in the environment.
         width : int
@@ -82,7 +86,11 @@ class RobotMission(Model):
         None
         """
         super().__init__()
-        self.dict_nb_agents = dict_nb_agents
+        self.dict_nb_agents = {
+            "green": nb_green_agents,
+            "yellow": nb_yellow_agents,
+            "red": nb_red_agents
+        }
         self.width = width
         self.height = height
         self.grid = MultiGrid(self.width, self.height, torus=False)

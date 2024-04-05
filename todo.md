@@ -9,6 +9,8 @@
 - [ ] mouvement de quadrillage avec sépration de la zone selon le nb d'agent sur la zone  (Agathe Plu, Laure)
 - [ ] faire en sorte de drop le déchet dans les cas de fin si impossibilité de faire une paire (green and yellow pas chez le rouge) (Oumaima)
 
+- [ ] la visualisation doit permettre de changer le nb de paramètres sans rentrer dans le code (we do it know)
+
 
 --> faire des agents chefs de chaque couleur pour coordonner les autres (pas abimé)
 --> si chef abimé il previent et un autre devient chef ou election d'un nouveau chef (LATER)

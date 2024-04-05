@@ -16,6 +16,7 @@ Group 3:
 
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import CanvasGrid, ChartModule
+import mesa.visualization
 
 ### Local imports ###
 
@@ -140,15 +141,20 @@ grid = CanvasGrid(
 #                       "Color": "Black"}],
 #                     data_collector_name='datacollector')
 
+model_params = {
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
+    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
+    "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
+    "width": mesa.visualization.Slider("Grid width", 18, 6, 30, 1),
+    "height": mesa.visualization.Slider("Grid height", 9, 3, 20, 1),
+    "waste_density": mesa.visualization.Slider("Initial waste density", 0.3, 0, 1, 0.1),
+}
+
 server = ModularServer(
     model_cls=RobotMission,
     visualization_elements=[grid],
     name="Area",
-    model_params={
-        "dict_nb_agents": {"green": 2, "yellow": 2, "red": 2},
-        "width":GRID_WIDTH,
-        "height":GRID_HEIGHT
-    }
+    model_params=model_params
 )
 
 server.port = 8523
