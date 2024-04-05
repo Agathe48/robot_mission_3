@@ -42,6 +42,9 @@ from tools.tools_constants import (
     ACT_WAIT
 )
 from agents import (
+    ChiefGreenAgent,
+    ChiefYellowAgent,
+    ChiefRedAgent,
     GreenAgent,
     YellowAgent,
     RedAgent,
@@ -50,10 +53,13 @@ from agents import (
 from schedule import CustomRandomScheduler
 
 
-DICT_CLASS_COLOR: dict[type[GreenAgent] | type[YellowAgent] | type[RedAgent], str] = {
+DICT_CLASS_COLOR = {
     GreenAgent: "green",
+    ChiefGreenAgent : "green",
     YellowAgent: "yellow",
-    RedAgent: "red"
+    ChiefYellowAgent: "yellow",
+    RedAgent: "red",
+    ChiefRedAgent: "red"
 }
 
 #############
@@ -262,23 +268,38 @@ class RobotMission(Model):
         None
         """
         list_agent_types_colors = [
-            [self.dict_nb_agents["green"], GreenAgent, (0, self.width//3)],
-            [self.dict_nb_agents["yellow"], YellowAgent,  (self.width//3, 2*self.width//3)],
-            [self.dict_nb_agents["red"], RedAgent, (2*self.width//3, self.width)],
+            [self.dict_nb_agents["green"], GreenAgent, ChiefGreenAgent, (0, self.width//3)],
+            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent, (self.width//3, 2*self.width//3)],
+            [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, (2*self.width//3, self.width)],
         ]
 
         # Create the cleaning agents randomly generated in the map
         for element in list_agent_types_colors:
             nb_agent_types = element[0]
             agent_class = element[1]
-            allowed_zone = element[2]
+            chief_agent_class = element[2]
+            allowed_zone = element[3]
+            first_agent = True
             for agent in range(nb_agent_types):
-                ag = agent_class(
-                    unique_id = self.next_id(),
-                    model = self,
-                    grid_size= (self.width, self.height),
-                    pos_waste_disposal = self.pos_waste_disposal 
-                    )
+                
+                # Add the chief : the first agent
+                if first_agent:
+                    ag = chief_agent_class(
+                        unique_id = self.next_id(),
+                        model = self,
+                        grid_size = (self.width, self.height),
+                        pos_waste_disposal = self.pos_waste_disposal 
+                        )
+                    first_agent = False
+
+                else:
+                    ag = agent_class(
+                        unique_id = self.next_id(),
+                        model = self,
+                        grid_size = (self.width, self.height),
+                        pos_waste_disposal = self.pos_waste_disposal 
+                        )
+
                 self.schedule.add(ag)
                 correct_position = False
                 while not correct_position:

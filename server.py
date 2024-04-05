@@ -30,13 +30,17 @@ from objects import (
 )
 from tools.tools_constants import (
     GRID_HEIGHT,
-    GRID_WIDTH
+    GRID_WIDTH,
+    WASTE_DENSITY
 )
 
 from agents import (
     GreenAgent,
+    ChiefGreenAgent,
     YellowAgent,
-    RedAgent
+    ChiefYellowAgent,
+    RedAgent,
+    ChiefRedAgent
 )
 
 #################
@@ -58,7 +62,6 @@ def agent_portrayal(agent):
     portrayal : dict
         A dictionary specifying the portrayal of the agent in the visualization.
     """
-
 
     # For the radioactivity objects
     if type(agent) == Radioactivity:
@@ -101,12 +104,11 @@ def agent_portrayal(agent):
         # Set the color of the waste according to its type
         portrayal["Color"] = agent.type_waste
 
-    # For the cleaning agents
-    if type(agent) in [GreenAgent, YellowAgent, RedAgent]:
+    # For the cleaning and chief agents
+    if type(agent) in [GreenAgent, ChiefGreenAgent, YellowAgent, ChiefYellowAgent, RedAgent, ChiefRedAgent]:
         portrayal = {
             "Shape": "circle",
             "Filled": "true",
-            "r": 0.5,
             "Layer": 3
         }
 
@@ -117,15 +119,29 @@ def agent_portrayal(agent):
         if not transformed_waste is None:
             portrayal["text"] = "T"
 
-        if type(agent) == GreenAgent:
+        if type(agent) in [GreenAgent, ChiefGreenAgent]:
             portrayal["Color"] = "#073d00"
             portrayal["text_color"] = "white"
-        elif type(agent) == YellowAgent:
+            if type(agent) == ChiefGreenAgent:
+                portrayal["r"] = 0.6
+            else:
+                portrayal["r"] = 0.4
+
+        elif type(agent) in [YellowAgent, ChiefYellowAgent]:
             portrayal["Color"] = "#ffa800"
             portrayal["text_color"] = "black"
-        elif type(agent) == RedAgent:
+            if type(agent) == ChiefYellowAgent:
+                portrayal["r"] = 0.6
+            else:
+                portrayal["r"] = 0.4
+            
+        elif type(agent) in [RedAgent, ChiefRedAgent]:
             portrayal["Color"] = "#a90000"
             portrayal["text_color"] = "white"
+            if type(agent) == ChiefRedAgent:
+                portrayal["r"] = 0.6
+            else:
+                portrayal["r"] = 0.4
 
     return portrayal
 
@@ -145,9 +161,9 @@ model_params = {
     "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
     "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
     "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
-    "width": mesa.visualization.Slider("Grid width", 18, 6, 30, 1),
-    "height": mesa.visualization.Slider("Grid height", 9, 3, 20, 1),
-    "waste_density": mesa.visualization.Slider("Initial waste density", 0.3, 0, 1, 0.1),
+    "width": mesa.visualization.Slider("Grid width", GRID_WIDTH, 6, 30, 1),
+    "height": mesa.visualization.Slider("Grid height", GRID_HEIGHT, 3, 20, 1),
+    "waste_density": mesa.visualization.Slider("Initial waste density", WASTE_DENSITY, 0, 1, 0.1),
 }
 
 server = ModularServer(
