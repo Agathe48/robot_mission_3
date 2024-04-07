@@ -23,6 +23,7 @@ import random
 from tools.tools_constants import (
     ACT_PICK_UP,
     ACT_DROP_TRANSFORMED_WASTE,
+    ACT_DROP_ONE_WASTE,
     ACT_TRANSFORM,
     ACT_GO_LEFT,
     ACT_GO_RIGHT,
@@ -134,10 +135,10 @@ class CleaningAgent(CommunicatingAgent):
             self.knowledge.set_picked_up_wastes(picked_up_waste)
 
         if action == ACT_DROP_TRANSFORMED_WASTE:
-            if type(self) == RedAgent:
-                self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
-            else:
-                self.knowledge.set_transformed_waste(transformed_waste = None)
+            self.knowledge.set_transformed_waste(transformed_waste = None)
+
+        if action == ACT_DROP_ONE_WASTE:
+            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
 
         if action == ACT_TRANSFORM:
             self.knowledge.set_transformed_waste(transformed_waste = my_object)
@@ -380,6 +381,7 @@ class GreenAgent(CleaningAgent):
                     list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
+        list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
 
@@ -513,6 +515,7 @@ class YellowAgent(CleaningAgent):
                     list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
+        list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
 
@@ -575,7 +578,7 @@ class RedAgent(CleaningAgent):
         # If we picked up a waste, go to waste disposal zone to drop it
         if len(picked_up_wastes) == 1:
             if grid_knowledge[self.pos[0]][self.pos[1]] == 4:
-                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+                list_possible_actions.append(ACT_DROP_ONE_WASTE)
             else:
                 # The agent goes to the waste disposal zone column
                 if right:

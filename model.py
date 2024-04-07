@@ -34,6 +34,7 @@ from tools.tools_constants import (
     WASTE_DENSITY,
     ACT_PICK_UP,
     ACT_DROP_TRANSFORMED_WASTE,
+    ACT_DROP_ONE_WASTE,
     ACT_TRANSFORM,
     ACT_GO_LEFT,
     ACT_GO_RIGHT,
@@ -151,7 +152,12 @@ class RobotMission(Model):
             # Distribute the remaining width randomly among the zones
             zone_index = rd.randint(0, 2)
             extra_width_distribution[zone_index] += 1
-
+        # Store the dimensions of each zone
+        self.zone_dimensions = [
+            (0, extra_width_distribution[0]),  # Green zone
+            (extra_width_distribution[0], extra_width_distribution[0] + extra_width_distribution[1]),  # Yellow zone
+            (extra_width_distribution[0] + extra_width_distribution[1], self.width)  # Red zone
+        ]
                 
         for i in range(self.height):
             for j in range(self.width):
@@ -193,28 +199,32 @@ class RobotMission(Model):
         """
         # Place the wastes on the grid
         self.nb_wastes_total = int(self.height*self.width*self.waste_density)
-        number_tiles_per_zone = int(self.width/3*self.height)
+        # Get the dimensions of each zone
+        green_zone, yellow_zone, red_zone = self.zone_dimensions
+        number_green_tiles = (green_zone[1] - green_zone[0]) * self.height
+        number_yellow_tiles = (yellow_zone[1] - yellow_zone[0]) * self.height
+        number_red_tiles = (red_zone[1] - red_zone[0]) * self.height
 
         wasted_correctly_placed = False
         while not wasted_correctly_placed:
             self.nb_wastes_green = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_tiles_per_zone + 1),
-                min(self.nb_wastes_total, number_tiles_per_zone))
+                max(0, self.nb_wastes_total - 2*number_green_tiles + 1),
+                min(self.nb_wastes_total, number_green_tiles))
 
             # Check that we have an even number of green wastes
             if self.nb_wastes_green % 2 != 0:
-                if self.nb_wastes_green == min(self.nb_wastes_total, number_tiles_per_zone):
+                if self.nb_wastes_green == min(self.nb_wastes_total, number_yellow_tiles):
                     self.nb_wastes_green -= 1
                 else:
                     self.nb_wastes_green += 1
             
             self.nb_wastes_yellow = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_tiles_per_zone + 1), 
-                max(0, min(self.nb_wastes_total - self.nb_wastes_green, number_tiles_per_zone)))
+                max(0, self.nb_wastes_total - 2*number_red_tiles + 1), 
+                max(0, min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles)))
 
             # Check that we have an even number of yellow and green pairs wastes
             if (self.nb_wastes_yellow + self.nb_wastes_green//2) % 2 != 0:
-                if self.nb_wastes_yellow == min(self.nb_wastes_total - self.nb_wastes_green, number_tiles_per_zone):
+                if self.nb_wastes_yellow == min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles):
                     self.nb_wastes_yellow -= 1
                 else:
                     self.nb_wastes_yellow += 1
@@ -222,13 +232,13 @@ class RobotMission(Model):
             self.nb_wastes_red = max(0, self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow)
             
             # If there are not too many wastes in one single zone
-            if self.nb_wastes_red <= number_tiles_per_zone - 1:
+            if self.nb_wastes_red <= number_red_tiles - 1:
                 wasted_correctly_placed = True
 
         list_waste_types_colors = [
-            [self.nb_wastes_green, "green", (0, self.width//3)],
-            [self.nb_wastes_yellow, "yellow",  (self.width//3, 2*self.width//3)],
-            [self.nb_wastes_red, "red", (2*self.width//3, self.width)],
+            [self.nb_wastes_green, "green", green_zone],
+            [self.nb_wastes_yellow, "yellow",  yellow_zone],
+            [self.nb_wastes_red, "red", red_zone],
         ]
 
         # Create the waste randomly generated in the map
@@ -267,10 +277,12 @@ class RobotMission(Model):
         -------
         None
         """
+        # Get the dimensions of each zone
+        green_zone, yellow_zone, red_zone = self.zone_dimensions
         list_agent_types_colors = [
-            [self.dict_nb_agents["green"], GreenAgent, ChiefGreenAgent, (0, self.width//3)],
-            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent, (self.width//3, 2*self.width//3)],
-            [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, (2*self.width//3, self.width)],
+            [self.dict_nb_agents["green"], GreenAgent, ChiefGreenAgent, green_zone],
+            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent,yellow_zone],
+            [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, red_zone],
         ]
 
         # Create the cleaning agents randomly generated in the map
@@ -416,10 +428,20 @@ class RobotMission(Model):
                         # Get the transformed waste object and place it on the grid
                         self.grid.place_agent(transformed_waste, agent_position)
                         print("Agent", agent.unique_id, "dropped a waste")
+                    break
+
+            elif action == ACT_DROP_ONE_WASTE:
+                # Check if there is no waste in the cell
+                if not any(isinstance(obj, Waste) for obj in cellmates):
+                    if color!= "red":
+                        # Get the picked up waste and place it on the grid
+                        self.grid.place_agent(picked_up_wastes[0], agent_position)
+                        print(f"Agent {agent.unique_id} dropped a {color} waste")
                     else:
                         self.schedule.remove(picked_up_wastes[0])
                         print("Red agent", agent.unique_id, "destroyed a waste")
                     break
+
 
             elif action == ACT_TRANSFORM:
                 # If agent is green, transform the waste to yellow
