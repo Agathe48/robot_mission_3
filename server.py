@@ -83,34 +83,32 @@ def agent_portrayal(agent):
     # For the radioactivity objects
     if type(agent) == WasteDisposalZone:
         portrayal = {
-            "Shape": "rect",
-            "Filled": "true",
-            "w": 1,
-            "h": 1,
-            "Layer": 1}
-
-        # Set the color with the shade of greens
-        portrayal["Color"] = "brown"
+            "Layer": 1,
+            "scale" : 0.95,
+            "Shape" : "ressources/waste_disposal_zone.png"}
 
     # For the wastes objects
     if type(agent) == Waste:
-        portrayal = {
-            "Shape": "rect",
-            "Filled": "true",
-            "w": 0.25,
-            "h": 0.25,
-            "Layer": 2}
-
-        # Set the color of the waste according to its type
+        portrayal = {"Layer": 2}
+        
         portrayal["Color"] = agent.type_waste
+
+        if portrayal["Color"] == "green" :
+            portrayal["Shape"] = "ressources/green_waste2.png"
+            portrayal["scale"] = 0.4
+
+        if portrayal["Color"] == "yellow" :
+            portrayal["Shape"] = "ressources/yellow_waste2.png"
+            portrayal["scale"] = 0.4
+
+        if portrayal["Color"] == "red" :
+            portrayal["Shape"] = "ressources/red_waste2.png"
+            portrayal["scale"] = 0.4
+
 
     # For the cleaning and chief agents
     if type(agent) in [GreenAgent, ChiefGreenAgent, YellowAgent, ChiefYellowAgent, RedAgent, ChiefRedAgent]:
-        portrayal = {
-            "Shape": "circle",
-            "Filled": "true",
-            "Layer": 3
-        }
+        portrayal = {"Layer": 3}
 
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
         transformed_waste = agent.knowledge.get_transformed_waste()
@@ -122,26 +120,37 @@ def agent_portrayal(agent):
         if type(agent) in [GreenAgent, ChiefGreenAgent]:
             portrayal["Color"] = "#073d00"
             portrayal["text_color"] = "white"
-            if type(agent) == ChiefGreenAgent:
-                portrayal["r"] = 0.6
-            else:
-                portrayal["r"] = 0.4
+
+            if type(agent) is GreenAgent:
+                portrayal["Shape"] = "ressources/green_agent.png"
+                portrayal["scale"] = 0.7
+
+            if type(agent) is ChiefGreenAgent:
+                portrayal["Shape"] = "ressources/green_chief.png"
+                portrayal["scale"] = 0.9
 
         elif type(agent) in [YellowAgent, ChiefYellowAgent]:
             portrayal["Color"] = "#ffa800"
             portrayal["text_color"] = "black"
-            if type(agent) == ChiefYellowAgent:
-                portrayal["r"] = 0.6
-            else:
-                portrayal["r"] = 0.4
+
+            if type(agent) is YellowAgent:
+                portrayal["Shape"] = "ressources/yellow_agent.png"
+                portrayal["scale"] = 0.7
+
+            if type(agent) is ChiefYellowAgent:
+                portrayal["Shape"] = "ressources/yellow_chief.png"
+                portrayal["scale"] = 0.9
             
         elif type(agent) in [RedAgent, ChiefRedAgent]:
             portrayal["Color"] = "#a90000"
             portrayal["text_color"] = "white"
-            if type(agent) == ChiefRedAgent:
-                portrayal["r"] = 0.6
-            else:
-                portrayal["r"] = 0.4
+            if type(agent) is RedAgent:
+                portrayal["Shape"] = "ressources/red_agent.png"
+                portrayal["scale"] = 0.7
+
+            if type(agent) is ChiefRedAgent:
+                portrayal["Shape"] = "ressources/red_chief2.png"
+                portrayal["scale"] = 0.9
 
     return portrayal
 
