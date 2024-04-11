@@ -49,19 +49,14 @@ from agents import (
     GreenAgent,
     YellowAgent,
     RedAgent,
-    CleaningAgent
+    CleaningAgent,
+    DICT_CLASS_COLOR
 )
 from schedule import CustomRandomScheduler
 
+from communication.message.MessageService import MessageService
 
-DICT_CLASS_COLOR = {
-    GreenAgent: "green",
-    ChiefGreenAgent : "green",
-    YellowAgent: "yellow",
-    ChiefYellowAgent: "yellow",
-    RedAgent: "red",
-    ChiefRedAgent: "red"
-}
+
 
 #############
 ### Model ###
@@ -93,6 +88,7 @@ class RobotMission(Model):
         None 
         """
         super().__init__()
+
         self.dict_nb_agents = {
             "green": nb_green_agents,
             "yellow": nb_yellow_agents,
@@ -102,6 +98,7 @@ class RobotMission(Model):
         self.height = height
         self.grid = MultiGrid(self.width, self.height, torus=False)
         self.schedule = CustomRandomScheduler(self)
+        self.__messages_service = MessageService(self.schedule)
         self.waste_density = waste_density
 
         # Initialize the grid with the zones
@@ -356,6 +353,7 @@ class RobotMission(Model):
         bool: 
             True if there are no more wastes left in the simulation, indicating the end of the simulation.
         """
+        self.__messages_service.dispatch_messages()
         # if there is no waste left, the model stops
         if any(type(agent) == Waste for agent in self.schedule.agents):
             self.schedule.step()

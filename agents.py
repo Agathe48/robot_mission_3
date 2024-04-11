@@ -38,6 +38,8 @@ from objects import (
     Radioactivity
 )
 from communication.agent.CommunicatingAgent import CommunicatingAgent
+from communication.message.Message import Message
+from communication.message.MessagePerformative import MessagePerformative
 
 ##############
 ### Agents ###
@@ -70,7 +72,7 @@ class CleaningAgent(CommunicatingAgent):
         super().__init__(unique_id, model)
         self.grid_size = grid_size
         # Initialise waste diposal zone position in knowledge
-        grid_knowledge = np.zeros((grid_size[0], grid_size[1]))
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), -1)
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = AgentKnowledge(
             grid_knowledge=grid_knowledge,
@@ -89,7 +91,6 @@ class CleaningAgent(CommunicatingAgent):
         -------
         None
         """
-        print(self.knowledge)
         # Update agent's knowledge
         self.update()
         # Determine all possible actions based on current knowledge
@@ -99,6 +100,8 @@ class CleaningAgent(CommunicatingAgent):
             self, list_possible_actions=list_possible_actions)
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
+        # Send the percepts to the chief
+        self.send_percepts()
       
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         """
@@ -255,6 +258,25 @@ class CleaningAgent(CommunicatingAgent):
             dict_boolean_knowledge["down"] = False
             self.knowledge.set_down(boolean_down = False)
         return dict_boolean_knowledge
+    
+    def send_percepts(self):
+        """
+        Sends the agent's percepts to the its chief.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        agent_color = DICT_CLASS_COLOR[type(self)]
+        dict_chiefs = self.knowledge.get_dict_chiefs()
+
+        for chief in dict_chiefs[agent_color]:
+            chief: Chief
+            self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS, self.percepts))
 
 class GreenAgent(CleaningAgent):
     
@@ -653,24 +675,157 @@ class RedAgent(CleaningAgent):
         return list_possible_actions
 
 
+class Chief(CleaningAgent):
+    
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Chief Agent with provided parameters.
 
-class ChiefGreenAgent(GreenAgent):
-    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-    
+
+    def receive_percepts(self):
+        list_messages = self.get_new_messages()
+        message: Message
+        list_received_percepts = []
+        for message in list_messages:
+            other_agent = message.get_exp()
+            if message.get_performative() == MessagePerformative.SEND_PERCEPTS:
+                    percepts = message.get_content()
+            # Store the percepts to later update its knowledge
+            list_received_percepts.append({"agent" : other_agent, "percepts" : percepts})
+
+            print("Chief", self.unique_id, "received percepts from", other_agent, ":", percepts)
+
     def step(self):
-        super().step()
-    
-class ChiefYellowAgent(YellowAgent):
+        """
+        Performs a step in the agent's decision-making process.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        self.receive_percepts()
+        print(self.knowledge)
+        # Update agent's knowledge
+        self.update()
+        # Determine all possible actions based on current knowledge
+        list_possible_actions = self.deliberate()
+        # Perform the action and update the percepts
+        self.percepts = self.model.do(
+            self, list_possible_actions=list_possible_actions)
+        # Update the knowledge of the agent with the consequences of the action
+        self.update_knowledge_with_action(self.percepts["action_done"])
+
+
+class ChiefGreenAgent(Chief, GreenAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Chief Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+
     
-    def step(self):
-        super().step()
-    
-class ChiefRedAgent(RedAgent):
+class ChiefYellowAgent(Chief, YellowAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Chief Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+
     
-    def step(self):
-        super().step()
+class ChiefRedAgent(Chief, RedAgent):
+    def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
+        """
+        Initializes the Chief Agent with provided parameters.
+
+        Parameters
+        ----------
+        unique_id : int
+            A unique identifier for the agent.
+            
+        model : Model
+            The model in which the agent is being initialized.
+            
+        grid_size : tuple
+            A tuple specifying the size of the grid environment (rows, columns).
+            
+        pos_waste_disposal : tuple 
+            A tuple specifying the position of the waste disposal zone in the grid (row, column).
+
+        Returns
+        -------
+        None
+        """
+        super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+
+
+#################
+### Constants ###
+#################
+
+DICT_CLASS_COLOR = {
+    GreenAgent: "green",
+    ChiefGreenAgent : "green",
+    YellowAgent: "yellow",
+    ChiefYellowAgent: "yellow",
+    RedAgent: "red",
+    ChiefRedAgent: "red"
+}

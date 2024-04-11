@@ -92,3 +92,26 @@ class CustomRandomScheduler(BaseScheduler):
             for agent in list_type_agent:
                 print("-----------------------------")
                 agent.step()
+
+    def get_communicating_agents(self):
+        """
+        Return the list of agents that can communicate.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list
+            List of agents that can communicate.
+        """
+        list_green_chiefs = list(self.model.get_agents_of_type(ChiefGreenAgent))
+        list_yellow_chiefs = list(self.model.get_agents_of_type(ChiefYellowAgent))
+        list_red_chiefs = list(self.model.get_agents_of_type(ChiefRedAgent))
+
+        list_green_subjects = list(self.model.get_agents_of_type(GreenAgent))
+        list_yellow_subjects = list(self.model.get_agents_of_type(YellowAgent))
+        list_red_subjects = list(self.model.get_agents_of_type(RedAgent))
+
+        return list_green_chiefs + list_yellow_chiefs + list_red_chiefs + list_green_subjects + list_yellow_subjects + list_red_subjects

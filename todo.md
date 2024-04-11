@@ -11,6 +11,8 @@
 
 - [ ] la visualisation doit permettre de changer le nb de paramètres sans rentrer dans le code (we do it now)
 
+- [ ] dans la visualisation, avoir des images différentes pour les agents en fonctionne de ses ressources, mettre des paths ressources dans les constantes (pour faire du clean code)(tu peux organiser en dossier) (Agathe Poulain)
+
 
 --> faire des agents chefs de chaque couleur pour coordonner les autres (pas abimé)
 --> si chef abimé il previent et un autre devient chef ou election d'un nouveau chef (LATER)
