@@ -18,7 +18,7 @@ import random as rd
 
 ### Mesa imports ###
 
-from mesa import Model
+from mesa import Model, DataCollector
 from mesa.space import MultiGrid
 
 ### Local imports ###
@@ -115,6 +115,14 @@ class RobotMission(Model):
         #     agent_reporters={"Wealth": "wealth"})
         
         # self.running = True
+
+        self.datacollector = DataCollector(
+            {
+                "nb_green_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "green"),
+                "nb_yellow_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "yellow"),
+                "nb_red_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "red"),
+            }
+        )
 
     def init_grid(self):
         """
@@ -357,10 +365,10 @@ class RobotMission(Model):
         # if there is no waste left, the model stops
         if any(type(agent) == Waste for agent in self.schedule.agents):
             self.schedule.step()
+            self.datacollector.collect(self)
         else:
             print("END OF THE SIMULATION")
             return True
-        # self.datacollector.collect(self)
         
     def run_model(self, step_count=100):
         """

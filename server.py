@@ -161,10 +161,17 @@ grid = CanvasGrid(
     canvas_width = 600,
     canvas_height = 600 * GRID_HEIGHT / GRID_WIDTH
 )
-
+chart_element = mesa.visualization.ChartModule(
+    [
+        {"Label": "nb_green_waste", "Color": "#b4deb8"},
+        {"Label": "nb_yellow_waste", "Color": "#fdec82"},
+        {"Label": "nb_red_waste", "Color": "#ff9688"},
+    ],
+    data_collector_name='datacollector'
+)
 # chart = ChartModule([{"Label": "Gini",
 #                       "Color": "Black"}],
-#                     data_collector_name='datacollector')
+#                     )
 
 model_params = {
     "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 1, 1, 6, 1),
@@ -177,7 +184,7 @@ model_params = {
 
 server = ModularServer(
     model_cls=RobotMission,
-    visualization_elements=[grid],
+    visualization_elements=[grid, chart_element],
     name="Area",
     model_params=model_params
 )
