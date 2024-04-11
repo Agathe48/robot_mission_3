@@ -38,6 +38,11 @@ class AgentKnowledge:
         self.right = True
         self.up = True
         self.down = True
+        self.dict_chiefs = {
+            "green": [],
+            "yellow": [],
+            "red": []
+        }
 
     def get_transformed_waste(self):
         """
@@ -136,6 +141,20 @@ class AgentKnowledge:
         bool
         """
         return self.down
+    
+    def get_dict_chiefs(self):
+        """
+        Return the dictionary of chiefs.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dict
+        """
+        return self.dict_chiefs
 
     def set_transformed_waste(self, transformed_waste):
         """
@@ -246,6 +265,21 @@ class AgentKnowledge:
         """
         self.down = boolean_down
 
+    def set_dict_chiefs(self, dict_chiefs):
+        """
+        Set dictionary of chiefs in knowledge.
+
+        Parameters
+        ----------
+        dict_chiefs : dict
+            Dictionary of chiefs.
+
+        Returns
+        -------
+        None
+        """
+        self.dict_chiefs = dict_chiefs
+
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down})"
+        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs})"
         

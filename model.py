@@ -281,9 +281,14 @@ class RobotMission(Model):
         green_zone, yellow_zone, red_zone = self.zone_dimensions
         list_agent_types_colors = [
             [self.dict_nb_agents["green"], GreenAgent, ChiefGreenAgent, green_zone],
-            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent,yellow_zone],
+            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent, yellow_zone],
             [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, red_zone],
         ]
+        dict_chiefs = {
+            "green": [],
+            "yellow": [],
+            "red": []
+        }
 
         # Create the cleaning agents randomly generated in the map
         for element in list_agent_types_colors:
@@ -291,18 +296,19 @@ class RobotMission(Model):
             agent_class = element[1]
             chief_agent_class = element[2]
             allowed_zone = element[3]
-            first_agent = True
+            chief_agent = True
             for agent in range(nb_agent_types):
                 
                 # Add the chief : the first agent
-                if first_agent:
+                if chief_agent:
                     ag = chief_agent_class(
                         unique_id = self.next_id(),
                         model = self,
                         grid_size = (self.width, self.height),
                         pos_waste_disposal = self.pos_waste_disposal 
                         )
-                    first_agent = False
+                    chief_agent = False
+                    dict_chiefs[DICT_CLASS_COLOR[chief_agent_class]].append(ag)
 
                 else:
                     ag = agent_class(
@@ -331,6 +337,11 @@ class RobotMission(Model):
 
                 ag.percepts = self.do(
                     ag, list_possible_actions=[ACT_WAIT])
+
+        # Update the knowledge of all agents with the chiefs
+        for agent in self.schedule.agents:
+            if type(agent) in [GreenAgent, YellowAgent, RedAgent, ChiefGreenAgent, ChiefYellowAgent, ChiefRedAgent]:
+                agent.knowledge.set_dict_chiefs(dict_chiefs)
 
     def step(self):
         """

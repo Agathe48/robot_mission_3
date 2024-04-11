@@ -89,6 +89,7 @@ class CleaningAgent(CommunicatingAgent):
         -------
         None
         """
+        print(self.knowledge)
         # Update agent's knowledge
         self.update()
         # Determine all possible actions based on current knowledge

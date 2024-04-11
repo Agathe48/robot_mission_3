@@ -26,7 +26,10 @@ from mesa.time import BaseScheduler
 from agents import (
     RedAgent,
     YellowAgent,
-    GreenAgent
+    GreenAgent,
+    ChiefRedAgent,
+    ChiefYellowAgent,
+    ChiefGreenAgent
 )
 
 #############
@@ -67,9 +70,17 @@ class CustomRandomScheduler(BaseScheduler):
         None
         """
         print("------ NEW STEP ------")
-        list_green_agents = list(self.model.get_agents_of_type(GreenAgent))
-        list_yellow_agents = list(self.model.get_agents_of_type(YellowAgent))
-        list_red_agents = list(self.model.get_agents_of_type(RedAgent))
+        list_green_chiefs = list(self.model.get_agents_of_type(ChiefGreenAgent))
+        list_yellow_chiefs = list(self.model.get_agents_of_type(ChiefYellowAgent))
+        list_red_chiefs = list(self.model.get_agents_of_type(ChiefRedAgent))
+
+        list_green_subjects = list(self.model.get_agents_of_type(GreenAgent))
+        list_yellow_subjects = list(self.model.get_agents_of_type(YellowAgent))
+        list_red_subjects = list(self.model.get_agents_of_type(RedAgent))
+
+        list_green_agents = list_green_chiefs + list_green_subjects
+        list_yellow_agents = list_yellow_chiefs + list_yellow_subjects
+        list_red_agents = list_red_chiefs + list_red_subjects
 
         # Shuffle the type of agent to activate firstly, secondly and thirdly
         activation_order_type = [list_green_agents, list_yellow_agents, list_red_agents]
