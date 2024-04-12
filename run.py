@@ -23,7 +23,7 @@ from model import (
 #############
 
 model = RobotMission(
-    nb_green_agents=2,
+    nb_green_agents=4,
     nb_yellow_agents=0,
     nb_red_agents=0
 )

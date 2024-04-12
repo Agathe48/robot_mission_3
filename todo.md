@@ -25,3 +25,7 @@
 --> est-ce qu'on peut drop un déchet : OUI
 
 
+
+Questions :
+- pourquoi le server passe deux fois dans l'init et nous crée deux messages services ?
+- pour quand on doit le rendre ?

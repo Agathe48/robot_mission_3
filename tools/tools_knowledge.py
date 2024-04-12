@@ -8,6 +8,8 @@ Group 3:
 - Agathe POULAIN
 """
 
+import numpy as np
+
 #############
 ### Class ###
 #############
@@ -281,5 +283,43 @@ class AgentKnowledge:
         self.dict_chiefs = dict_chiefs
 
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={self.grid_knowledge}, grid_radioactivity={self.grid_radioactivity}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs})"
+        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs})"
         
+
+class ChiefAgentKnowledge(AgentKnowledge):
+    def __init__(self, grid_knowledge, grid_radioactivity):
+        super().__init__(grid_knowledge, grid_radioactivity)
+
+        self.dict_agents_knowledge = {}
+
+    def get_dict_agents_knowledge(self):
+        """"
+        Return the dictionary of agents knowledge.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dict
+        """
+        return self.dict_agents_knowledge
+    
+    def set_dict_agents_knowledge(self, dict_agents_knowledge):
+        """
+        Set the dictionary of agents knowledge.
+
+        Parameters
+        ----------
+        dict_agents_knowledge : dict
+            Dictionary of agents knowledge.
+
+        Returns
+        -------
+        None
+        """
+        self.dict_agents_knowledge = dict_agents_knowledge
+
+    def __str__(self) -> str:
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge})"

@@ -31,7 +31,10 @@ from tools.tools_constants import (
     ACT_GO_DOWN,
     ACT_WAIT
 )
-from tools.tools_knowledge import AgentKnowledge
+from tools.tools_knowledge import (
+    AgentKnowledge,
+    ChiefAgentKnowledge
+)
 from objects import (
     Waste,
     WasteDisposalZone,
@@ -70,14 +73,6 @@ class CleaningAgent(CommunicatingAgent):
         None
         """
         super().__init__(unique_id, model)
-        self.grid_size = grid_size
-        # Initialise waste diposal zone position in knowledge
-        grid_knowledge = np.full((grid_size[0], grid_size[1]), -1)
-        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
-        self.knowledge = AgentKnowledge(
-            grid_knowledge=grid_knowledge,
-            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = {}
 
     def step(self):
         """
@@ -101,7 +96,7 @@ class CleaningAgent(CommunicatingAgent):
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
         # Send the percepts to the chief
-        self.send_percepts()
+        self.send_percepts_and_data()
       
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         """
@@ -226,7 +221,7 @@ class CleaningAgent(CommunicatingAgent):
                 if key == "down":
                     self.knowledge.set_down(boolean_down = True)
 
-        # print("Knowledge after of Agent", self.unique_id, self.knowledge)
+        # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
 
     def update_positions_around_agent(self, direction, dict_boolean_knowledge):
 
@@ -259,7 +254,7 @@ class CleaningAgent(CommunicatingAgent):
             self.knowledge.set_down(boolean_down = False)
         return dict_boolean_knowledge
     
-    def send_percepts(self):
+    def send_percepts_and_data(self):
         """
         Sends the agent's percepts to the its chief.
 
@@ -271,12 +266,20 @@ class CleaningAgent(CommunicatingAgent):
         -------
         None
         """
+        # Get agent's data
+        agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
+        agent_transformed_waste = self.knowledge.get_transformed_waste()
+        # Create the percepts and data to send
+        percepts_and_data = self.percepts.copy()
+        percepts_and_data["nb_wastes"] = agent_nb_wastes
+        percepts_and_data["transformed_waste"] = agent_transformed_waste
+
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
 
         for chief in dict_chiefs[agent_color]:
             chief: Chief
-            self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS, self.percepts))
+            self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
 
 class GreenAgent(CleaningAgent):
     
@@ -304,6 +307,15 @@ class GreenAgent(CleaningAgent):
         """
 
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+
+        self.grid_size = grid_size
+        # Initialise waste diposal zone position in knowledge
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = AgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
 
     def deliberate(self):
         """
@@ -433,7 +445,16 @@ class YellowAgent(CleaningAgent):
         None
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-        
+
+        self.grid_size = grid_size
+        # Initialise waste diposal zone position in knowledge
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = AgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
     def deliberate(self):
         """
         Determines all possible actions based o the current knowledge of the environment.
@@ -568,6 +589,15 @@ class RedAgent(CleaningAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
+        self.grid_size = grid_size
+        # Initialise waste diposal zone position in knowledge
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = AgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
     def deliberate(self):
         """
         Determines all possible actions based o the current knowledge of the environment.
@@ -701,18 +731,29 @@ class Chief(CleaningAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
-    def receive_percepts(self):
+        self.grid_size = grid_size
+        # Initialise waste diposal zone position in knowledge
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = ChiefAgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
+    def receive_percepts_and_data(self):
         list_messages = self.get_new_messages()
+        self.list_received_percepts_and_data = []
         message: Message
-        list_received_percepts = []
         for message in list_messages:
             other_agent = message.get_exp()
-            if message.get_performative() == MessagePerformative.SEND_PERCEPTS:
-                    percepts = message.get_content()
-            # Store the percepts to later update its knowledge
-            list_received_percepts.append({"agent" : other_agent, "percepts" : percepts})
+            if message.get_performative() == MessagePerformative.SEND_PERCEPTS_AND_DATA:
+                percepts = message.get_content()
+                # Store the percepts to later update its knowledge
+                self.list_received_percepts_and_data.append({"agent" : other_agent, "percepts" : percepts})
 
-            print("Chief", self.unique_id, "received percepts from", other_agent, ":", percepts)
+            # print("Chief", self.unique_id, "received percepts from", other_agent, ":", percepts)
+        print("Chief", self.unique_id, "received messages :", self.list_received_percepts_and_data)
+        
 
     def step(self):
         """
@@ -726,8 +767,8 @@ class Chief(CleaningAgent):
         -------
         None
         """
-        self.receive_percepts()
-        print(self.knowledge)
+        # Receive the percepts of the other agents
+        self.receive_percepts_and_data()
         # Update agent's knowledge
         self.update()
         # Determine all possible actions based on current knowledge
@@ -737,6 +778,70 @@ class Chief(CleaningAgent):
             self, list_possible_actions=list_possible_actions)
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
+        # Send the percepts to the chief (itself, to update the grid in the right order to have accurate data for the other agents)
+        self.send_percepts_and_data()
+
+    def update(self):
+        """
+        Updates the chief agent's knowledge based on its percepts
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None 
+        """
+        # Do the update from the CleaningAgent class
+        super().update()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+
+        # Update the knowledge with the percepts received from the other agents
+        for element in self.list_received_percepts_and_data:
+            agent = element["agent"]
+            percepts_and_data = element["percepts"]
+
+            # Update the grid with the waste position knowledge of the other agents
+            for key in percepts_and_data["positions"]:
+                list_objects_tile = percepts_and_data["positions"][key]
+                print(key)
+                if not list_objects_tile is None: # If the tile is the grid 
+
+                    # When there is no Waste or WasteDisposalZone, set to 0
+                    if not any(isinstance(obj, Waste) or isinstance(obj, WasteDisposalZone) for obj in list_objects_tile):
+                        grid_knowledge[key[0]][key[1]] = 0
+
+                    for element in list_objects_tile:
+                        if type(element) == Waste: 
+                            if element.type_waste == "green":
+                                grid_knowledge[key[0]][key[1]] = 1
+                            elif element.type_waste == "yellow":
+                                grid_knowledge[key[0]][key[1]] = 2
+                            elif element.type_waste == "red":
+                                grid_knowledge[key[0]][key[1]] = 3
+
+                        if type(element) == WasteDisposalZone:
+                            grid_knowledge[key[0]][key[1]] = 4
+
+                        if type(element) == Radioactivity:
+                            if element.zone == "z1":
+                                grid_radioactivity[key[0]][key[1]] = 1
+                            elif element.zone == "z2":
+                                grid_radioactivity[key[0]][key[1]] = 2
+                            elif element.zone == "z3":
+                                grid_radioactivity[key[0]][key[1]] = 3
+                
+            # Update the knowledge of the chief with the number of wastes and the transformed waste
+            dict_agent_knowledge = self.knowledge.get_dict_agents_knowledge()
+            agent_nb_wastes = percepts_and_data["nb_wastes"]
+            agent_transformed_waste = percepts_and_data["transformed_waste"]
+            dict_agent_knowledge[agent] = {"nb_wastes" : agent_nb_wastes, "transformed_waste" : agent_transformed_waste}
+        
+        # Set the updated knowledge
+        self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agent_knowledge)
+        self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
+        print("Knowledge after of Chief", self.knowledge)
 
 
 class ChiefGreenAgent(Chief, GreenAgent):

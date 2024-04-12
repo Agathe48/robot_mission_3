@@ -174,7 +174,7 @@ chart_element = mesa.visualization.ChartModule(
 #                     )
 
 model_params = {
-    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 1, 1, 6, 1),
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 3, 1, 6, 1),
     "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 0, 1, 6, 1) ,
     "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 0, 1, 6, 1),
     "width": mesa.visualization.Slider("Grid width", GRID_WIDTH, 6, 30, 1),

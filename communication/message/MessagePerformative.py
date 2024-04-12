@@ -15,7 +15,7 @@ class MessagePerformative(Enum):
     QUERY_REF = 106 # ask for value
     INFORM_REF = 107 # give the value
 
-    SEND_PERCEPTS = 108 # send percepts
+    SEND_PERCEPTS_AND_DATA = 108 # send percepts
     SEND_ORDERS = 109 # send orders
 
     def __str__(self):
