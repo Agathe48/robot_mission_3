@@ -269,10 +269,12 @@ class CleaningAgent(CommunicatingAgent):
         # Get agent's data
         agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
         agent_transformed_waste = self.knowledge.get_transformed_waste()
+        agent_position = self.pos
         # Create the percepts and data to send
         percepts_and_data = self.percepts.copy()
         percepts_and_data["nb_wastes"] = agent_nb_wastes
         percepts_and_data["transformed_waste"] = agent_transformed_waste
+        percepts_and_data["position"] = agent_position
 
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
@@ -778,8 +780,6 @@ class Chief(CleaningAgent):
             self, list_possible_actions=list_possible_actions)
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
-        # Send the percepts to the chief (itself, to update the grid in the right order to have accurate data for the other agents)
-        self.send_percepts_and_data()
 
     def update(self):
         """
@@ -796,6 +796,7 @@ class Chief(CleaningAgent):
         # Do the update from the CleaningAgent class
         super().update()
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        dict_agents_knowledge = self.knowledge.get_dict_agents_knowledge()
 
         # Update the knowledge with the percepts received from the other agents
         for element in self.list_received_percepts_and_data:
@@ -833,13 +834,16 @@ class Chief(CleaningAgent):
                                 grid_radioactivity[key[0]][key[1]] = 3
                 
             # Update the knowledge of the chief with the number of wastes and the transformed waste
-            dict_agent_knowledge = self.knowledge.get_dict_agents_knowledge()
             agent_nb_wastes = percepts_and_data["nb_wastes"]
             agent_transformed_waste = percepts_and_data["transformed_waste"]
-            dict_agent_knowledge[agent] = {"nb_wastes" : agent_nb_wastes, "transformed_waste" : agent_transformed_waste}
+            agent_position = percepts_and_data["position"]
+            dict_agents_knowledge[agent] = {
+                "nb_wastes" : agent_nb_wastes,
+                "transformed_waste" : agent_transformed_waste,
+                "position": agent_position}
         
         # Set the updated knowledge
-        self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agent_knowledge)
+        self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
         print("Knowledge after of Chief", self.knowledge)
 

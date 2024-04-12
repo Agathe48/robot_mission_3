@@ -253,6 +253,8 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 
 #### The Agent's knowledge
 
+--> class chief knowledge qui hérite de knwoledge
+
 #### The CleaningAgent
 
 #### The GreenAgent
@@ -267,5 +269,9 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 ### Our Model
 
 ### The scheduler
+
+On a changer pour le scheduler : choix random pour la couleur PUIS le chef de la couleur PUIS les autres de manière aléatoire (donc les chefs passent toujours en premier à chaque step)
+
+--> ça nous permet qu'ils aient toujours une data à jour et ils envoient leurs ordres en D2BUT de step
 
 ### The visualization
