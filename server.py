@@ -84,7 +84,7 @@ def agent_portrayal(agent):
     if type(agent) == WasteDisposalZone:
         portrayal = {
             "Layer": 1,
-            "scale" : 0.95,
+            "scale" :0.95,
             "Shape" : "ressources/waste_disposal_zone.png"}
 
     # For the wastes objects
@@ -94,15 +94,15 @@ def agent_portrayal(agent):
         portrayal["Color"] = agent.type_waste
 
         if portrayal["Color"] == "green" :
-            portrayal["Shape"] = "ressources/green_waste2.png"
+            portrayal["Shape"] = "ressources/green_waste3.png"
             portrayal["scale"] = 0.4
 
         if portrayal["Color"] == "yellow" :
-            portrayal["Shape"] = "ressources/yellow_waste2.png"
+            portrayal["Shape"] = "ressources/yellow_waste3.png"
             portrayal["scale"] = 0.4
 
         if portrayal["Color"] == "red" :
-            portrayal["Shape"] = "ressources/red_waste2.png"
+            portrayal["Shape"] = "ressources/red_waste3.png"
             portrayal["scale"] = 0.4
 
 
@@ -112,45 +112,80 @@ def agent_portrayal(agent):
 
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
         transformed_waste = agent.knowledge.get_transformed_waste()
-        if len(picked_up_wastes) >= 1:
-            portrayal["text"] = len(picked_up_wastes)
-        if not transformed_waste is None:
-            portrayal["text"] = "T"
+
 
         if type(agent) in [GreenAgent, ChiefGreenAgent]:
-            portrayal["Color"] = "#073d00"
-            portrayal["text_color"] = "white"
 
             if type(agent) is GreenAgent:
                 portrayal["Shape"] = "ressources/green_agent.png"
                 portrayal["scale"] = 0.7
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/green_agent_1_green_waste.png"
+                    portrayal["scale"] = 0.7
+                if len(picked_up_wastes) == 2:
+                    portrayal["Shape"] = "ressources/green_agent_2_green_waste.png"
+                    portrayal["scale"] = 0.7
+                if not transformed_waste is None:
+                    portrayal["Shape"] = "ressources/green_agent_yellow_waste.png"
+                    portrayal["scale"] = 0.7
 
             if type(agent) is ChiefGreenAgent:
                 portrayal["Shape"] = "ressources/green_chief.png"
                 portrayal["scale"] = 0.9
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/green_chief_1_green_waste.png"
+                    portrayal["scale"] = 0.9
+                if len(picked_up_wastes) == 2:
+                    portrayal["Shape"] = "ressources/green_chief_2_green_waste.png"
+                    portrayal["scale"] = 0.9
+                if not transformed_waste is None:
+                    portrayal["Shape"] = "ressources/green_chief_yellow_waste.png"
+                    portrayal["scale"] = 0.9
 
         elif type(agent) in [YellowAgent, ChiefYellowAgent]:
-            portrayal["Color"] = "#ffa800"
-            portrayal["text_color"] = "black"
 
             if type(agent) is YellowAgent:
                 portrayal["Shape"] = "ressources/yellow_agent.png"
                 portrayal["scale"] = 0.7
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/yellow_agent_1_yellow_waste.png"
+                    portrayal["scale"] = 0.7
+                if len(picked_up_wastes) == 2:
+                    portrayal["Shape"] = "ressources/yellow_agent_2_yellow_waste.png"
+                    portrayal["scale"] = 0.7
+                if not transformed_waste is None:
+                    portrayal["Shape"] = "ressources/yellow_agent_1_red_waste.png"
+                    portrayal["scale"] = 0.7
 
             if type(agent) is ChiefYellowAgent:
                 portrayal["Shape"] = "ressources/yellow_chief.png"
                 portrayal["scale"] = 0.9
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/yellow_chief_1_yellow_waste.png"
+                    portrayal["scale"] = 0.9
+                if len(picked_up_wastes) == 2:
+                    portrayal["Shape"] = "ressources/yellow_chief_2_yellow_waste.png"
+                    portrayal["scale"] = 0.9
+                if not transformed_waste is None:
+                    portrayal["Shape"] = "ressources/yellow_chief_1_red_waste.png"
+                    portrayal["scale"] = 0.9
             
         elif type(agent) in [RedAgent, ChiefRedAgent]:
             portrayal["Color"] = "#a90000"
-            portrayal["text_color"] = "white"
+            # portrayal["text_color"] = "white"
             if type(agent) is RedAgent:
                 portrayal["Shape"] = "ressources/red_agent.png"
                 portrayal["scale"] = 0.7
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/red_agent_1_red_waste.png"
+                    portrayal["scale"] = 0.7
 
             if type(agent) is ChiefRedAgent:
                 portrayal["Shape"] = "ressources/red_chief2.png"
                 portrayal["scale"] = 0.9
+                if len(picked_up_wastes) == 1:
+                    portrayal["Shape"] = "ressources/red_chief_1_red_waste.png"
+                    portrayal["scale"] = 0.9
 
     return portrayal
 
