@@ -181,7 +181,7 @@ def agent_portrayal(agent):
                     portrayal["scale"] = 0.7
 
             if type(agent) is ChiefRedAgent:
-                portrayal["Shape"] = "ressources/red_chief2.png"
+                portrayal["Shape"] = "ressources/red_chief.png"
                 portrayal["scale"] = 0.9
                 if len(picked_up_wastes) == 1:
                     portrayal["Shape"] = "ressources/red_chief_1_red_waste.png"

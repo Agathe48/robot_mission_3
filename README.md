@@ -255,7 +255,7 @@ To analyse the performance of the model without communication, we launched sever
 
 Here is the table with all the results :
 
-![alt text](resultats_simulation_sans_communication.png)
+![alt text](results/results_without_communication.png)
 
 When there is only one agent per zone (blue cells on the previous picture), the average number of steps to complete the cleaning of the map is 1346.
 
@@ -265,6 +265,7 @@ When there are three agents per zone (purple cells on the previous picture), the
 
 According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
 
+You can see in appendix in results/graphics_without_communication the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
 
 ## With Communication
 
