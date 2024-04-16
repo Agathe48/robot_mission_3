@@ -240,6 +240,10 @@ class RobotMission(Model):
             if self.nb_wastes_red <= number_red_tiles - 1:
                 wasted_correctly_placed = True
 
+        print("nb initial green waste : ", self.nb_wastes_green)
+        print("nb initial yellow waste : ", self.nb_wastes_yellow)
+        print("nb initial red waste : ", self.nb_wastes_red)
+
         list_waste_types_colors = [
             [self.nb_wastes_green, "green", green_zone],
             [self.nb_wastes_yellow, "yellow",  yellow_zone],
