@@ -312,11 +312,15 @@ class CleaningAgent(CommunicatingAgent):
         agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
         agent_transformed_waste = self.knowledge.get_transformed_waste()
         agent_position = self.pos
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
         # Create the percepts and data to send
         percepts_and_data = self.percepts.copy()
         percepts_and_data["nb_wastes"] = agent_nb_wastes
         percepts_and_data["transformed_waste"] = agent_transformed_waste
         percepts_and_data["position"] = agent_position
+        percepts_and_data["bool_quadrillage"] = bool_quadrillage
+        percepts_and_data["direction_quadrillage"] = direction_quadrillage
 
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
@@ -353,7 +357,7 @@ class GreenAgent(CleaningAgent):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
         self.grid_size = grid_size
-        # Initialise waste diposal zone position in knowledge
+        # Initialise waste disposal zone position in knowledge
         grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = AgentKnowledge(
@@ -491,7 +495,7 @@ class YellowAgent(CleaningAgent):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
         self.grid_size = grid_size
-        # Initialise waste diposal zone position in knowledge
+        # Initialise waste disposal zone position in knowledge
         grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = AgentKnowledge(
@@ -634,7 +638,7 @@ class RedAgent(CleaningAgent):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
         self.grid_size = grid_size
-        # Initialise waste diposal zone position in knowledge
+        # Initialise waste disposal zone position in knowledge
         grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = AgentKnowledge(
@@ -776,7 +780,7 @@ class Chief(CleaningAgent):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
         self.grid_size = grid_size
-        # Initialise waste diposal zone position in knowledge
+        # Initialise waste disposal zone position in knowledge
         grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = ChiefAgentKnowledge(
@@ -795,9 +799,7 @@ class Chief(CleaningAgent):
                 # Store the percepts to later update its knowledge
                 self.list_received_percepts_and_data.append({"agent" : other_agent, "percepts" : percepts})
 
-            # print("Chief", self.unique_id, "received percepts from", other_agent, ":", percepts)
         print("Chief", self.unique_id, "received messages :", self.list_received_percepts_and_data)
-        
 
     def step(self):
         """
@@ -815,6 +817,8 @@ class Chief(CleaningAgent):
         self.receive_percepts_and_data()
         # Update agent's knowledge
         self.update()
+        # Send orders to the other agents
+        self.send_orders()
         # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
         # Perform the action and update the percepts
@@ -876,19 +880,76 @@ class Chief(CleaningAgent):
                                 grid_radioactivity[key[0]][key[1]] = 3
                 
             # Update the knowledge of the chief with the number of wastes and the transformed waste
-            agent_nb_wastes = percepts_and_data["nb_wastes"]
-            agent_transformed_waste = percepts_and_data["transformed_waste"]
-            agent_position = percepts_and_data["position"]
             dict_agents_knowledge[agent] = {
-                "nb_wastes" : agent_nb_wastes,
-                "transformed_waste" : agent_transformed_waste,
-                "position": agent_position}
+                "nb_wastes" : percepts_and_data["nb_wastes"],
+                "transformed_waste" : percepts_and_data["transformed_waste"],
+                "position": percepts_and_data["position"],
+                "bool_quadrillage": percepts_and_data["bool_quadrillage"],
+                "direction_quadrillage": percepts_and_data["direction_quadrillage"]}
         
         # Set the updated knowledge
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
         print("Knowledge after of Chief", self.knowledge)         
-            
+
+    def find_closest_agent(self, position):
+        """
+        Find the closest agent to a given position.
+        
+        Parameters
+        ----------
+        position : (int, int)
+            Position to reach.
+        
+        Returns
+        -------
+        Agent
+        """
+        dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
+        grid_knowledge, _ = self.knowledge.get_grids()
+        closest_agent = None
+        closest_distance = grid_knowledge.shape[0] + grid_knowledge.shape[1]
+        for agent in dict_knowledge_agents:
+            agent_position = dict_knowledge_agents[agent]["position"]
+            distance = abs(position[0] - agent_position[0]) + abs(position[1] - agent_position[1])
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_agent = agent
+        return closest_agent
+
+    def send_orders_quadrillage(self):
+        dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
+        grid_knowledge, _ = self.knowledge.get_grids()
+        rows_being_covered = self.knowledge.get_rows_being_covered()
+        number_agents = len(dict_knowledge_agents)
+
+        # Send orders for each agent, depending on their current knowledge
+        for agent in dict_knowledge_agents:
+            dict_knowledge = dict_knowledge_agents[agent]
+            bool_quadrillage = dict_knowledge["bool_quadrillage"]
+            direction_quadrillage = dict_knowledge["direction_quadrillage"]
+
+            # If the agent is in quadrillage mode
+            if bool_quadrillage:
+                # If the agent is waiting for an order
+                if direction_quadrillage is None:
+                    # Send the order to start a new covering (the closest to the agent)
+                    if 0 in rows_being_covered:
+                        # TODO
+                        # Choose the best row to cover (which is ideally covering two other rows)
+                        pass
+                    # Send the order to stop covering
+                    else:
+                        # TODO
+                        pass                        
+
+    def send_orders(self):
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+
+        # If the grid is not finished to be covered, the chief will send orders of coverage if necessary
+        if np.any(grid_knowledge) == 9:
+            self.send_orders_quadrillage()
+
 
 class ChiefGreenAgent(Chief, GreenAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):

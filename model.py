@@ -110,12 +110,6 @@ class RobotMission(Model):
         # Initialize the agents on the grid
         self.init_agents()
 
-        # self.datacollector = DataCollector(
-        #     model_reporters={"Gini": compute_gini},
-        #     agent_reporters={"Wealth": "wealth"})
-        
-        # self.running = True
-
         self.datacollector = DataCollector(
             {
                 "nb_green_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "green"),

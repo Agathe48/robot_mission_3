@@ -323,6 +323,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.dict_agents_knowledge = {}
         self.bool_cleaned_right_column = False
         self.direction_clean_right_column = None # can take as values None when the agent has not started cleaning the right column, "up", "down"
+        self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
 
     def get_dict_agents_knowledge(self):
         """"
@@ -366,6 +367,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         return self.direction_clean_right_column
     
+    def get_rows_being_covered(self):
+        """
+        Return the list of rows being covered.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list
+        """
+        return self.rows_being_covered
+
     def set_dict_agents_knowledge(self, dict_agents_knowledge):
         """
         Set the dictionary of agents knowledge.
@@ -410,6 +425,21 @@ class ChiefAgentKnowledge(AgentKnowledge):
         None
         """
         self.direction_clean_right_column = direction_clean_right_column
+
+    def set_rows_being_covered(self, rows_being_covered):
+        """
+        Set the list of rows being covered.
+
+        Parameters
+        ----------
+        rows_being_covered : list
+            The list of rows being covered.
+
+        Returns
+        -------
+        None
+        """
+        self.rows_being_covered = rows_being_covered
 
     def __str__(self) -> str:
         return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column})"
