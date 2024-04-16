@@ -29,7 +29,8 @@ from tools.tools_constants import (
     ACT_GO_RIGHT,
     ACT_GO_UP,
     ACT_GO_DOWN,
-    ACT_WAIT
+    ACT_WAIT,
+    STOP_COVERING
 )
 from tools.tools_knowledge import (
     AgentKnowledge,
@@ -684,14 +685,14 @@ class RedAgent(CleaningAgent):
                     list_possible_actions.append(ACT_GO_RIGHT)
                 else:
                     waste_disposal_zone_position = np.where(grid_knowledge == 4)
-                    # If the Waste dispozal zone is above the agent
+                    # If the Waste disposal zone is above the agent
                     if waste_disposal_zone_position[1] > self.pos[1]:
                         if up:
                             list_possible_actions.append(ACT_GO_UP)
                         # If the agent can't go up, it waits
                         else:
                             list_possible_actions.append(ACT_WAIT)
-                    # If the Waste dispozal zone is below the agent
+                    # If the Waste disposal zone is below the agent
                     else:
                         if down:
                             list_possible_actions.append(ACT_GO_DOWN)
@@ -915,17 +916,71 @@ class Chief(CleaningAgent):
                 closest_agent = agent
         return closest_agent
 
+    def get_green_yellow_right_column(self, mode: Literal["z1", "z2"]):
+        """
+        Get the last column for zones 1 and 2.
+        
+        Parameters
+        ----------
+        mode : Literal["z1", "z2"]
+            Depending if we are in zone 1 or 2.
+        
+        Returns
+        -------
+        int
+            Id of the column.
+        """
+        _, grid_radioactivity = self.knowledge.get_grids()
+        zone_to_detect = "z2" if mode == "z1" else "z3"
+        for column in grid_radioactivity:
+            print("DEBUG PRINT : I'm in zone", column[0])
+            if column[0] == zone_to_detect:
+                return column - 1
+
+    def find_best_rows_to_cover(self, agent_position, rows_being_covered):
+        grid_height = len(rows_being_covered)
+        # First start to cover the extremities
+        if rows_being_covered[1] == 0 and rows_being_covered[grid_height-2] == 0:
+            # The agent is in the upper part of the screen
+            if agent_position[1] > grid_height//2:
+                return 1
+            # The agent is in the upper part of the screen
+            else:
+                return grid_height - 2
+        elif rows_being_covered[1] == 0:
+            return 1
+        elif rows_being_covered[grid_height - 2]:
+            return grid_height - 2
+        
+        # Cover when there are three rows adjacent not covered
+        for counter in range(1, grid_height-1):
+            if rows_being_covered[counter-1] == 0 and rows_being_covered[counter] == 0 and rows_being_covered[counter+1] == 0:
+                return counter
+            
+        # Cover when there are two rows adjacent not covered
+        for counter in range(1, grid_height-1):
+            if (rows_being_covered[counter-1] == 0 and rows_being_covered[counter] == 0) or (rows_being_covered[counter+1] == 0 and rows_being_covered[counter] == 0):
+                return counter
+            
+        # Cover the single row not covered
+        for counter in range(1, grid_height-1):
+            if rows_being_covered[counter] == 0:
+                return counter        
+
     def send_orders_quadrillage(self):
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
         grid_knowledge, _ = self.knowledge.get_grids()
+        grid_height = grid_knowledge[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
-        number_agents = len(dict_knowledge_agents)
+        green_right_column = self.get_green_yellow_right_column("z1")
+        yellow_right_column = self.get_green_yellow_right_column("z2")
 
         # Send orders for each agent, depending on their current knowledge
         for agent in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent]
             bool_quadrillage = dict_knowledge["bool_quadrillage"]
             direction_quadrillage = dict_knowledge["direction_quadrillage"]
+            agent_position = dict_knowledge["position"]
 
             # If the agent is in quadrillage mode
             if bool_quadrillage:
@@ -933,13 +988,30 @@ class Chief(CleaningAgent):
                 if direction_quadrillage is None:
                     # Send the order to start a new covering (the closest to the agent)
                     if 0 in rows_being_covered:
-                        # TODO
                         # Choose the best row to cover (which is ideally covering two other rows)
-                        pass
-                    # Send the order to stop covering
+                        id_row_to_go = self.find_best_rows_to_cover(agent_position=agent_position, rows_being_covered=rows_being_covered)
+
+                        # Update the rows being covered
+                        rows_being_covered[id_row_to_go] = 1
+                        if id_row_to_go != 0:
+                            rows_being_covered[id_row_to_go-1] = 1
+                        if id_row_to_go != grid_height - 1:
+                            rows_being_covered[id_row_to_go+1] = 1
+                        
+                        # Determine the position to go if the agent is already on the right column of its zone
+                        if agent_position[0] in [green_right_column, yellow_right_column]:
+                            position_to_go = (0, id_row_to_go)
+                        else:
+                            position_to_go = (0, id_row_to_go)
+                        # Send the order to go to this position
+                        self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, position_to_go))
+
+                    # Send the order to stop covering when there is nothing more to cover
                     else:
-                        # TODO
-                        pass                        
+                        self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, STOP_COVERING))
+        
+        # Update the knowledge of the chief with the rows being covered
+        self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
 
     def send_orders(self):
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
@@ -947,7 +1019,6 @@ class Chief(CleaningAgent):
         # If the grid is not finished to be covered, the chief will send orders of coverage if necessary
         if np.any(grid_knowledge) == 9:
             self.send_orders_quadrillage()
-
 
 class ChiefGreenAgent(Chief, GreenAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):

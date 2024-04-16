@@ -36,3 +36,8 @@ ACT_GO_UP = "go_up"
 ACT_GO_DOWN = "go_down"
 ACT_WAIT = "wait"
 
+##############
+### ORDERS ###
+##############
+
+STOP_COVERING = "stop_covering"
