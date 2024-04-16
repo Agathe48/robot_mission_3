@@ -14,7 +14,7 @@ GRID_WIDTH = GRID_SIZE[1]
 WASTE_DENSITY = 0.3
 
 DICT_NUMBER_TYPE_CONTENT = {
-    -1: "Unknown content",
+    9: "Unknown content",
     0: "Empty tile",
     1: "Waste Green",
     2: "Waste Yellow",

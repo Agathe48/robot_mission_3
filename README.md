@@ -251,6 +251,8 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 
 ### Our Agents
 
+TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par type)
+
 #### The Agent's knowledge
 
 --> class chief knowledge qui hérite de knwoledge

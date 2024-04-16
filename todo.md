@@ -24,8 +24,7 @@
 
 --> est-ce qu'on peut drop un déchet : OUI
 
-
-
-Questions :
-- pourquoi le server passe deux fois dans l'init et nous crée deux messages services ?
-- pour quand on doit le rendre ?
+Principe mouvement amélioré et comm:
+- le chef de chaque zone (sauf rouge) va clean la colonne de droite de dépôt (Agathe Plu et Laure)
+- quadrillage des autres agents : il se positionne a l'emplacement donné par le chef (dans une cellule le plus à gauche, en ayant divisé par le nombre d'agents classiques, sauf pour rouge où l'on compte aussi le chef), puis il avance vers la droite (ils peuvent ramasser un déchet uniquement s'il est sur la case ou l'agent se trouve (on ne devie pas)), ensuite descend/monte et mouvement droite-gauche (dans ce cas, si dechet transformer) (Oumaima et Agathe Poulain)
+- après le quadrillage effectué, les autres vont recevoir des ordres du chef pour aller chercher des déchets (Agathe Plu et Laure)
