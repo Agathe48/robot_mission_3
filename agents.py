@@ -347,125 +347,156 @@ class GreenAgent(CleaningAgent):
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        target_position = self.knowledge.get_target_position()
+
+        actual_position = self.pos
 
         # Check up and down available directions
         list_available_act_directions = []
-        if up:
-            list_available_act_directions.append(ACT_GO_UP)
-        if down:
-            list_available_act_directions.append(ACT_GO_DOWN)
 
-        # Check if there is a waste to transform
-        if len(picked_up_wastes) == 2:
-            list_possible_actions.append(ACT_TRANSFORM)
-
-        # Check if agent has a transformed waste and if it can go right or drop it
-        if transformed_waste != None:
-            # Check if cell at the right is in zone 2
-            if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
-                # Check if the current cell does not already contain a waste
-                if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
-                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
-                else:
-                    if len(list_available_act_directions) > 0:
-                        # Randomize the order of possible moves
-                        random.shuffle(list_available_act_directions)
-                        for action in list_available_act_directions:
-                            list_possible_actions.append(action)
-                    else :
-                        list_possible_actions.append(ACT_WAIT)
-            else:
-                # Move to the right to drop the waste
+        # If the agent is in mode quadrillage but not at the good start position yet
+        if bool_quadrillage and direction_quadrillage is None: 
+            # If the target position is to the right of the agent, move right
+            if target_position[0] > actual_position[0]:
                 list_possible_actions.append(ACT_GO_RIGHT)
-        
-        # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
-        if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
-            list_possible_actions.append(ACT_PICK_UP)
+            # If the target position is to the left of the agent, move left
+            elif target_position[0] < actual_position[0]:
+                list_possible_actions.append(ACT_GO_LEFT)
+            # If the target position is above the agent, move up
+            elif target_position[1] > actual_position[1]:
+                list_possible_actions.append(ACT_GO_UP)
+            # If the target position is below the agent, move down
+            elif target_position[1] < actual_position[1]:
+                list_possible_actions.append(ACT_GO_DOWN)
+                
+        # If the agent is in mode quadrillage and ready to do it
+        elif bool_quadrillage : 
+            # Check if there is a waste to transform
+            if len(picked_up_wastes) == 2:
+                list_possible_actions.append(ACT_TRANSFORM)
+            # Check if agent has a transformed waste and drop it
+            if transformed_waste != None:
+                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1:
+                list_possible_actions.append(ACT_PICK_UP)
 
-        # Check for other agent in surronding cells
-        if left:
-            list_available_act_directions.append(ACT_GO_LEFT)
-        if right:
-            # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
-            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2:
-                list_available_act_directions.append(ACT_GO_RIGHT)
+            # Clean the column in the direction from its position
+            if direction_quadrillage == "right":
+                if right:
+                    list_possible_actions.append(ACT_GO_RIGHT)
 
-        if len(list_available_act_directions) > 0:
-            list_best_directions = []
-            for act_direction in list_available_act_directions:
-                # Check if there is a waste in the right cell and favor this direction
-                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 1:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the left cell and favor this direction
-                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the up cell and favor this direction
-                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 1:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the down cell and favor this direction
-                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 1:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
+            elif direction_quadrillage == "left":
+                if left:
+                    list_possible_actions.append(ACT_GO_LEFT)
 
-            # Randomize the order of possible best moves
-            if len(list_best_directions) > 0:
-                random.shuffle(list_best_directions)
-                for action in list_best_directions:
-                    list_possible_actions.append(action)
+        # If the agent is in normal mode
+        else : 
+            if up:
+                list_available_act_directions.append(ACT_GO_UP)
+            if down:
+                list_available_act_directions.append(ACT_GO_DOWN)
 
-            # Randomize the order of possible moves
+            # Check if there is a waste to transform
+            if len(picked_up_wastes) == 2:
+                list_possible_actions.append(ACT_TRANSFORM)
+
+            # Check if agent has a transformed waste and if it can go right or drop it
+            if transformed_waste != None:
+                # Check if cell at the right is in zone 2
+                if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
+                    # Check if the current cell does not already contain a waste
+                    if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
+                        list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+                    else:
+                        if len(list_available_act_directions) > 0:
+                            # Randomize the order of possible moves
+                            random.shuffle(list_available_act_directions)
+                            for action in list_available_act_directions:
+                                list_possible_actions.append(action)
+                        else :
+                            list_possible_actions.append(ACT_WAIT)
+                else:
+                    # Move to the right to drop the waste
+                    list_possible_actions.append(ACT_GO_RIGHT)
+            
+            # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
+            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
+                list_possible_actions.append(ACT_PICK_UP)
+
+            # Check for other agent in surronding cells
+            if left:
+                list_available_act_directions.append(ACT_GO_LEFT)
+            if right:
+                # Check if cell at the right is in zone 2 (green agent can't go in zone 2)
+                if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 2:
+                    list_available_act_directions.append(ACT_GO_RIGHT)
+
             if len(list_available_act_directions) > 0:
-                random.shuffle(list_available_act_directions)
-                for action in list_available_act_directions:
-                    list_possible_actions.append(action)
+                list_best_directions = []
+                for act_direction in list_available_act_directions:
+                    # Check if there is a waste in the right cell and favor this direction
+                    if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 1:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the left cell and favor this direction
+                    if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 1:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the up cell and favor this direction
+                    if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 1:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the down cell and favor this direction
+                    if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 1:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+
+                # Randomize the order of possible best moves
+                if len(list_best_directions) > 0:
+                    random.shuffle(list_best_directions)
+                    for action in list_best_directions:
+                        list_possible_actions.append(action)
+
+                # Randomize the order of possible moves
+                if len(list_available_act_directions) > 0:
+                    random.shuffle(list_available_act_directions)
+                    for action in list_available_act_directions:
+                        list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        list_possible_actions.append(ACT_DROP_ONE_WASTE)
+        # list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
     
-    def execute_movement_pattern(self):
-        """
-        Executes the movement pattern described for the agents.
+    def update_knowledge_with_action(self, performed_action):
+        super().update_knowledge_with_action(performed_action=performed_action)
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
 
-        Returns
-        -------
-        None
-        """
-        # Check if the agent is in the process of following the movement pattern
-        if self.knowledge.get_target_position():
-            # If the agent has reached the end of the current movement sequence, reset the movement pattern
-            if self.pos == self.knowledge.get_target_position():
-                self.knowledge.set_target_position(target_position=None)
-            # If the agent has not reached the end of the current movement sequence, continue moving
-            else:
-                self.move_to_target_position()
-    
-    def move_to_target_position(self):
-        """
-        Moves the agent to the target position.
+        actual_position = self.pos
 
-        Returns
-        -------
-        None
-        """
+        # Set target position back to (None, None) is position is reached
         target_position = self.knowledge.get_target_position()
-        # If the target position is to the right of the agent, move right
-        if target_position[0] > self.pos[0]:
-            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_RIGHT])
-        # If the target position is to the left of the agent, move left
-        elif target_position[0] < self.pos[0]:
-            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_LEFT])
-        # If the target position is above the agent, move up
-        elif target_position[1] > self.pos[1]:
-            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_UP])
-        # If the target position is below the agent, move down
-        elif target_position[1] < self.pos[1]:
-            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_DOWN])
-
+        if actual_position == target_position :
+            target_position = (None, None)
+            self.knowledge.set_target_position(target_position)
+            if bool_quadrillage : 
+                # When target position is reached, set direction to quadriller
+                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2:
+                    if actual_position[0] == 0:
+                        direction_quadrillage = "right"
+                    else:
+                        direction_quadrillage = "left"
+                # If quadrillage line is done, but direction_quadrillage bakc to None
+                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 or actual_position[0] == 0:
+                    direction_quadrillage = None
+                self.knowledge.set_bool_quadrillage(False)
+                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+    
    
 class YellowAgent(CleaningAgent):
 
@@ -525,90 +556,160 @@ class YellowAgent(CleaningAgent):
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        target_position = self.knowledge.get_target_position()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
 
-        # Check up and down cells for agents
-        list_available_act_directions = []
-        if up:
-            list_available_act_directions.append(ACT_GO_UP)
-        if down:
-            list_available_act_directions.append(ACT_GO_DOWN)
+        actual_position = self.pos
 
-        # Check if there is a waste to transform
-        if len(picked_up_wastes) == 2:
-            list_possible_actions.append(ACT_TRANSFORM)
-
-        # Check if agent has a transformed waste and if it can go right or drop it
-        if transformed_waste != None:
-            # Check if cell at the right is in zone 3
-            if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 3:
-                # Check if the current cell does not already contain a waste
-                if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
-                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
-                else :
-                    if len(list_available_act_directions) > 0 :
-                        # Randomize the order of possible moves
-                        random.shuffle(list_available_act_directions)
-                        for action in list_available_act_directions:
-                            list_possible_actions.append(action)
-                    else :
-                        list_possible_actions.append(ACT_WAIT)
-            else:
-                # Move to the right to drop the waste
+        # If the agent is in mode quadrillage but not at the good start position yet
+        if bool_quadrillage and direction_quadrillage is None: 
+            # If the target position is to the right of the agent, move right
+            if target_position[0] > actual_position[0]:
                 list_possible_actions.append(ACT_GO_RIGHT)
-        
-        # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
-        if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2 and transformed_waste == None:
-            list_possible_actions.append(ACT_PICK_UP)
+            # If the target position is to the left of the agent, move left
+            elif target_position[0] < actual_position[0]:
+                list_possible_actions.append(ACT_GO_LEFT)
+            # If the target position is above the agent, move up
+            elif target_position[1] > actual_position[1]:
+                list_possible_actions.append(ACT_GO_UP)
+            # If the target position is below the agent, move down
+            elif target_position[1] < actual_position[1]:
+                list_possible_actions.append(ACT_GO_DOWN)
+                
+        # If the agent is in mode quadrillage and ready to do it
+        elif bool_quadrillage : 
+            # Check if there is a waste to transform
+            if len(picked_up_wastes) == 2:
+                list_possible_actions.append(ACT_TRANSFORM)
+            # Check if agent has a transformed waste and drop it
+            if transformed_waste != None:
+                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2:
+                list_possible_actions.append(ACT_PICK_UP)
 
-        # Check for other agent in surronding cells
-        if left:
-            # Check if cell at the left is in zone 2
-            if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
-                list_available_act_directions.append(ACT_GO_LEFT)
-            # Check if the cell is in zone 1 and if it contains an yellow waste
-            elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
-                list_available_act_directions.append(ACT_GO_LEFT)
-        if right:
-            # Check if cell at the right is in zone 2 (yellow agent can't go in zone 3)
-            if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 3 :
-                list_available_act_directions.append(ACT_GO_RIGHT)
+            # Clean the column in the direction from its position
+            if direction_quadrillage == "right":
+                if right:
+                    list_possible_actions.append(ACT_GO_RIGHT)
 
-        if len(list_available_act_directions) > 0:
-            list_best_directions = []
-            for act_direction in list_available_act_directions:
-                # Check if there is a waste in the right cell and favor this direction
-                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 2:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the left cell and favor this direction
-                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the up cell and favor this direction
-                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 2:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the down cell and favor this direction
-                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 2:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
+            elif direction_quadrillage == "left":
+                if left:
+                    list_possible_actions.append(ACT_GO_LEFT)
 
-            # Randomize the order of possible best moves
-            if len(list_best_directions) > 0:
-                random.shuffle(list_best_directions)
-                for action in list_best_directions:
-                    list_possible_actions.append(action)
+        # If the agent is in normal mode
+        else : 
+            # Check up and down cells for agents
+            list_available_act_directions = []
+            if up:
+                list_available_act_directions.append(ACT_GO_UP)
+            if down:
+                list_available_act_directions.append(ACT_GO_DOWN)
 
-            # Randomize the order of possible moves
+            # Check if there is a waste to transform
+            if len(picked_up_wastes) == 2:
+                list_possible_actions.append(ACT_TRANSFORM)
+
+            # Check if agent has a transformed waste and if it can go right or drop it
+            if transformed_waste != None:
+                # Check if cell at the right is in zone 3
+                if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 3:
+                    # Check if the current cell does not already contain a waste
+                    if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
+                        list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+                    else :
+                        if len(list_available_act_directions) > 0 :
+                            # Randomize the order of possible moves
+                            random.shuffle(list_available_act_directions)
+                            for action in list_available_act_directions:
+                                list_possible_actions.append(action)
+                        else :
+                            list_possible_actions.append(ACT_WAIT)
+                else:
+                    # Move to the right to drop the waste
+                    list_possible_actions.append(ACT_GO_RIGHT)
+            
+            # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
+            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2 and transformed_waste == None:
+                list_possible_actions.append(ACT_PICK_UP)
+
+            # Check for other agent in surronding cells
+            if left:
+                # Check if cell at the left is in zone 2
+                if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
+                    list_available_act_directions.append(ACT_GO_LEFT)
+                # Check if the cell is in zone 1 and if it contains an yellow waste
+                elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
+                    list_available_act_directions.append(ACT_GO_LEFT)
+            if right:
+                # Check if cell at the right is in zone 2 (yellow agent can't go in zone 3)
+                if grid_radioactivity[self.pos[0]+1][self.pos[1]] != 3 :
+                    list_available_act_directions.append(ACT_GO_RIGHT)
+
             if len(list_available_act_directions) > 0:
-                random.shuffle(list_available_act_directions)
-                for action in list_available_act_directions:
-                    list_possible_actions.append(action)
+                list_best_directions = []
+                for act_direction in list_available_act_directions:
+                    # Check if there is a waste in the right cell and favor this direction
+                    if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 2:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the left cell and favor this direction
+                    if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 2:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the up cell and favor this direction
+                    if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 2:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the down cell and favor this direction
+                    if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 2:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+
+                # Randomize the order of possible best moves
+                if len(list_best_directions) > 0:
+                    random.shuffle(list_best_directions)
+                    for action in list_best_directions:
+                        list_possible_actions.append(action)
+
+                # Randomize the order of possible moves
+                if len(list_available_act_directions) > 0:
+                    random.shuffle(list_available_act_directions)
+                    for action in list_available_act_directions:
+                        list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
         list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
+ 
+    def update_knowledge_with_action(self, performed_action):
+        super().update_knowledge_with_action(performed_action=performed_action)
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+
+        actual_position = self.pos
+
+        # Set target position back to (None, None) is position is reached
+        target_position = self.knowledge.get_target_position()
+        if actual_position == target_position :
+            target_position = (None, None)
+            self.knowledge.set_target_position(target_position)
+            if bool_quadrillage : 
+                # When target position is reached, set direction to quadriller
+                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
+                    if grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
+                        direction_quadrillage = "right"
+                    elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
+                        direction_quadrillage = "left"
+                # If quadrillage line is done, but direction_quadrillage bakc to None
+                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 or grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
+                    direction_quadrillage = None
+                self.knowledge.set_bool_quadrillage(False)
+                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+
 
 class RedAgent(CleaningAgent):
 
@@ -667,89 +768,155 @@ class RedAgent(CleaningAgent):
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        target_position = self.knowledge.get_target_position()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
 
-        # Check up and down cells for agents
-        list_available_act_directions = []
-        if up:
-            list_available_act_directions.append(ACT_GO_UP)
-        if down:
-            list_available_act_directions.append(ACT_GO_DOWN)
-        
-        # If we picked up a waste, go to waste disposal zone to drop it
-        if len(picked_up_wastes) == 1:
-            if grid_knowledge[self.pos[0]][self.pos[1]] == 4:
-                list_possible_actions.append(ACT_DROP_ONE_WASTE)
-            else:
-                # The agent goes to the waste disposal zone column
+        actual_position = self.pos
+
+        # If the agent is in mode quadrillage but not at the good start position yet
+        if bool_quadrillage and direction_quadrillage is None: 
+            # If the target position is to the right of the agent, move right
+            if target_position[0] > actual_position[0]:
+                list_possible_actions.append(ACT_GO_RIGHT)
+            # If the target position is to the left of the agent, move left
+            elif target_position[0] < actual_position[0]:
+                list_possible_actions.append(ACT_GO_LEFT)
+            # If the target position is above the agent, move up
+            elif target_position[1] > actual_position[1]:
+                list_possible_actions.append(ACT_GO_UP)
+            # If the target position is below the agent, move down
+            elif target_position[1] < actual_position[1]:
+                list_possible_actions.append(ACT_GO_DOWN)
+                
+        # If the agent is in mode quadrillage and ready to do it
+        elif bool_quadrillage : 
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if len(picked_up_wastes) <=0  and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
+                list_possible_actions.append(ACT_PICK_UP)
+
+            # Clean the column in the direction from its position
+            if direction_quadrillage == "right":
                 if right:
                     list_possible_actions.append(ACT_GO_RIGHT)
+
+            elif direction_quadrillage == "left":
+                if left:
+                    list_possible_actions.append(ACT_GO_LEFT)
+
+        # If the agent is in normal mode
+        else : 
+
+            # Check up and down cells for agents
+            list_available_act_directions = []
+            if up:
+                list_available_act_directions.append(ACT_GO_UP)
+            if down:
+                list_available_act_directions.append(ACT_GO_DOWN)
+            
+            # If we picked up a waste, go to waste disposal zone to drop it
+            if len(picked_up_wastes) == 1:
+                if grid_knowledge[self.pos[0]][self.pos[1]] == 4:
+                    list_possible_actions.append(ACT_DROP_ONE_WASTE)
                 else:
-                    waste_disposal_zone_position = np.where(grid_knowledge == 4)
-                    # If the Waste disposal zone is above the agent
-                    if waste_disposal_zone_position[1] > self.pos[1]:
-                        if up:
-                            list_possible_actions.append(ACT_GO_UP)
-                        # If the agent can't go up, it waits
-                        else:
-                            list_possible_actions.append(ACT_WAIT)
-                    # If the Waste disposal zone is below the agent
+                    # The agent goes to the waste disposal zone column
+                    if right:
+                        list_possible_actions.append(ACT_GO_RIGHT)
                     else:
-                        if down:
-                            list_possible_actions.append(ACT_GO_DOWN)
-                        # If the agent can't go down, it waits
+                        waste_disposal_zone_position = np.where(grid_knowledge == 4)
+                        # If the Waste dispozal zone is above the agent
+                        if waste_disposal_zone_position[1] > self.pos[1]:
+                            if up:
+                                list_possible_actions.append(ACT_GO_UP)
+                            # If the agent can't go up, it waits
+                            else:
+                                list_possible_actions.append(ACT_WAIT)
+                        # If the Waste dispozal zone is below the agent
                         else:
-                            list_possible_actions.append(ACT_WAIT)
+                            if down:
+                                list_possible_actions.append(ACT_GO_DOWN)
+                            # If the agent can't go down, it waits
+                            else:
+                                list_possible_actions.append(ACT_WAIT)
 
-        # Check if there is a waste to pick up and if we can pick up a waste
-        if len(picked_up_wastes) <= 0 and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
-            list_possible_actions.append(ACT_PICK_UP)
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if len(picked_up_wastes) <= 0 and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
+                list_possible_actions.append(ACT_PICK_UP)
 
-        # Check for other agent in surronding cells
-        if left:
-            # Check if cell at the left is in zone 3
-            if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 2:
-                list_available_act_directions.append(ACT_GO_LEFT)
-            # Check if the cell is in zone 2 and if it contains a red waste
-            elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
-                list_available_act_directions.append(ACT_GO_LEFT)
-        if right:
-            list_available_act_directions.append(ACT_GO_RIGHT)
+            # Check for other agent in surronding cells
+            if left:
+                # Check if cell at the left is in zone 3
+                if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 2:
+                    list_available_act_directions.append(ACT_GO_LEFT)
+                # Check if the cell is in zone 2 and if it contains a red waste
+                elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
+                    list_available_act_directions.append(ACT_GO_LEFT)
+            if right:
+                list_available_act_directions.append(ACT_GO_RIGHT)
 
-        if len(list_available_act_directions) > 0:
-            list_best_directions = []
-            for act_direction in list_available_act_directions:
-                # Check if there is a waste in the right cell and favor this direction
-                if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 3:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the left cell and favor this direction
-                if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the up cell and favor this direction
-                if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 3:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-                # Check if there is a waste in the down cell and favor this direction
-                if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 3:
-                    list_best_directions.append(act_direction)
-                    list_available_act_directions.remove(act_direction)
-
-            # Randomize the order of possible best moves
-            if len(list_best_directions) > 0:
-                random.shuffle(list_best_directions)
-                for action in list_best_directions:
-                    list_possible_actions.append(action)
-
-            # Randomize the order of possible moves
             if len(list_available_act_directions) > 0:
-                random.shuffle(list_available_act_directions)
-                for action in list_available_act_directions:
-                    list_possible_actions.append(action)
+                list_best_directions = []
+                for act_direction in list_available_act_directions:
+                    # Check if there is a waste in the right cell and favor this direction
+                    if act_direction == ACT_GO_RIGHT and grid_knowledge[self.pos[0]+1][self.pos[1]] == 3:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the left cell and favor this direction
+                    if act_direction == ACT_GO_LEFT and grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the up cell and favor this direction
+                    if act_direction == ACT_GO_UP and grid_knowledge[self.pos[0]][self.pos[1]+1] == 3:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+                    # Check if there is a waste in the down cell and favor this direction
+                    if act_direction == ACT_GO_DOWN and grid_knowledge[self.pos[0]][self.pos[1]-1] == 3:
+                        list_best_directions.append(act_direction)
+                        list_available_act_directions.remove(act_direction)
+
+                # Randomize the order of possible best moves
+                if len(list_best_directions) > 0:
+                    random.shuffle(list_best_directions)
+                    for action in list_best_directions:
+                        list_possible_actions.append(action)
+
+                # Randomize the order of possible moves
+                if len(list_available_act_directions) > 0:
+                    random.shuffle(list_available_act_directions)
+                    for action in list_available_act_directions:
+                        list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
         print("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
+
+    def update_knowledge_with_action(self, performed_action):
+        super().update_knowledge_with_action(performed_action=performed_action)
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        grid_length = grid_knowledge[0]
+
+        actual_position = self.pos
+
+        # Set target position back to (None, None) is position is reached
+        target_position = self.knowledge.get_target_position()
+        if actual_position == target_position :
+            target_position = (None, None)
+            self.knowledge.set_target_position(target_position)
+            if bool_quadrillage : 
+                # When target position is reached, set direction to quadriller
+                if direction_quadrillage is None:
+                    if actual_position[0] == grid_length:
+                        direction_quadrillage = "right"
+                    else:
+                        direction_quadrillage = "left"
+                # If quadrillage line is done, but direction_quadrillage bakc to None
+                elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_length:
+                    direction_quadrillage = None
+                self.knowledge.set_bool_quadrillage(False)
+                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+    
 
 
 class Chief(CleaningAgent):
