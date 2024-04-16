@@ -45,7 +45,7 @@ class AgentKnowledge:
             "yellow": [],
             "red": []
         }
-        self.target_position = (None, None)
+        self.target_position = (0, 0)
         self.bool_quadrillage = True
         self.direction_quadrillage = None
 

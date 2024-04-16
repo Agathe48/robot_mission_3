@@ -348,7 +348,6 @@ class GreenAgent(CleaningAgent):
 
         actual_position = self.pos
 
-        target_position = (0, 0) # to test it, TODO remove it
         # Check up and down available directions
         list_available_act_directions = []
 
@@ -482,13 +481,13 @@ class GreenAgent(CleaningAgent):
             self.knowledge.set_target_position(target_position)
             if bool_quadrillage : 
                 # When target position is reached, set direction to quadriller
-                if direction_quadrillage is None:
+                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2:
                     if actual_position[0] == 0:
                         direction_quadrillage = "right"
                     else:
                         direction_quadrillage = "left"
                 # If quadrillage line is done, but direction_quadrillage bakc to None
-                if grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 or actual_position[0] == 0:
+                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 or actual_position[0] == 0:
                     direction_quadrillage = None
                 self.knowledge.set_bool_quadrillage(False)
                 self.knowledge.set_direction_quadrillage(direction_quadrillage)
@@ -558,7 +557,6 @@ class YellowAgent(CleaningAgent):
 
         actual_position = self.pos
 
-        target_position = (0, 6) # to test it, TODO remove it
         # If the agent is in mode quadrillage but not at the good start position yet
         if bool_quadrillage and direction_quadrillage is None: 
             # If the target position is to the right of the agent, move right
@@ -696,13 +694,13 @@ class YellowAgent(CleaningAgent):
             self.knowledge.set_target_position(target_position)
             if bool_quadrillage : 
                 # When target position is reached, set direction to quadriller
-                if direction_quadrillage is None:
+                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
                     if grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
                         direction_quadrillage = "right"
                     elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
                         direction_quadrillage = "left"
                 # If quadrillage line is done, but direction_quadrillage bakc to None
-                if grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 or grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
+                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 or grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
                     direction_quadrillage = None
                 self.knowledge.set_bool_quadrillage(False)
                 self.knowledge.set_direction_quadrillage(direction_quadrillage)
@@ -771,7 +769,6 @@ class RedAgent(CleaningAgent):
 
         actual_position = self.pos
 
-        target_position = (0, 12) # to test it, TODO remove it
         # If the agent is in mode quadrillage but not at the good start position yet
         if bool_quadrillage and direction_quadrillage is None: 
             # If the target position is to the right of the agent, move right
@@ -910,7 +907,7 @@ class RedAgent(CleaningAgent):
                     else:
                         direction_quadrillage = "left"
                 # If quadrillage line is done, but direction_quadrillage bakc to None
-                if grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_length:
+                elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_length:
                     direction_quadrillage = None
                 self.knowledge.set_bool_quadrillage(False)
                 self.knowledge.set_direction_quadrillage(direction_quadrillage)
