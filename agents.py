@@ -97,7 +97,49 @@ class CleaningAgent(CommunicatingAgent):
         self.update_knowledge_with_action(self.percepts["action_done"])
         # Send the percepts to the chief
         self.send_percepts_and_data()
-      
+        self.execute_movement_pattern()
+
+    def execute_movement_pattern(self):
+        """
+        Executes the movement pattern described for the agents.
+
+        Returns
+        -------
+        None
+        """
+        # Check if the agent is in the process of following the movement pattern
+        if self.knowledge.get_target_position():
+            # If the agent has reached the end of the current movement sequence, reset the movement pattern
+            if self.pos == self.knowledge.get_target_position():
+                self.knowledge.set_target_position(target_position=None)
+            # If the agent has not reached the end of the current movement sequence, continue moving
+            else:
+                self.move_to_target_position()
+    
+    def move_to_target_position(self):
+        """
+        Moves the agent to the target position.
+
+        Returns
+        -------
+        None
+        """
+        target_position = self.knowledge.get_target_position()
+        # If the target position is to the right of the agent, move right
+        if target_position[0] > self.pos[0]:
+            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_RIGHT])
+        # If the target position is to the left of the agent, move left
+        elif target_position[0] < self.pos[0]:
+            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_LEFT])
+        # If the target position is above the agent, move up
+        elif target_position[1] > self.pos[1]:
+            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_UP])
+        # If the target position is below the agent, move down
+        elif target_position[1] < self.pos[1]:
+            self.percepts = self.model.do(self, list_possible_actions=[ACT_GO_DOWN])
+
+    
+
     def convert_pos_to_tile(self, pos) -> Literal["right", "left", "down", "up"]:
         """
         Converts a position to a directional tile.
