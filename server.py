@@ -85,7 +85,7 @@ def agent_portrayal(agent):
         portrayal = {
             "Layer": 1,
             "scale" :0.95,
-            "Shape" : "ressources/waste_disposal_zone.png"}
+            "Shape" : "ressources/waste_disposal_zone_illustration.png"}
 
     # For the wastes objects
     if type(agent) == Waste:
