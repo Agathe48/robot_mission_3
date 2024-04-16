@@ -46,6 +46,8 @@ class AgentKnowledge:
             "red": []
         }
         self.target_position = (None, None)
+        self.bool_quadrillage = True
+        self.direction_quadrillage = None
 
     def get_transformed_waste(self):
         """
@@ -172,6 +174,34 @@ class AgentKnowledge:
         tuple
         """
         return self.target_position
+
+    def get_bool_quadrillage(self):
+        """
+        Return the quadrillage mode.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
+        return self.bool_quadrillage
+    
+    def get_direction_quadrillage(self):
+        """
+        Return the quadrillage direction.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None, "right" or "left"
+        """
+        return self.direction_quadrillage
 
     def set_transformed_waste(self, transformed_waste):
         """
@@ -311,6 +341,36 @@ class AgentKnowledge:
         None
         """
         self.target_position = target_position
+
+    def set_bool_quadrillage(self, bool_quadrillage):
+        """
+        Set quadrillage mode.
+
+        Parameters
+        ----------
+        bool_quadrillage : bool
+            Quadrillage mode.
+
+        Returns
+        -------
+        None
+        """
+        self.bool_quadrillage = bool_quadrillage
+
+    def set_direction_quadrillage(self, direction_quadrillage):
+        """
+        Set quadrillage direction.
+
+        Parameters
+        ----------
+        bool_quadrillage : None, "right" or "left"
+            Quadrillage direction.
+
+        Returns
+        -------
+        None
+        """
+        self.direction_quadrillage = direction_quadrillage
 
     def __str__(self) -> str:
         return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position})"
