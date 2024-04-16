@@ -7,6 +7,11 @@ The project has been realized by the group 3 composed of:
 - Agathe PLU
 - Agathe POULAIN
 
+## pistes d'amélioration
+
+- situations bloquantes :
+    - quand le chef veut aller en haut pour clean la colonne de droite et qu'il y a un agent qui veut déposer dans la colonne de droite (cf image)
+
 ## Table of contents
 
 - [Robot Mission - Group 3](#robot-mission---group-3)

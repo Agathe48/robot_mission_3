@@ -1184,6 +1184,120 @@ class ChiefYellowAgent(Chief, YellowAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
+    def update(self):
+        """
+        Updates the chief agent's knowledge based on its percepts
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None 
+        """
+        # Do the update from the Chief class
+        super().update()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
+        direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
+        grid_height = grid_knowledge.shape[1]
+
+        actual_position = self.pos
+
+        if not bool_cleaned_right_column:
+
+            # Update the boolean when he has finish to clean the right column
+            if direction_clean_right_column == "up" and actual_position[1] == grid_height - 1 :
+                bool_cleaned_right_column = True
+                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
+            if direction_clean_right_column == "down" and actual_position[1] == 0 :
+                bool_cleaned_right_column = True
+                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
+            
+            # Update the direction to clean right column if he has reach one of the starting positions
+            if direction_clean_right_column is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 and actual_position[1] in [0, grid_height - 1]:
+                if actual_position[1] == 0:
+                    direction_clean_right_column = "up"
+                else:
+                    direction_clean_right_column = "down"
+                self.knowledge.set_direction_clean_right_column(direction_clean_right_column)
+
+    def deliberate(self):
+        """
+        Determines all possible actions based on the current knowledge of the environment.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        """
+        # Get data from knowledge
+        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
+        direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
+        right = self.knowledge.get_right()
+        up = self.knowledge.get_up()
+        down = self.knowledge.get_down()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        grid_height = grid_knowledge.shape[1]
+        actual_position = self.pos
+        list_possible_actions = []
+
+        # First the chief goes to upper right or lower righ position
+        if not bool_cleaned_right_column and direction_clean_right_column is None:
+            # If the chief is in the upper part of the grid, it goes up
+            if actual_position[1] > grid_height // 2:
+                # If the chief can go up, it goes up
+                if up:
+                    list_possible_actions.append(ACT_GO_UP)
+                # If the chief can't go up, it goes right (to still move closer to the right column)
+                elif right and grid_radioactivity[actual_position[0]+1][actual_position[1]] != 3:
+                    list_possible_actions.append(ACT_GO_RIGHT)
+            # If the chief is in the lower part of the grid, it goes down
+            else:
+                # If the chief can go down, it goes down
+                if down:
+                    list_possible_actions.append(ACT_GO_DOWN)
+                # If the chief can't go down, it goes right (to still move closer to the right column)
+                elif right and grid_radioactivity[actual_position[0]+1][actual_position[1]] != 3:
+                    list_possible_actions.append(ACT_GO_RIGHT)
+
+            list_possible_actions.append(ACT_WAIT)
+        
+        # If the chief has started to clean the column and not finished
+        elif not bool_cleaned_right_column:           
+
+            # Check if there is a waste to transform
+            if len(picked_up_wastes) == 2:
+                list_possible_actions.append(ACT_TRANSFORM)
+            # Check if agent has a transformed waste and drop it
+            if transformed_waste != None:
+                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2:
+                list_possible_actions.append(ACT_PICK_UP)
+
+            # Clean the column in the direction from its position
+            if direction_clean_right_column == "up":
+                if up:
+                    list_possible_actions.append(ACT_GO_UP)
+
+            elif direction_clean_right_column == "down":
+                if down:
+                    list_possible_actions.append(ACT_GO_DOWN)
+
+            list_possible_actions.append(ACT_WAIT)
+        else:
+            list_possible_actions = super().deliberate()
+
+        return list_possible_actions
+
     
 class ChiefRedAgent(Chief, RedAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
