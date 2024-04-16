@@ -45,6 +45,7 @@ class AgentKnowledge:
             "yellow": [],
             "red": []
         }
+        self.target_position = (None, None)
 
     def get_transformed_waste(self):
         """
@@ -157,6 +158,20 @@ class AgentKnowledge:
         dict
         """
         return self.dict_chiefs
+
+    def get_target_position(self):
+        """
+        Return the target position.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        tuple
+        """
+        return self.target_position
 
     def set_transformed_waste(self, transformed_waste):
         """
@@ -282,8 +297,23 @@ class AgentKnowledge:
         """
         self.dict_chiefs = dict_chiefs
 
+    def set_target_position(self, target_position):
+        """
+        Set target position in knowledge.
+
+        Parameters
+        ----------
+        target_position : tuple
+            The target position.
+
+        Returns
+        -------
+        None
+        """
+        self.target_position = target_position
+
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs})"
+        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position})"
         
 
 class ChiefAgentKnowledge(AgentKnowledge):

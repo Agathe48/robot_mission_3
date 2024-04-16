@@ -270,6 +270,8 @@ According to these results, we can conclude that, on one hand, the higher the nu
 
 ### Our Agents
 
+TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par type)
+
 #### The Agent's knowledge
 
 --> class chief knowledge qui hérite de knwoledge
