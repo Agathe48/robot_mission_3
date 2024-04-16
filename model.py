@@ -451,7 +451,7 @@ class RobotMission(Model):
                 # Check if there is no waste in the cell
                 if not any(isinstance(obj, Waste) for obj in cellmates):
                     if color!= "red":
-                        # Get the picked up waste and place it on the grid
+                        # Get the picked up waste and place it on the grid 
                         self.grid.place_agent(picked_up_wastes[0], agent_position)
                         print(f"Agent {agent.unique_id} dropped a {color} waste")
                     else:
