@@ -271,15 +271,15 @@ class CleaningAgent(CommunicatingAgent):
         agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
         agent_transformed_waste = self.knowledge.get_transformed_waste()
         agent_position = self.pos
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
         # Create the percepts and data to send
         percepts_and_data = self.percepts.copy()
         percepts_and_data["nb_wastes"] = agent_nb_wastes
         percepts_and_data["transformed_waste"] = agent_transformed_waste
         percepts_and_data["position"] = agent_position
-        percepts_and_data["bool_quadrillage"] = bool_quadrillage
-        percepts_and_data["direction_quadrillage"] = direction_quadrillage
+        percepts_and_data["bool_covering"] = bool_covering
+        percepts_and_data["direction_covering"] = direction_covering
 
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
@@ -347,8 +347,8 @@ class GreenAgent(CleaningAgent):
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
         target_position = self.knowledge.get_target_position()
 
         actual_position = self.pos
@@ -356,8 +356,8 @@ class GreenAgent(CleaningAgent):
         # Check up and down available directions
         list_available_act_directions = []
 
-        # If the agent is in mode quadrillage but not at the good start position yet
-        if bool_quadrillage and direction_quadrillage is None: 
+        # If the agent is in mode covering but not at the good start position yet
+        if bool_covering and direction_covering is None: 
             # If the target position is to the right of the agent, move right
             if target_position[0] > actual_position[0]:
                 list_possible_actions.append(ACT_GO_RIGHT)
@@ -371,8 +371,8 @@ class GreenAgent(CleaningAgent):
             elif target_position[1] < actual_position[1]:
                 list_possible_actions.append(ACT_GO_DOWN)
                 
-        # If the agent is in mode quadrillage and ready to do it
-        elif bool_quadrillage : 
+        # If the agent is in mode covering and ready to do it
+        elif bool_covering : 
             # Check if there is a waste to transform
             if len(picked_up_wastes) == 2:
                 list_possible_actions.append(ACT_TRANSFORM)
@@ -384,11 +384,11 @@ class GreenAgent(CleaningAgent):
                 list_possible_actions.append(ACT_PICK_UP)
 
             # Clean the column in the direction from its position
-            if direction_quadrillage == "right":
+            if direction_covering == "right":
                 if right:
                     list_possible_actions.append(ACT_GO_RIGHT)
 
-            elif direction_quadrillage == "left":
+            elif direction_covering == "left":
                 if left:
                     list_possible_actions.append(ACT_GO_LEFT)
 
@@ -474,8 +474,8 @@ class GreenAgent(CleaningAgent):
     def update_knowledge_with_action(self, performed_action):
         super().update_knowledge_with_action(performed_action=performed_action)
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
 
         actual_position = self.pos
 
@@ -484,18 +484,18 @@ class GreenAgent(CleaningAgent):
         if actual_position == target_position :
             target_position = (None, None)
             self.knowledge.set_target_position(target_position)
-            if bool_quadrillage : 
+            if bool_covering : 
                 # When target position is reached, set direction to quadriller
-                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2:
+                if direction_covering is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2:
                     if actual_position[0] == 0:
-                        direction_quadrillage = "right"
+                        direction_covering = "right"
                     else:
-                        direction_quadrillage = "left"
-                # If quadrillage line is done, but direction_quadrillage bakc to None
+                        direction_covering = "left"
+                # If covering line is done, but direction_covering bakc to None
                 elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 or actual_position[0] == 0:
-                    direction_quadrillage = None
-                self.knowledge.set_bool_quadrillage(False)
-                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+                    direction_covering = None
+                self.knowledge.set_bool_covering(False)
+                self.knowledge.set_direction_covering(direction_covering)
     
    
 class YellowAgent(CleaningAgent):
@@ -556,14 +556,14 @@ class YellowAgent(CleaningAgent):
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
         target_position = self.knowledge.get_target_position()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        direction_covering = self.knowledge.get_direction_covering()
 
         actual_position = self.pos
 
-        # If the agent is in mode quadrillage but not at the good start position yet
-        if bool_quadrillage and direction_quadrillage is None: 
+        # If the agent is in mode covering but not at the good start position yet
+        if bool_covering and direction_covering is None: 
             # If the target position is to the right of the agent, move right
             if target_position[0] > actual_position[0]:
                 list_possible_actions.append(ACT_GO_RIGHT)
@@ -577,8 +577,8 @@ class YellowAgent(CleaningAgent):
             elif target_position[1] < actual_position[1]:
                 list_possible_actions.append(ACT_GO_DOWN)
                 
-        # If the agent is in mode quadrillage and ready to do it
-        elif bool_quadrillage : 
+        # If the agent is in mode covering and ready to do it
+        elif bool_covering : 
             # Check if there is a waste to transform
             if len(picked_up_wastes) == 2:
                 list_possible_actions.append(ACT_TRANSFORM)
@@ -590,11 +590,11 @@ class YellowAgent(CleaningAgent):
                 list_possible_actions.append(ACT_PICK_UP)
 
             # Clean the column in the direction from its position
-            if direction_quadrillage == "right":
+            if direction_covering == "right":
                 if right:
                     list_possible_actions.append(ACT_GO_RIGHT)
 
-            elif direction_quadrillage == "left":
+            elif direction_covering == "left":
                 if left:
                     list_possible_actions.append(ACT_GO_LEFT)
 
@@ -687,8 +687,8 @@ class YellowAgent(CleaningAgent):
     def update_knowledge_with_action(self, performed_action):
         super().update_knowledge_with_action(performed_action=performed_action)
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
 
         actual_position = self.pos
 
@@ -697,18 +697,18 @@ class YellowAgent(CleaningAgent):
         if actual_position == target_position :
             target_position = (None, None)
             self.knowledge.set_target_position(target_position)
-            if bool_quadrillage : 
+            if bool_covering : 
                 # When target position is reached, set direction to quadriller
-                if direction_quadrillage is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
+                if direction_covering is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
                     if grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
-                        direction_quadrillage = "right"
+                        direction_covering = "right"
                     elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
-                        direction_quadrillage = "left"
-                # If quadrillage line is done, but direction_quadrillage bakc to None
+                        direction_covering = "left"
+                # If covering line is done, but direction_covering bakc to None
                 elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 or grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
-                    direction_quadrillage = None
-                self.knowledge.set_bool_quadrillage(False)
-                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+                    direction_covering = None
+                self.knowledge.set_bool_covering(False)
+                self.knowledge.set_direction_covering(direction_covering)
 
 
 class RedAgent(CleaningAgent):
@@ -768,14 +768,14 @@ class RedAgent(CleaningAgent):
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
+        bool_covering = self.knowledge.get_bool_covering()
         target_position = self.knowledge.get_target_position()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
+        direction_covering = self.knowledge.get_direction_covering()
 
         actual_position = self.pos
 
-        # If the agent is in mode quadrillage but not at the good start position yet
-        if bool_quadrillage and direction_quadrillage is None: 
+        # If the agent is in mode covering but not at the good start position yet
+        if bool_covering and direction_covering is None: 
             # If the target position is to the right of the agent, move right
             if target_position[0] > actual_position[0]:
                 list_possible_actions.append(ACT_GO_RIGHT)
@@ -789,18 +789,18 @@ class RedAgent(CleaningAgent):
             elif target_position[1] < actual_position[1]:
                 list_possible_actions.append(ACT_GO_DOWN)
                 
-        # If the agent is in mode quadrillage and ready to do it
-        elif bool_quadrillage : 
+        # If the agent is in mode covering and ready to do it
+        elif bool_covering : 
             # Check if there is a waste to pick up and if we can pick up a waste
             if len(picked_up_wastes) <=0  and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
                 list_possible_actions.append(ACT_PICK_UP)
 
             # Clean the column in the direction from its position
-            if direction_quadrillage == "right":
+            if direction_covering == "right":
                 if right:
                     list_possible_actions.append(ACT_GO_RIGHT)
 
-            elif direction_quadrillage == "left":
+            elif direction_covering == "left":
                 if left:
                     list_possible_actions.append(ACT_GO_LEFT)
 
@@ -893,9 +893,9 @@ class RedAgent(CleaningAgent):
     def update_knowledge_with_action(self, performed_action):
         super().update_knowledge_with_action(performed_action=performed_action)
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_quadrillage = self.knowledge.get_bool_quadrillage()
-        direction_quadrillage = self.knowledge.get_direction_quadrillage()
-        grid_length = grid_knowledge[0]
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
+        grid_width = grid_knowledge.shape[0]
 
         actual_position = self.pos
 
@@ -904,18 +904,18 @@ class RedAgent(CleaningAgent):
         if actual_position == target_position :
             target_position = (None, None)
             self.knowledge.set_target_position(target_position)
-            if bool_quadrillage : 
+            if bool_covering : 
                 # When target position is reached, set direction to quadriller
-                if direction_quadrillage is None:
-                    if actual_position[0] == grid_length:
-                        direction_quadrillage = "right"
+                if direction_covering is None:
+                    if actual_position[0] == grid_width - 1:
+                        direction_covering = "right"
                     else:
-                        direction_quadrillage = "left"
-                # If quadrillage line is done, but direction_quadrillage bakc to None
-                elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_length:
-                    direction_quadrillage = None
-                self.knowledge.set_bool_quadrillage(False)
-                self.knowledge.set_direction_quadrillage(direction_quadrillage)
+                        direction_covering = "left"
+                # If covering line is done, but direction_covering bakc to None
+                elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_width - 1:
+                    direction_covering = None
+                self.knowledge.set_bool_covering(False)
+                self.knowledge.set_direction_covering(direction_covering)
     
 
 
@@ -1018,7 +1018,6 @@ class Chief(CleaningAgent):
             # Update the grid with the waste position knowledge of the other agents
             for key in percepts_and_data["positions"]:
                 list_objects_tile = percepts_and_data["positions"][key]
-                print(key)
                 if not list_objects_tile is None: # If the tile is the grid 
 
                     # When there is no Waste or WasteDisposalZone, set to 0
@@ -1050,8 +1049,8 @@ class Chief(CleaningAgent):
                 "nb_wastes" : percepts_and_data["nb_wastes"],
                 "transformed_waste" : percepts_and_data["transformed_waste"],
                 "position": percepts_and_data["position"],
-                "bool_quadrillage": percepts_and_data["bool_quadrillage"],
-                "direction_quadrillage": percepts_and_data["direction_quadrillage"]}
+                "bool_covering": percepts_and_data["bool_covering"],
+                "direction_covering": percepts_and_data["direction_covering"]}
         
         # Set the updated knowledge
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
@@ -1100,8 +1099,8 @@ class Chief(CleaningAgent):
         _, grid_radioactivity = self.knowledge.get_grids()
         zone_to_detect = "z2" if mode == "z1" else "z3"
         for column in grid_radioactivity:
-            print("DEBUG PRINT : I'm in zone", column[0])
             if column[0] == zone_to_detect:
+                print("DEBUG PRINT : I'm in zone", column[0])
                 return column - 1
 
     def find_best_rows_to_cover(self, agent_position, rows_being_covered):
@@ -1110,13 +1109,13 @@ class Chief(CleaningAgent):
         if rows_being_covered[1] == 0 and rows_being_covered[grid_height-2] == 0:
             # The agent is in the upper part of the screen
             if agent_position[1] > grid_height//2:
-                return 1
+                return grid_height - 2
             # The agent is in the upper part of the screen
             else:
-                return grid_height - 2
+                return 1
         elif rows_being_covered[1] == 0:
             return 1
-        elif rows_being_covered[grid_height - 2]:
+        elif rows_being_covered[grid_height - 2] == 0:
             return grid_height - 2
         
         # Cover when there are three rows adjacent not covered
@@ -1134,10 +1133,10 @@ class Chief(CleaningAgent):
             if rows_being_covered[counter] == 0:
                 return counter        
 
-    def send_orders_quadrillage(self):
+    def send_orders_covering(self):
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
         grid_knowledge, _ = self.knowledge.get_grids()
-        grid_height = grid_knowledge[1]
+        grid_height = grid_knowledge.shape[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
         green_right_column = self.get_green_yellow_right_column("z1")
         yellow_right_column = self.get_green_yellow_right_column("z2")
@@ -1145,14 +1144,14 @@ class Chief(CleaningAgent):
         # Send orders for each agent, depending on their current knowledge
         for agent in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent]
-            bool_quadrillage = dict_knowledge["bool_quadrillage"]
-            direction_quadrillage = dict_knowledge["direction_quadrillage"]
+            bool_covering = dict_knowledge["bool_covering"]
+            direction_covering = dict_knowledge["direction_covering"]
             agent_position = dict_knowledge["position"]
 
-            # If the agent is in quadrillage mode
-            if bool_quadrillage:
+            # If the agent is in covering mode
+            if bool_covering:
                 # If the agent is waiting for an order
-                if direction_quadrillage is None:
+                if direction_covering is None:
                     # Send the order to start a new covering (the closest to the agent)
                     if 0 in rows_being_covered:
                         # Choose the best row to cover (which is ideally covering two other rows)
@@ -1167,25 +1166,27 @@ class Chief(CleaningAgent):
                         
                         # Determine the position to go if the agent is already on the right column of its zone
                         if agent_position[0] in [green_right_column, yellow_right_column]:
-                            position_to_go = (0, id_row_to_go)
+                            position_to_go = (agent_position[0], id_row_to_go)
                         else:
                             position_to_go = (0, id_row_to_go)
+                        print("DEBUG PRINT : I'm sending the order to cover row", id_row_to_go, "to agent", agent)
                         # Send the order to go to this position
                         self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, position_to_go))
 
                     # Send the order to stop covering when there is nothing more to cover
                     else:
                         self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, STOP_COVERING))
-        
+                        print("DEBUG PRINT : I'm sending the order to stop covering to agent", agent)
+                        
         # Update the knowledge of the chief with the rows being covered
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
 
     def send_orders(self):
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-
+        
         # If the grid is not finished to be covered, the chief will send orders of coverage if necessary
-        if np.any(grid_knowledge) == 9:
-            self.send_orders_quadrillage()
+        if np.any(grid_knowledge == 9):
+            self.send_orders_covering()
 
 class ChiefGreenAgent(Chief, GreenAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):

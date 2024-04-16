@@ -6,7 +6,7 @@
 - [ ] agent chef, qui hérite des autres classes color_agent et modifier l'init du modèle (Agathe Plu, Laure)
 - [x] Changer dans affichages (rond plus, gros) pour le chef  (Agathe Poulain) 
 - [ ] communication des agents qui envoient tous leur knowledge pertinente au chef + les chefs de chaque couleur qui se communique les dépots et picked up sur la frontière --> init à -1 dans la grille des déchets (comme case au contenu inconnu)  (Agathe Plu, Laure)
-- [ ] mouvement de quadrillage avec sépration de la zone selon le nb d'agent sur la zone  (Agathe Plu, Laure)
+- [ ] mouvement de covering avec sépration de la zone selon le nb d'agent sur la zone  (Agathe Plu, Laure)
 - [x] faire en sorte de drop le déchet dans les cas de fin si impossibilité de faire une paire  (Oumaima)
 
 - [ ] la visualisation doit permettre de changer le nb de paramètres sans rentrer dans le code (we do it now)
@@ -26,5 +26,5 @@
 
 Principe mouvement amélioré et comm:
 - le chef de chaque zone (sauf rouge) va clean la colonne de droite de dépôt (Agathe Plu et Laure)
-- quadrillage des autres agents : il se positionne a l'emplacement donné par le chef (dans une cellule le plus à gauche, en ayant divisé par le nombre d'agents classiques, sauf pour rouge où l'on compte aussi le chef), puis il avance vers la droite (ils peuvent ramasser un déchet uniquement s'il est sur la case ou l'agent se trouve (on ne devie pas)), ensuite descend/monte et mouvement droite-gauche (dans ce cas, si dechet transformer) (Oumaima et Agathe Poulain)
-- après le quadrillage effectué, les autres vont recevoir des ordres du chef pour aller chercher des déchets (Agathe Plu et Laure)
+- covering des autres agents : il se positionne a l'emplacement donné par le chef (dans une cellule le plus à gauche, en ayant divisé par le nombre d'agents classiques, sauf pour rouge où l'on compte aussi le chef), puis il avance vers la droite (ils peuvent ramasser un déchet uniquement s'il est sur la case ou l'agent se trouve (on ne devie pas)), ensuite descend/monte et mouvement droite-gauche (dans ce cas, si dechet transformer) (Oumaima et Agathe Poulain)
+- après le covering effectué, les autres vont recevoir des ordres du chef pour aller chercher des déchets (Agathe Plu et Laure)

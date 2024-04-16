@@ -45,9 +45,9 @@ class AgentKnowledge:
             "yellow": [],
             "red": []
         }
-        self.target_position = (0, 0)
-        self.bool_quadrillage = True
-        self.direction_quadrillage = None
+        self.target_position = (None, None)
+        self.bool_covering = True
+        self.direction_covering = None
 
     def get_transformed_waste(self):
         """
@@ -175,9 +175,9 @@ class AgentKnowledge:
         """
         return self.target_position
 
-    def get_bool_quadrillage(self):
+    def get_bool_covering(self):
         """
-        Return the quadrillage mode.
+        Return the covering mode.
 
         Parameters
         ----------
@@ -187,11 +187,11 @@ class AgentKnowledge:
         -------
         bool
         """
-        return self.bool_quadrillage
+        return self.bool_covering
     
-    def get_direction_quadrillage(self):
+    def get_direction_covering(self):
         """
-        Return the quadrillage direction.
+        Return the covering direction.
 
         Parameters
         ----------
@@ -201,7 +201,7 @@ class AgentKnowledge:
         -------
         None, "right" or "left"
         """
-        return self.direction_quadrillage
+        return self.direction_covering
 
     def set_transformed_waste(self, transformed_waste):
         """
@@ -342,35 +342,35 @@ class AgentKnowledge:
         """
         self.target_position = target_position
 
-    def set_bool_quadrillage(self, bool_quadrillage):
+    def set_bool_covering(self, bool_covering):
         """
-        Set quadrillage mode.
+        Set covering mode.
 
         Parameters
         ----------
-        bool_quadrillage : bool
-            Quadrillage mode.
+        bool_covering : bool
+            covering mode.
 
         Returns
         -------
         None
         """
-        self.bool_quadrillage = bool_quadrillage
+        self.bool_covering = bool_covering
 
-    def set_direction_quadrillage(self, direction_quadrillage):
+    def set_direction_covering(self, direction_covering):
         """
-        Set quadrillage direction.
+        Set covering direction.
 
         Parameters
         ----------
-        bool_quadrillage : None, "right" or "left"
-            Quadrillage direction.
+        bool_covering : None, "right" or "left"
+            covering direction.
 
         Returns
         -------
         None
         """
-        self.direction_quadrillage = direction_quadrillage
+        self.direction_covering = direction_covering
 
     def __str__(self) -> str:
         return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position})"
