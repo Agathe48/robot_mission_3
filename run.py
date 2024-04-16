@@ -23,13 +23,17 @@ from model import (
 #############
 
 model = RobotMission(
-    dict_nb_agents={"green": 2, "yellow": 2, "red": 2}
+    nb_green_agents=4,
+    nb_yellow_agents=0,
+    nb_red_agents=0
 )
 
 counter_step = 0
 while True:
     bool_exit = model.step()
     counter_step += 1
+    if counter_step == 2:
+        break
     if bool_exit:
         break
 

@@ -27,9 +27,9 @@ from agents import (
     RedAgent,
     YellowAgent,
     GreenAgent,
-    ChiefGreenAgent,
-    ChiefYellowAgent, 
-    ChiefRedAgent
+    ChiefRedAgent,
+    ChiefYellowAgent,
+    ChiefGreenAgent
 )
 
 #############
@@ -57,7 +57,7 @@ class CustomRandomScheduler(BaseScheduler):
         """
         super().__init__(model, agents)
 
-def step(self):
+    def step(self):
         """
         Activate agents in a random order based on their type (green, yellow, red) at each model step.
         
@@ -78,17 +78,40 @@ def step(self):
         list_yellow_subjects = list(self.model.get_agents_of_type(YellowAgent))
         list_red_subjects = list(self.model.get_agents_of_type(RedAgent))
 
-        list_green_agents = list_green_chiefs + list_green_subjects
-        list_yellow_agents = list_yellow_chiefs + list_yellow_subjects
-        list_red_agents = list_red_chiefs + list_red_subjects
-
         # Shuffle the type of agent to activate firstly, secondly and thirdly
-        activation_order_type = [list_green_agents, list_yellow_agents, list_red_agents]
+        activation_order_type = [(list_green_chiefs, list_green_subjects), (list_yellow_chiefs, list_yellow_subjects), (list_red_chiefs, list_red_subjects)]
         rd.shuffle(activation_order_type)
 
-        for list_type_agent in activation_order_type:
+        for element in activation_order_type:
             # Shuffle the agents from the same type
-            rd.shuffle(list_type_agent)
-            for agent in list_type_agent:
+            list_type_chiefs = element[0]
+            list_type_subjects = element[1]
+            rd.shuffle(list_type_chiefs)
+            rd.shuffle(list_type_subjects)
+            list_type_agents = list_type_chiefs + list_type_subjects
+            for agent in list_type_agents:
                 print("-----------------------------")
                 agent.step()
+
+    def get_communicating_agents(self):
+        """
+        Return the list of agents that can communicate.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        list
+            List of agents that can communicate.
+        """
+        list_green_chiefs = list(self.model.get_agents_of_type(ChiefGreenAgent))
+        list_yellow_chiefs = list(self.model.get_agents_of_type(ChiefYellowAgent))
+        list_red_chiefs = list(self.model.get_agents_of_type(ChiefRedAgent))
+
+        list_green_subjects = list(self.model.get_agents_of_type(GreenAgent))
+        list_yellow_subjects = list(self.model.get_agents_of_type(YellowAgent))
+        list_red_subjects = list(self.model.get_agents_of_type(RedAgent))
+
+        return list_green_chiefs + list_yellow_chiefs + list_red_chiefs + list_green_subjects + list_yellow_subjects + list_red_subjects

@@ -19,18 +19,32 @@ The project has been realized by the group 3 composed of:
         - [The Radioactivity](#the-radioactivity)
         - [The Waste](#the-waste)
         - [The WasteDisposalZone](#the-wastedisposalzone)
-    - [Our Agents](#our-agents)
-        - [The Agent's knowledge](#the-agents-knowledge)
-        - [The CleaningAgent](#the-cleaningagent)
-        - [The GreenAgent](#the-greenagent)
-            - [The deliberate method](#the-deliberate-method)
-        - [The YellowAgent](#the-yellowagent)
-            - [The deliberate method](#the-deliberate-method)
-        - [The RedAgent](#the-redagent)
-            - [The deliberate method](#the-deliberate-method)
-    - [Our Model](#our-model)
-    - [The scheduler](#the-scheduler)
-    - [The visualization](#the-visualization)
+    - [Without Communication](#without-communication)
+        - [Our Agents](#our-agents)
+            - [The Agent's knowledge](#the-agents-knowledge)
+            - [The CleaningAgent](#the-cleaningagent)
+            - [The GreenAgent](#the-greenagent)
+                - [The deliberate method](#the-deliberate-method)
+            - [The YellowAgent](#the-yellowagent)
+                - [The deliberate method](#the-deliberate-method)
+            - [The RedAgent](#the-redagent)
+                - [The deliberate method](#the-deliberate-method)
+        - [Our Model](#our-model)
+        - [The scheduler](#the-scheduler)
+        - [The visualization](#the-visualization)
+    - [With Communication](#with-communication)
+        - [Our Agents](#our-agents)
+            - [The Agent's knowledge](#the-agents-knowledge)
+            - [The CleaningAgent](#the-cleaningagent)
+            - [The GreenAgent](#the-greenagent)
+                - [The deliberate method](#the-deliberate-method)
+            - [The YellowAgent](#the-yellowagent)
+                - [The deliberate method](#the-deliberate-method)
+            - [The RedAgent](#the-redagent)
+                - [The deliberate method](#the-deliberate-method)
+        - [Our Model](#our-model)
+        - [The scheduler](#the-scheduler)
+        - [The visualization](#the-visualization)
  
 
 ## Installation
@@ -108,11 +122,14 @@ The `Waste` object represents the waste. It has one attribute: `type_waste` whic
 
 The `WasteDisposalZone` object represents a cell in the last right column of the grid, chosen randomly from the cells in that column.
 
-## Our Agents
+
+## Without Communication
+
+### Our Agents
 
 The implementation of our different cleaning agents is in the `agents.py` file.
 
-### The agent's knowledge
+#### The agent's knowledge
 
 The `AgentKnowledge` class represents the knowledge and state of an agent in the simulation. This class is defined in `tools/tools_knowledge.py`. It has the following attributes:
 
@@ -124,7 +141,7 @@ The `AgentKnowledge` class represents the knowledge and state of an agent in the
 
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
-### The CleaningAgent
+#### The CleaningAgent
 
 The `CleaningAgent` class inherits from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update` and `update_positions_around_agent`.
 
@@ -137,11 +154,11 @@ The `update` method updates each attributes of the agent's knowledge according t
 The `update_positions_around_agent` method is used in the `update` method to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
 
 
-### The GreenAgent
+#### The GreenAgent
 
 The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
-#### The deliberate method
+##### The deliberate method
 
 The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first of the list which can be executed.
 
@@ -167,23 +184,23 @@ Otherwise, we will add moving to differents directions if nothing blocks its way
 
 The last action of the list will be to wait, so the agent always has an action to preform.
 
-### The YellowAgent
+#### The YellowAgent
 
 The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the yellow agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
-#### The deliberate method
+##### The deliberate method
 
 It has the same behavior as the GreenAgent's deliberate method. One of the few differences is that it can move to the green area to pick up yellow waste at the border.
 
-### The RedAgent
+#### The RedAgent
 
 The `RedAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the red agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
-#### The deliberate method
+##### The deliberate method
 
 This method's behavior is still quite similar to the tow other agents' deliberate methods. However, the red agents won't transform wastes, they will only pick up one waste and then put it in the waste disposal zone. To do so, it will go right after picking up a waste and then move up or down to join the waste disposal zone whose position is stored in the agent's knowledge.
 
-## Our Model
+### Our Model
 
 The implementation of our model is in the `model.py` file. The `RobotMission` class inherits from the Mesa `Model` class and defines the RobotMission model itself, and uses the agents, the scheduler and the environment. 
 
@@ -217,14 +234,44 @@ The `do` method takes as arguments the agent performing the action and the list 
 
 The `do` method returns the percepts. It is a dictionary of four keys (left, right, up and down). It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). This percepts is created after an action is performed to take into account the possible new position of the agent. 
 
-## The scheduler
+### The scheduler
 
 A custom class of random scheduler `CustomRandomScheduler` has been defined in the file `schedule.py`. This new class inherits from the base class of *mesa* `BaseScheduler`, but its `step()` function is slightly modified to activate the cleaning agents in a random order, according to their type. More precisely, the order of activation of the types of agents is random (random between green, yellow and red), and for each type, the order of activation of agents is random.
 
-## The visualization
+### The visualization
 
 The visualization is defined in the `server.py`. Each agent and object is there represented according to the following codes:
 - the `Radioactivity` objects are rectangles in the layer 0 in the corresponding color (light green, light yellow, light red): they map the grid.
 - the `WasteDisposalZone` object is a brown rectangle in the layer 1.
 - the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
 - the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
+
+
+## With Communication
+
+### Our Agents
+
+#### The Agent's knowledge
+
+--> class chief knowledge qui hérite de knwoledge
+
+#### The CleaningAgent
+
+#### The GreenAgent
+##### The deliberate method
+
+#### The YellowAgent
+##### The deliberate method
+
+#### The RedAgent
+##### The deliberate method
+
+### Our Model
+
+### The scheduler
+
+On a changer pour le scheduler : choix random pour la couleur PUIS le chef de la couleur PUIS les autres de manière aléatoire (donc les chefs passent toujours en premier à chaque step)
+
+--> ça nous permet qu'ils aient toujours une data à jour et ils envoient leurs ordres en D2BUT de step
+
+### The visualization

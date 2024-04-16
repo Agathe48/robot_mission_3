@@ -7,9 +7,11 @@
 - [x] Changer dans affichages (rond plus, gros) pour le chef  (Agathe Poulain) 
 - [ ] communication des agents qui envoient tous leur knowledge pertinente au chef + les chefs de chaque couleur qui se communique les dépots et picked up sur la frontière --> init à -1 dans la grille des déchets (comme case au contenu inconnu)  (Agathe Plu, Laure)
 - [ ] mouvement de quadrillage avec sépration de la zone selon le nb d'agent sur la zone  (Agathe Plu, Laure)
-- [ ] faire en sorte de drop le déchet dans les cas de fin si impossibilité de faire une paire (green and yellow pas chez le rouge) (Oumaima)
+- [x] faire en sorte de drop le déchet dans les cas de fin si impossibilité de faire une paire  (Oumaima)
 
-- [ ] la visualisation doit permettre de changer le nb de paramètres sans rentrer dans le code (we do it know)
+- [ ] la visualisation doit permettre de changer le nb de paramètres sans rentrer dans le code (we do it now)
+
+- [ ] dans la visualisation, avoir des images différentes pour les agents en fonctionne de ses ressources, mettre des paths ressources dans les constantes (pour faire du clean code)(tu peux organiser en dossier) (Agathe Poulain)
 
 
 --> faire des agents chefs de chaque couleur pour coordonner les autres (pas abimé)
@@ -23,3 +25,7 @@
 --> est-ce qu'on peut drop un déchet : OUI
 
 
+
+Questions :
+- pourquoi le server passe deux fois dans l'init et nous crée deux messages services ?
+- pour quand on doit le rendre ?

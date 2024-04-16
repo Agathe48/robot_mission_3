@@ -49,19 +49,14 @@ from agents import (
     GreenAgent,
     YellowAgent,
     RedAgent,
-    CleaningAgent
+    CleaningAgent,
+    DICT_CLASS_COLOR
 )
 from schedule import CustomRandomScheduler
 
+from communication.message.MessageService import MessageService
 
-DICT_CLASS_COLOR = {
-    GreenAgent: "green",
-    ChiefGreenAgent : "green",
-    YellowAgent: "yellow",
-    ChiefYellowAgent: "yellow",
-    RedAgent: "red",
-    ChiefRedAgent: "red"
-}
+
 
 #############
 ### Model ###
@@ -93,6 +88,7 @@ class RobotMission(Model):
         None 
         """
         super().__init__()
+
         self.dict_nb_agents = {
             "green": nb_green_agents,
             "yellow": nb_yellow_agents,
@@ -102,6 +98,7 @@ class RobotMission(Model):
         self.height = height
         self.grid = MultiGrid(self.width, self.height, torus=False)
         self.schedule = CustomRandomScheduler(self)
+        self.__messages_service = MessageService(self.schedule)
         self.waste_density = waste_density
 
         # Initialize the grid with the zones
@@ -293,9 +290,14 @@ class RobotMission(Model):
         green_zone, yellow_zone, red_zone = self.zone_dimensions
         list_agent_types_colors = [
             [self.dict_nb_agents["green"], GreenAgent, ChiefGreenAgent, green_zone],
-            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent,yellow_zone],
+            [self.dict_nb_agents["yellow"], YellowAgent, ChiefYellowAgent, yellow_zone],
             [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, red_zone],
         ]
+        dict_chiefs = {
+            "green": [],
+            "yellow": [],
+            "red": []
+        }
 
         # Create the cleaning agents randomly generated in the map
         for element in list_agent_types_colors:
@@ -303,18 +305,19 @@ class RobotMission(Model):
             agent_class = element[1]
             chief_agent_class = element[2]
             allowed_zone = element[3]
-            first_agent = True
+            chief_agent = True
             for agent in range(nb_agent_types):
                 
                 # Add the chief : the first agent
-                if first_agent:
+                if chief_agent:
                     ag = chief_agent_class(
                         unique_id = self.next_id(),
                         model = self,
                         grid_size = (self.width, self.height),
                         pos_waste_disposal = self.pos_waste_disposal 
                         )
-                    first_agent = False
+                    chief_agent = False
+                    dict_chiefs[DICT_CLASS_COLOR[chief_agent_class]].append(ag)
 
                 else:
                     ag = agent_class(
@@ -344,6 +347,11 @@ class RobotMission(Model):
                 ag.percepts = self.do(
                     ag, list_possible_actions=[ACT_WAIT])
 
+        # Update the knowledge of all agents with the chiefs
+        for agent in self.schedule.agents:
+            if type(agent) in [GreenAgent, YellowAgent, RedAgent, ChiefGreenAgent, ChiefYellowAgent, ChiefRedAgent]:
+                agent.knowledge.set_dict_chiefs(dict_chiefs)
+
     def step(self):
         """
         Executes a step in the simulation.
@@ -357,6 +365,7 @@ class RobotMission(Model):
         bool: 
             True if there are no more wastes left in the simulation, indicating the end of the simulation.
         """
+        self.__messages_service.dispatch_messages()
         # if there is no waste left, the model stops
         if any(type(agent) == Waste for agent in self.schedule.agents):
             self.schedule.step()
@@ -446,7 +455,7 @@ class RobotMission(Model):
                 # Check if there is no waste in the cell
                 if not any(isinstance(obj, Waste) for obj in cellmates):
                     if color!= "red":
-                        # Get the picked up waste and place it on the grid
+                        # Get the picked up waste and place it on the grid 
                         self.grid.place_agent(picked_up_wastes[0], agent_position)
                         print(f"Agent {agent.unique_id} dropped a {color} waste")
                     else:
