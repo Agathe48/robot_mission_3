@@ -246,6 +246,26 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 - the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
 - the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
 
+### Simulation's results interpretation
+
+To analyse the performance of the model without communication, we launched several simulations. The variable we are interested in is the number of step needed to clean the entire map. The map size is identical for every test. Only the number of agents per zone is evolving : 
+- Simulations 1 to 10 : 1 agent per zone
+- Simulations 11 to 20 : 2 agents per zone
+- Simulations 21 to 30 : 3 agents per zone
+
+Here is the table with all the results :
+
+![alt text](results/results_without_communication.png)
+
+When there is only one agent per zone (blue cells on the previous picture), the average number of steps to complete the cleaning of the map is 1346.
+
+When there are two agents per zone (green cells on the previous picture), the average number of steps to complete the cleaning of the map is 713. It is almost two times less than the average number of steps needed with one agent per zone. However, half of the simulations launched with two agents did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
+
+When there are three agents per zone (purple cells on the previous picture), the average number of steps to complete the cleaning of the map is 404. It is almost three times less than the average number of steps needed with one agent per zone. However, 6 out of 10 simulations launched did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
+
+According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
+
+You can see in appendix in results/graphics_without_communication the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
 
 ## With Communication
 

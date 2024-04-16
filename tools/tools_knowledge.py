@@ -321,6 +321,8 @@ class ChiefAgentKnowledge(AgentKnowledge):
         super().__init__(grid_knowledge, grid_radioactivity)
 
         self.dict_agents_knowledge = {}
+        self.bool_cleaned_right_column = False
+        self.direction_clean_right_column = None # can take as values None when the agent has not started cleaning the right column, "up", "down"
 
     def get_dict_agents_knowledge(self):
         """"
@@ -335,6 +337,34 @@ class ChiefAgentKnowledge(AgentKnowledge):
         dict
         """
         return self.dict_agents_knowledge
+    
+    def get_bool_cleaned_right_column(self):
+        """
+        Return the boolean regarding if the right column is cleaned.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
+        return self.bool_cleaned_right_column
+    
+    def get_direction_clean_right_column(self):
+        """
+        Return the direction of the right column cleaning.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        str
+        """
+        return self.direction_clean_right_column
     
     def set_dict_agents_knowledge(self, dict_agents_knowledge):
         """
@@ -351,5 +381,35 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         self.dict_agents_knowledge = dict_agents_knowledge
 
+    def set_bool_cleaned_right_column(self, bool_cleaned_right_column):
+        """
+        Set the boolean regarding if the right column is cleaned.
+
+        Parameters
+        ----------
+        bool_cleaned_right_column : bool
+            Boolean regarding if the right column is cleaned.
+
+        Returns
+        -------
+        None
+        """
+        self.bool_cleaned_right_column = bool_cleaned_right_column
+    
+    def set_direction_clean_right_column(self, direction_clean_right_column):
+        """
+        Set the direction of the right column cleaning.
+
+        Parameters
+        ----------
+        direction_clean_right_column : str
+            The direction of the right column cleaning.
+
+        Returns
+        -------
+        None
+        """
+        self.direction_clean_right_column = direction_clean_right_column
+
     def __str__(self) -> str:
-        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge})"
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column})"
