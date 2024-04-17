@@ -1,5 +1,5 @@
 """
-Python file for the Visualization.
+Python file for the Visualization of the simulation.
 
 Group 3:
 - Oumaima CHATER
@@ -15,7 +15,7 @@ Group 3:
 ### Mesa imports ###
 
 from mesa.visualization.ModularVisualization import ModularServer
-from mesa.visualization.modules import CanvasGrid, ChartModule
+from mesa.visualization.modules import CanvasGrid
 import mesa.visualization
 
 ### Local imports ###
@@ -204,9 +204,6 @@ chart_element = mesa.visualization.ChartModule(
     ],
     data_collector_name='datacollector'
 )
-# chart = ChartModule([{"Label": "Gini",
-#                       "Color": "Black"}],
-#                     )
 
 model_params = {
     "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
@@ -226,5 +223,4 @@ server = ModularServer(
 
 server.port = 8523
 server.launch()
-
              

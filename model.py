@@ -340,11 +340,15 @@ class RobotMission(Model):
 
                 ag.percepts = self.do(
                     ag, list_possible_actions=[ACT_WAIT])
+                ag.update()
 
-        # Update the knowledge of all agents with the chiefs
         for agent in self.schedule.agents:
+            # Update the knowledge of all agents with the chiefs
             if type(agent) in [GreenAgent, YellowAgent, RedAgent, ChiefGreenAgent, ChiefYellowAgent, ChiefRedAgent]:
                 agent.knowledge.set_dict_chiefs(dict_chiefs)
+            # Update the knowledge of the chiefs with their colored agent
+            if type(agent) in [GreenAgent, YellowAgent, RedAgent]:
+                agent.send_percepts_and_data()
 
     def step(self):
         """
@@ -414,8 +418,7 @@ class RobotMission(Model):
 
         transformed_waste = agent.knowledge.get_transformed_waste()
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
-        print("Agent", agent.unique_id, "is in position", agent_position, "and has the transformed waste", transformed_waste)
-        print("Agent", agent.unique_id, "is in position", agent_position, "and has the picked up wastes", picked_up_wastes)
+        print("Agent", agent.unique_id, "is in position", agent_position, ", has the transformed waste", transformed_waste, "and has the picked up wastes", picked_up_wastes)
 
         for action in list_possible_actions:
             if action == ACT_PICK_UP:

@@ -45,7 +45,7 @@ class AgentKnowledge:
             "yellow": [],
             "red": []
         }
-        self.target_position = (None, None)
+        self.target_position = None
         self.bool_covering = True
         self.direction_covering = None
 
@@ -373,7 +373,7 @@ class AgentKnowledge:
         self.direction_covering = direction_covering
 
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position})"
+        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position}, direction_covering={self.direction_covering}, bool_covering={self.bool_covering})"
         
 
 class ChiefAgentKnowledge(AgentKnowledge):

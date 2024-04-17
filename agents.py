@@ -87,15 +87,16 @@ class CleaningAgent(CommunicatingAgent):
         -------
         None
         """
-        # Update agent's knowledge
-        self.update()
+        # Receive the orders from the chief
+        self.receive_orders()
+        print(self.knowledge)
         # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
         # Perform the action and update the percepts
         self.percepts = self.model.do(
             self, list_possible_actions=list_possible_actions)
-        # Update the knowledge of the agent with the consequences of the action
-        self.update_knowledge_with_action(self.percepts["action_done"])
+        # Update agent's knowledge
+        self.update()
         # Send the percepts to the chief
         self.send_percepts_and_data()
 
@@ -144,10 +145,9 @@ class CleaningAgent(CommunicatingAgent):
             self.knowledge.set_transformed_waste(transformed_waste = my_object)
             self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
 
-
     def update(self):
         """
-        Updates the agent's knowledge based on its percepts
+        Updates the agent's knowledge based on its percepts.
 
         Parameters
         ----------
@@ -222,10 +222,12 @@ class CleaningAgent(CommunicatingAgent):
                 if key == "down":
                     self.knowledge.set_down(boolean_down = True)
 
-        # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
+        # Update the knowledge of the agent with the consequences of the action
+        self.update_knowledge_with_action(self.percepts["action_done"])
+
+        print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
 
     def update_positions_around_agent(self, direction, dict_boolean_knowledge):
-
         """
         Updates the boolean knowledge about adjacent positions around the agent.
 
@@ -273,6 +275,7 @@ class CleaningAgent(CommunicatingAgent):
         agent_position = self.pos
         bool_covering = self.knowledge.get_bool_covering()
         direction_covering = self.knowledge.get_direction_covering()
+        target_position = self.knowledge.get_target_position()
         # Create the percepts and data to send
         percepts_and_data = self.percepts.copy()
         percepts_and_data["nb_wastes"] = agent_nb_wastes
@@ -280,6 +283,7 @@ class CleaningAgent(CommunicatingAgent):
         percepts_and_data["position"] = agent_position
         percepts_and_data["bool_covering"] = bool_covering
         percepts_and_data["direction_covering"] = direction_covering
+        percepts_and_data["target_position"] = target_position
 
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
@@ -287,6 +291,22 @@ class CleaningAgent(CommunicatingAgent):
         for chief in dict_chiefs[agent_color]:
             chief: Chief
             self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
+
+    def receive_orders(self):
+        list_messages = self.get_new_messages()
+        message: Message
+        for message in list_messages:
+            # The message is an order from the chief
+            if message.get_performative() == MessagePerformative.SEND_ORDERS:
+                content = message.get_content()
+                # The chief asks the agent to stop covering
+                if content == STOP_COVERING:
+                    self.knowledge.set_bool_covering(bool_covering=False)
+                # The chief is sending a target position to reach for the agent
+                elif type(content) == tuple:
+                    self.knowledge.set_target_position(target_position=content)
+
+                print("Agent", self.unique_id, "received order :", content)
 
 class GreenAgent(CleaningAgent):
     
@@ -316,8 +336,9 @@ class GreenAgent(CleaningAgent):
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
         self.grid_size = grid_size
-        # Initialise waste disposal zone position in knowledge
+        # Initialise the grid to unknown
         grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        # Initialise waste disposal zone position in knowledge
         grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
         self.knowledge = AgentKnowledge(
             grid_knowledge=grid_knowledge,
@@ -356,44 +377,46 @@ class GreenAgent(CleaningAgent):
         # Check up and down available directions
         list_available_act_directions = []
 
-        # If the agent is in mode covering but not at the good start position yet
-        if bool_covering and direction_covering is None: 
-            # If the target position is to the right of the agent, move right
-            if target_position[0] > actual_position[0]:
-                list_possible_actions.append(ACT_GO_RIGHT)
-            # If the target position is to the left of the agent, move left
-            elif target_position[0] < actual_position[0]:
-                list_possible_actions.append(ACT_GO_LEFT)
-            # If the target position is above the agent, move up
-            elif target_position[1] > actual_position[1]:
-                list_possible_actions.append(ACT_GO_UP)
-            # If the target position is below the agent, move down
-            elif target_position[1] < actual_position[1]:
-                list_possible_actions.append(ACT_GO_DOWN)
-                
-        # If the agent is in mode covering and ready to do it
-        elif bool_covering : 
-            # Check if there is a waste to transform
-            if len(picked_up_wastes) == 2:
-                list_possible_actions.append(ACT_TRANSFORM)
-            # Check if agent has a transformed waste and drop it
-            if transformed_waste != None:
-                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
-            # Check if there is a waste to pick up and if we can pick up a waste
-            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1:
-                list_possible_actions.append(ACT_PICK_UP)
-
-            # Clean the column in the direction from its position
-            if direction_covering == "right":
-                if right:
+        # If the agent is in covering mode
+        if bool_covering:
+            # If the agent has not started covering its assigned row
+            if direction_covering is None:
+                # If the target position is to the right of the agent, move right
+                if target_position[0] > actual_position[0]:
                     list_possible_actions.append(ACT_GO_RIGHT)
-
-            elif direction_covering == "left":
-                if left:
+                # If the target position is to the left of the agent, move left
+                elif target_position[0] < actual_position[0]:
                     list_possible_actions.append(ACT_GO_LEFT)
+                # If the target position is above the agent, move up
+                elif target_position[1] > actual_position[1]:
+                    list_possible_actions.append(ACT_GO_UP)
+                # If the target position is below the agent, move down
+                elif target_position[1] < actual_position[1]:
+                    list_possible_actions.append(ACT_GO_DOWN)
+                    
+            # If the agent is in mode covering and ready to do it
+            else:
+                # Check if there is a waste to transform
+                if len(picked_up_wastes) == 2:
+                    list_possible_actions.append(ACT_TRANSFORM)
+                # Check if agent has a transformed waste and drop it
+                if transformed_waste is not None and grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
+                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+                # Check if there is a waste to pick up and if we can pick up a waste
+                if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1:
+                    list_possible_actions.append(ACT_PICK_UP)
+
+                # Clean the column in the direction from its position
+                if direction_covering == "right":
+                    if right:
+                        list_possible_actions.append(ACT_GO_RIGHT)
+
+                elif direction_covering == "left":
+                    if left:
+                        list_possible_actions.append(ACT_GO_LEFT)
 
         # If the agent is in normal mode
-        else : 
+        else:
             if up:
                 list_available_act_directions.append(ACT_GO_UP)
             if down:
@@ -426,7 +449,7 @@ class GreenAgent(CleaningAgent):
             if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
                 list_possible_actions.append(ACT_PICK_UP)
 
-            # Check for other agent in surronding cells
+            # Check for other agent in surrounding cells
             if left:
                 list_available_act_directions.append(ACT_GO_LEFT)
             if right:
@@ -479,23 +502,29 @@ class GreenAgent(CleaningAgent):
 
         actual_position = self.pos
 
-        # Set target position back to (None, None) is position is reached
+        # Set target position back to None when this position is reached
         target_position = self.knowledge.get_target_position()
-        if actual_position == target_position :
-            target_position = (None, None)
+        if actual_position == target_position:
+            target_position = None
             self.knowledge.set_target_position(target_position)
-            if bool_covering : 
-                # When target position is reached, set direction to quadriller
-                if direction_covering is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2:
+            if bool_covering:
+                # When target position is reached, set the direction to cover
+                if direction_covering is None:
                     if actual_position[0] == 0:
                         direction_covering = "right"
                     else:
                         direction_covering = "left"
-                # If covering line is done, but direction_covering bakc to None
-                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 or actual_position[0] == 0:
+                    self.knowledge.set_direction_covering(direction_covering)
+
+        else:
+            if bool_covering:
+                # If covering line is done, but direction_covering back to None
+                print("Tu es là ?")
+                print(grid_radioactivity[actual_position[0] + 1][actual_position[1]])
+                if (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2  and direction_covering != "left") or (actual_position[0] == 0 and direction_covering != "right"):
+                    print("YOUOU")
                     direction_covering = None
-                self.knowledge.set_bool_covering(False)
-                self.knowledge.set_direction_covering(direction_covering)
+                    self.knowledge.set_direction_covering(direction_covering)
     
    
 class YellowAgent(CleaningAgent):
@@ -824,14 +853,14 @@ class RedAgent(CleaningAgent):
                         list_possible_actions.append(ACT_GO_RIGHT)
                     else:
                         waste_disposal_zone_position = np.where(grid_knowledge == 4)
-                        # If the Waste dispozal zone is above the agent
+                        # If the Waste disposal zone is above the agent
                         if waste_disposal_zone_position[1] > self.pos[1]:
                             if up:
                                 list_possible_actions.append(ACT_GO_UP)
                             # If the agent can't go up, it waits
                             else:
                                 list_possible_actions.append(ACT_WAIT)
-                        # If the Waste dispozal zone is below the agent
+                        # If the Waste disposal zone is below the agent
                         else:
                             if down:
                                 list_possible_actions.append(ACT_GO_DOWN)
@@ -918,7 +947,6 @@ class RedAgent(CleaningAgent):
                 self.knowledge.set_direction_covering(direction_covering)
     
 
-
 class Chief(CleaningAgent):
     
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -952,6 +980,8 @@ class Chief(CleaningAgent):
         self.knowledge = ChiefAgentKnowledge(
             grid_knowledge=grid_knowledge,
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        # The chiefs are not covering anything
+        self.knowledge.set_bool_covering(False)
         self.percepts = {}
 
     def receive_percepts_and_data(self):
@@ -982,7 +1012,7 @@ class Chief(CleaningAgent):
         # Receive the percepts of the other agents
         self.receive_percepts_and_data()
         # Update agent's knowledge
-        self.update()
+        self.update_chief_with_agents_knowledge()
         # Send orders to the other agents
         self.send_orders()
         # Determine all possible actions based on current knowledge
@@ -990,10 +1020,10 @@ class Chief(CleaningAgent):
         # Perform the action and update the percepts
         self.percepts = self.model.do(
             self, list_possible_actions=list_possible_actions)
-        # Update the knowledge of the agent with the consequences of the action
-        self.update_knowledge_with_action(self.percepts["action_done"])
+        # Do the update from the CleaningAgent class
+        self.update()
 
-    def update(self):
+    def update_chief_with_agents_knowledge(self):
         """
         Updates the chief agent's knowledge based on its percepts
 
@@ -1005,8 +1035,6 @@ class Chief(CleaningAgent):
         -------
         None 
         """
-        # Do the update from the CleaningAgent class
-        super().update()
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_agents_knowledge = self.knowledge.get_dict_agents_knowledge()
 
@@ -1050,12 +1078,13 @@ class Chief(CleaningAgent):
                 "transformed_waste" : percepts_and_data["transformed_waste"],
                 "position": percepts_and_data["position"],
                 "bool_covering": percepts_and_data["bool_covering"],
-                "direction_covering": percepts_and_data["direction_covering"]}
+                "direction_covering": percepts_and_data["direction_covering"],
+                "target_position": percepts_and_data["target_position"]}
         
         # Set the updated knowledge
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
-        print("Knowledge after of Chief", self.knowledge)         
+        print("Knowledge after of Chief", self.knowledge)
 
     def find_closest_agent(self, position):
         """
@@ -1101,7 +1130,7 @@ class Chief(CleaningAgent):
         for column in grid_radioactivity:
             if column[0] == zone_to_detect:
                 print("DEBUG PRINT : I'm in zone", column[0])
-                return column - 1
+                return column[0] - 1
 
     def find_best_rows_to_cover(self, agent_position, rows_being_covered):
         grid_height = len(rows_being_covered)
@@ -1142,17 +1171,18 @@ class Chief(CleaningAgent):
         yellow_right_column = self.get_green_yellow_right_column("z2")
 
         # Send orders for each agent, depending on their current knowledge
-        for agent in dict_knowledge_agents:
-            dict_knowledge = dict_knowledge_agents[agent]
+        for agent_name in dict_knowledge_agents:
+            dict_knowledge = dict_knowledge_agents[agent_name]
             bool_covering = dict_knowledge["bool_covering"]
             direction_covering = dict_knowledge["direction_covering"]
             agent_position = dict_knowledge["position"]
+            target_position = dict_knowledge["target_position"]
 
             # If the agent is in covering mode
             if bool_covering:
                 # If the agent is waiting for an order
-                if direction_covering is None:
-                    # Send the order to start a new covering (the closest to the agent)
+                if target_position is None and direction_covering is None:
+                    # Send the order to start a new covering (the closest to the agent) if there are still rows to cover
                     if 0 in rows_being_covered:
                         # Choose the best row to cover (which is ideally covering two other rows)
                         id_row_to_go = self.find_best_rows_to_cover(agent_position=agent_position, rows_being_covered=rows_being_covered)
@@ -1169,14 +1199,14 @@ class Chief(CleaningAgent):
                             position_to_go = (agent_position[0], id_row_to_go)
                         else:
                             position_to_go = (0, id_row_to_go)
-                        print("DEBUG PRINT : I'm sending the order to cover row", id_row_to_go, "to agent", agent)
+                        print("DEBUG PRINT : I'm sending the order to cover row", id_row_to_go, "to agent", agent_name)
                         # Send the order to go to this position
-                        self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, position_to_go))
+                        self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, position_to_go))
 
                     # Send the order to stop covering when there is nothing more to cover
                     else:
-                        self.send_message(Message(self.get_name(), self.get_name(), MessagePerformative.SEND_ORDERS, STOP_COVERING))
-                        print("DEBUG PRINT : I'm sending the order to stop covering to agent", agent)
+                        self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, STOP_COVERING))
+                        print("DEBUG PRINT : I'm sending the order to stop covering to agent", agent_name)
                         
         # Update the knowledge of the chief with the rows being covered
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
@@ -1300,7 +1330,7 @@ class ChiefGreenAgent(Chief, GreenAgent):
             list_possible_actions.append(ACT_WAIT)
         
         # If the chief has started to clean the column and not finished
-        elif not bool_cleaned_right_column:           
+        elif not bool_cleaned_right_column:        
 
             # Check if there is a waste to transform
             if len(picked_up_wastes) == 2:
