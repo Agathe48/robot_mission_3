@@ -89,7 +89,6 @@ class CleaningAgent(CommunicatingAgent):
         """
         # Receive the orders from the chief
         self.receive_orders()
-        print(self.knowledge)
         # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
         # Perform the action and update the percepts
@@ -308,6 +307,44 @@ class CleaningAgent(CommunicatingAgent):
 
                 print("Agent", self.unique_id, "received order :", content)
 
+    def get_number_wastes_max_type_waste_zone_type(self):
+        if type(self) in [GreenAgent, ChiefGreenAgent]:
+            number_wastes_max = 2
+            type_waste = 1
+            right_zone = 2
+        elif type(self) in [YellowAgent, ChiefYellowAgent]:
+            number_wastes_max = 2
+            type_waste = 2
+            right_zone = 3
+        else:
+            number_wastes_max = 1
+            type_waste = 3
+            right_zone = None
+        return number_wastes_max, type_waste, right_zone
+
+    def can_drop_transformed_waste(self):
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        if transformed_waste is not None:
+            if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
+                _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
+                if grid_radioactivity[self.pos[0]+1][self.pos[1]] == right_zone:
+                    return True
+        return False
+
+    def can_transform(self):
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        return len(picked_up_wastes) == 2 and transformed_waste is None
+
+    def can_pick_up(self):
+        grid_knowledge, _ = self.knowledge.get_grids()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        transformed_waste = self.knowledge.get_transformed_waste()
+        number_wastes_max, type_waste, _ = self.get_number_wastes_max_type_waste_zone_type()
+
+        return len(picked_up_wastes) < number_wastes_max and transformed_waste is None and grid_knowledge[self.pos[0]][self.pos[1]] == type_waste
+
 class GreenAgent(CleaningAgent):
     
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -397,13 +434,13 @@ class GreenAgent(CleaningAgent):
             # If the agent is in mode covering and ready to do it
             else:
                 # Check if there is a waste to transform
-                if len(picked_up_wastes) == 2:
+                if self.can_transform():
                     list_possible_actions.append(ACT_TRANSFORM)
                 # Check if agent has a transformed waste and drop it
-                if transformed_waste is not None and grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
+                if self.can_drop_transformed_waste():
                     list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
                 # Check if there is a waste to pick up and if we can pick up a waste
-                if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1:
+                if self.can_pick_up():
                     list_possible_actions.append(ACT_PICK_UP)
 
                 # Clean the column in the direction from its position
@@ -423,11 +460,11 @@ class GreenAgent(CleaningAgent):
                 list_available_act_directions.append(ACT_GO_DOWN)
 
             # Check if there is a waste to transform
-            if len(picked_up_wastes) == 2:
+            if self.can_transform():
                 list_possible_actions.append(ACT_TRANSFORM)
 
             # Check if agent has a transformed waste and if it can go right or drop it
-            if transformed_waste != None:
+            if transformed_waste is not None:
                 # Check if cell at the right is in zone 2
                 if grid_radioactivity[self.pos[0]+1][self.pos[1]] == 2:
                     # Check if the current cell does not already contain a waste
@@ -446,7 +483,7 @@ class GreenAgent(CleaningAgent):
                     list_possible_actions.append(ACT_GO_RIGHT)
             
             # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
-            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1 and transformed_waste == None:
+            if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
 
             # Check for other agent in surrounding cells
@@ -519,10 +556,7 @@ class GreenAgent(CleaningAgent):
         else:
             if bool_covering:
                 # If covering line is done, but direction_covering back to None
-                print("Tu es là ?")
-                print(grid_radioactivity[actual_position[0] + 1][actual_position[1]])
                 if (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2  and direction_covering != "left") or (actual_position[0] == 0 and direction_covering != "right"):
-                    print("YOUOU")
                     direction_covering = None
                     self.knowledge.set_direction_covering(direction_covering)
     
@@ -1111,7 +1145,7 @@ class Chief(CleaningAgent):
                 closest_agent = agent
         return closest_agent
 
-    def get_green_yellow_right_column(self, mode: Literal["z1", "z2"]):
+    def get_green_yellow_right_column(self, mode: Literal["green", "yellow"]):
         """
         Get the last column for zones 1 and 2.
         
@@ -1126,11 +1160,12 @@ class Chief(CleaningAgent):
             Id of the column.
         """
         _, grid_radioactivity = self.knowledge.get_grids()
-        zone_to_detect = "z2" if mode == "z1" else "z3"
+        zone_to_detect = 2 if mode == "green" else 3
+        counter = 0
         for column in grid_radioactivity:
-            if column[0] == zone_to_detect:
-                print("DEBUG PRINT : I'm in zone", column[0])
-                return column[0] - 1
+            if int(column[0]) == zone_to_detect:
+                return counter - 1
+            counter += 1
 
     def find_best_rows_to_cover(self, agent_position, rows_being_covered):
         grid_height = len(rows_being_covered)
@@ -1167,8 +1202,8 @@ class Chief(CleaningAgent):
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
-        green_right_column = self.get_green_yellow_right_column("z1")
-        yellow_right_column = self.get_green_yellow_right_column("z2")
+        green_right_column = self.get_green_yellow_right_column("green")
+        yellow_right_column = self.get_green_yellow_right_column("yellow")
 
         # Send orders for each agent, depending on their current knowledge
         for agent_name in dict_knowledge_agents:
@@ -1199,14 +1234,14 @@ class Chief(CleaningAgent):
                             position_to_go = (agent_position[0], id_row_to_go)
                         else:
                             position_to_go = (0, id_row_to_go)
-                        print("DEBUG PRINT : I'm sending the order to cover row", id_row_to_go, "to agent", agent_name)
+                        print("Chief is sending the order to cover row", id_row_to_go, "to agent", agent_name)
                         # Send the order to go to this position
                         self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, position_to_go))
 
                     # Send the order to stop covering when there is nothing more to cover
                     else:
                         self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, STOP_COVERING))
-                        print("DEBUG PRINT : I'm sending the order to stop covering to agent", agent_name)
+                        print("Chief is sending the order to stop covering to agent", agent_name)
                         
         # Update the knowledge of the chief with the rows being covered
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
@@ -1333,13 +1368,13 @@ class ChiefGreenAgent(Chief, GreenAgent):
         elif not bool_cleaned_right_column:        
 
             # Check if there is a waste to transform
-            if len(picked_up_wastes) == 2:
+            if self.can_transform():
                 list_possible_actions.append(ACT_TRANSFORM)
             # Check if agent has a transformed waste and drop it
-            if transformed_waste != None:
+            if self.can_drop_transformed_waste():
                 list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
             # Check if there is a waste to pick up and if we can pick up a waste
-            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 1:
+            if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
 
             # Clean the column in the direction from its position
