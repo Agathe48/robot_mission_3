@@ -332,7 +332,7 @@ class RobotMission(Model):
                     # We check to see if there is already an agent in the cell
                     bool_contains_agent = False
                     for element in cellmates: 
-                        if type(element) == agent_class:
+                        if type(element) == agent_class or type(element) == chief_agent_class:
                             bool_contains_agent = True
                     if not bool_contains_agent:
                         correct_position = True
