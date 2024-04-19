@@ -240,21 +240,23 @@ class CleaningAgent(CommunicatingAgent):
             chief: Chief
             self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
 
+    def treat_order(self, content):
+        # The chief asks the agent to stop covering
+        if content == STOP_COVERING:
+            self.knowledge.set_bool_covering(bool_covering=False)
+        # The chief is sending a target position to reach for the agent
+        elif type(content) == tuple:
+            self.knowledge.set_target_position(target_position=content)
+
+        print("Agent", self.unique_id, "received order :", content)
+
     def receive_orders(self):
         list_messages = self.get_new_messages()
         message: Message
         for message in list_messages:
             # The message is an order from the chief
             if message.get_performative() == MessagePerformative.SEND_ORDERS:
-                content = message.get_content()
-                # The chief asks the agent to stop covering
-                if content == STOP_COVERING:
-                    self.knowledge.set_bool_covering(bool_covering=False)
-                # The chief is sending a target position to reach for the agent
-                elif type(content) == tuple:
-                    self.knowledge.set_target_position(target_position=content)
-
-                print("Agent", self.unique_id, "received order :", content)
+                self.treat_order(content=message.get_content())
 
     def get_specificities_type_agent(self):
         """
@@ -895,22 +897,6 @@ class Chief(CleaningAgent):
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
         self.percepts = {}
 
-        # The chiefs are not covering anything
-        self.knowledge.set_bool_covering(False)
-
-    def receive_percepts_and_data(self):
-        list_messages = self.get_new_messages()
-        self.list_received_percepts_and_data = []
-        message: Message
-        for message in list_messages:
-            other_agent = message.get_exp()
-            if message.get_performative() == MessagePerformative.SEND_PERCEPTS_AND_DATA:
-                percepts = message.get_content()
-                # Store the percepts to later update its knowledge
-                self.list_received_percepts_and_data.append({"agent" : other_agent, "percepts" : percepts})
-
-        print("Chief", self.unique_id, "received messages :", self.list_received_percepts_and_data)
-
     def step(self):
         """
         Performs a step in the agent's decision-making process.
@@ -924,11 +910,13 @@ class Chief(CleaningAgent):
         None
         """
         # Receive the percepts of the other agents
-        self.receive_percepts_and_data()
+        self.receive_messages()
         # Update agent's knowledge
         self.update_chief_with_agents_knowledge()
         # Send orders to the other agents
         self.send_orders()
+        # Receive the orders he just send to himself
+        self.receive_orders()
         # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
         # Perform the action and update the percepts
@@ -936,6 +924,22 @@ class Chief(CleaningAgent):
             self, list_possible_actions=list_possible_actions)
         # Do the update from the CleaningAgent class
         self.update()
+
+    def receive_messages(self):
+        list_messages = self.get_new_messages()
+        self.list_received_percepts_and_data = []
+        self.list_orders = []
+        message: Message
+        for message in list_messages:
+            other_agent = message.get_exp()
+
+            # The chief has received the percept from an agent
+            if message.get_performative() == MessagePerformative.SEND_PERCEPTS_AND_DATA:
+                percepts = message.get_content()
+                # Store the percepts to later update its knowledge
+                self.list_received_percepts_and_data.append({"agent" : other_agent, "percepts" : percepts})
+
+        print("Chief", self.unique_id, "received messages :", self.list_received_percepts_and_data)
 
     def update(self):
         """
@@ -1141,7 +1145,7 @@ class Chief(CleaningAgent):
             list_possible_actions.append(ACT_WAIT)
         
         # If the chief has started to clean the column and not finished
-        else:    
+        else:
 
             # Check if there is a waste to transform
             if self.can_transform():
@@ -1252,6 +1256,14 @@ class Chief(CleaningAgent):
         green_left_column, yellow_left_column, red_left_column = self.knowledge.get_list_green_yellow_red_left_columns()
         green_right_column, yellow_right_column, red_right_column = self.knowledge.get_list_green_yellow_red_right_columns()
 
+        # The chief can now send orders to himself
+        dict_knowledge_agents[self.get_name()] = {
+            "bool_covering": self.knowledge.get_bool_covering(),
+            "direction_covering": self.knowledge.get_direction_covering(),
+            "position": self.pos,
+            "target_position": self.knowledge.get_target_position()
+        }
+
         # Send orders for each agent, depending on their current knowledge
         for agent_name in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent_name]
@@ -1334,44 +1346,8 @@ class ChiefGreenAgent(Chief, GreenAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
-    def update(self):
-        """
-        Updates the chief agent's knowledge based on its percepts
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None 
-        """
-        # Do the update from the Chief class
-        super().update()
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
-        direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
-        grid_height = grid_knowledge.shape[1]
-
-        actual_position = self.pos
-
-        if not bool_cleaned_right_column:
-
-            # Update the boolean when he has finish to clean the right column
-            if direction_clean_right_column == "up" and actual_position[1] == grid_height - 1 :
-                bool_cleaned_right_column = True
-                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
-            if direction_clean_right_column == "down" and actual_position[1] == 0 :
-                bool_cleaned_right_column = True
-                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
-            
-            # Update the direction to clean right column if he has reach one of the starting positions
-            if direction_clean_right_column is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2 and actual_position[1] in [0, grid_height - 1]:
-                if actual_position[1] == 0:
-                    direction_clean_right_column = "up"
-                else:
-                    direction_clean_right_column = "down"
-                self.knowledge.set_direction_clean_right_column(direction_clean_right_column)
+        # The green chief is not covering anything
+        self.knowledge.set_bool_covering(False)
 
 
 class ChiefYellowAgent(Chief, YellowAgent):
@@ -1399,6 +1375,9 @@ class ChiefYellowAgent(Chief, YellowAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
+        # The yellow chief is not covering anything
+        self.knowledge.set_bool_covering(False)
+
     
 class ChiefRedAgent(Chief, RedAgent):
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -1424,6 +1403,7 @@ class ChiefRedAgent(Chief, RedAgent):
         None
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+
         # The red chief does not have to clean the last column
         self.knowledge.set_bool_cleaned_right_column(True)
 
