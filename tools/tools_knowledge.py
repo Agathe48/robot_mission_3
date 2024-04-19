@@ -36,10 +36,6 @@ class AgentKnowledge:
         self.grid_radioactivity = grid_radioactivity
         self.picked_up_wastes = []
         self.transformed_waste = None
-        self.left = True
-        self.right = True
-        self.up = True
-        self.down = True
         self.dict_chiefs = {
             "green": [],
             "yellow": [],
@@ -90,62 +86,6 @@ class AgentKnowledge:
         np.ndarray, np.ndarray
         """
         return self.grid_knowledge, self.grid_radioactivity
-    
-    def get_left(self):
-        """
-        Return the boolean according if the agent can go left.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bool
-        """
-        return self.left
-    
-    def get_right(self):
-        """
-        Return the boolean according if the agent can go right.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bool
-        """
-        return self.right
-    
-    def get_up(self):
-        """
-        Return the boolean according if the agent can go up.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bool
-        """
-        return self.up
-    
-    def get_down(self):
-        """
-        Return the boolean according if the agent can go down.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        bool
-        """
-        return self.down
     
     def get_dict_chiefs(self):
         """
@@ -252,66 +192,6 @@ class AgentKnowledge:
         self.grid_knowledge = grid_knowledge
         self.grid_radioactivity = grid_radioactivity
 
-    def set_left(self, boolean_left):
-        """
-        Set boolean regarding the left action in knowledge.
-
-        Parameters
-        ----------
-        boolean_left : bool
-            Boolean according if the agent can go left.
-
-        Returns
-        -------
-        None
-        """
-        self.left = boolean_left
-
-    def set_right(self, boolean_right):
-        """
-        Set boolean regarding the right action in knowledge.
-
-        Parameters
-        ----------
-        boolean_right : bool
-            Boolean according if the agent can go right.
-
-        Returns
-        -------
-        None
-        """
-        self.right = boolean_right
-    
-    def set_up(self, boolean_up):
-        """
-        Set boolean regarding the up action in knowledge.
-
-        Parameters
-        ----------
-        boolean_up : bool
-            Boolean according if the agent can go up.
-
-        Returns
-        -------
-        None
-        """
-        self.up = boolean_up
-
-    def set_down(self, boolean_down):
-        """
-        Set boolean regarding the down action in knowledge.
-
-        Parameters
-        ----------
-        boolean_down : bool
-            Boolean according if the agent can go down.
-
-        Returns
-        -------
-        None
-        """
-        self.down = boolean_down
-
     def set_dict_chiefs(self, dict_chiefs):
         """
         Set dictionary of chiefs in knowledge.
@@ -373,7 +253,7 @@ class AgentKnowledge:
         self.direction_covering = direction_covering
 
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position}, direction_covering={self.direction_covering}, bool_covering={self.bool_covering})"
+        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position}, direction_covering={self.direction_covering}, bool_covering={self.bool_covering})"
         
 
 class ChiefAgentKnowledge(AgentKnowledge):
@@ -384,9 +264,8 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.bool_cleaned_right_column = False
         self.direction_clean_right_column = None # can take as values None when the agent has not started cleaning the right column, "up", "down"
         self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
-        self.list_green_yellow_red_left_column = [None, None, None]
-        self.list_green_yellow_red_right_column = [None, None, None]
-
+        self.resourceslist_green_yellow_red_left_columns = [None, None, None]
+        self.list_green_yellow_red_right_columns = [None, None, None]
 
     def get_dict_agents_knowledge(self):
         """"
@@ -444,7 +323,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         return self.rows_being_covered
     
-    def get_list_green_yellow_red_left_column(self):
+    def get_resourceslist_green_yellow_red_left_columns(self):
         """
         Return the list of position of each area left column's.
 
@@ -456,9 +335,9 @@ class ChiefAgentKnowledge(AgentKnowledge):
         -------
         list
         """
-        return self.list_green_yellow_red_left_column
+        return self.resourceslist_green_yellow_red_left_columns
     
-    def get_list_green_yellow_red_right_column(self):
+    def get_list_green_yellow_red_right_columns(self):
         """
         Return the list of position of each area right column's.
 
@@ -470,7 +349,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         -------
         list
         """
-        return self.list_green_yellow_red_right_column
+        return self.list_green_yellow_red_right_columns
 
     def set_dict_agents_knowledge(self, dict_agents_knowledge):
         """
@@ -532,35 +411,35 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         self.rows_being_covered = rows_being_covered
 
-    def set_list_green_yellow_red_left_column(self, list_green_yellow_red_left_column):
+    def set_resourceslist_green_yellow_red_left_columns(self, resourceslist_green_yellow_red_left_columns):
         """
         Set the list of position of each area left column's.
 
         Parameters
         ----------
-        list_green_yellow_red_left_column : list
+        resourceslist_green_yellow_red_left_columns : list
             The list of position of each area left column's.
 
         Returns
         -------
         None
         """
-        self.list_green_yellow_red_left_column = list_green_yellow_red_left_column
+        self.resourceslist_green_yellow_red_left_columns = resourceslist_green_yellow_red_left_columns
 
-    def set_list_green_yellow_red_right_column(self, list_green_yellow_red_right_column):
+    def set_list_green_yellow_red_right_columns(self, list_green_yellow_red_right_columns):
         """
         Set the list of position of each area right column's.
 
         Parameters
         ----------
-        list_green_yellow_red_right_column : list
+        list_green_yellow_red_right_columns : list
             The list of position of each area right column's.
 
         Returns
         -------
         None
         """
-        self.list_green_yellow_red_right_column = list_green_yellow_red_right_column
+        self.list_green_yellow_red_right_columns = list_green_yellow_red_right_columns
 
     def __str__(self) -> str:
-        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, left={self.left}, right={self.right}, up={self.up}, down={self.down}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_column={self.list_green_yellow_red_left_column}, list_green_yellow_red_right_column={self.list_green_yellow_red_right_column}, rows_being_covered={self.rows_being_covered})"
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, resourceslist_green_yellow_red_left_columns={self.resourceslist_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered})"
