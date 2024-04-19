@@ -14,6 +14,7 @@ Group 3:
 
 ### Python imports ###
 
+from matplotlib.pyplot import grid
 import numpy as np
 from typing import Literal 
 import random
@@ -308,42 +309,143 @@ class CleaningAgent(CommunicatingAgent):
                 print("Agent", self.unique_id, "received order :", content)
 
     def get_number_wastes_max_type_waste_zone_type(self):
+        """
+        Returns the number of wastes max, the type of waste and the zone type for the agent.
+        
+        """
         if type(self) in [GreenAgent, ChiefGreenAgent]:
             number_wastes_max = 2
             type_waste = 1
+            left_zone = None
             right_zone = 2
         elif type(self) in [YellowAgent, ChiefYellowAgent]:
             number_wastes_max = 2
             type_waste = 2
-            right_zone = 3
+            left_zone = 1
+            right_zone = 2
         else:
             number_wastes_max = 1
             type_waste = 3
+            left_zone = 2
             right_zone = None
-        return number_wastes_max, type_waste, right_zone
+        return number_wastes_max, type_waste, left_zone, right_zone
 
     def can_drop_transformed_waste(self):
+        # Retrieve data from knowledge
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         transformed_waste = self.knowledge.get_transformed_waste()
+
         if transformed_waste is not None:
             if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
-                _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
+                _, _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
                 if grid_radioactivity[self.pos[0]+1][self.pos[1]] == right_zone:
                     return True
         return False
 
     def can_transform(self):
+        # Retrieve data from knowledge
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
         transformed_waste = self.knowledge.get_transformed_waste()
+
         return len(picked_up_wastes) == 2 and transformed_waste is None
 
     def can_pick_up(self):
+        # Retrieve data from knowledge
         grid_knowledge, _ = self.knowledge.get_grids()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
         transformed_waste = self.knowledge.get_transformed_waste()
-        number_wastes_max, type_waste, _ = self.get_number_wastes_max_type_waste_zone_type()
+        number_wastes_max, type_waste, _, _ = self.get_number_wastes_max_type_waste_zone_type()
 
         return len(picked_up_wastes) < number_wastes_max and transformed_waste is None and grid_knowledge[self.pos[0]][self.pos[1]] == type_waste
+
+    def can_go_right(self):
+        _, grid_radioactivity = self.knowledge.get_grids()
+        actual_position = self.pos
+        _, _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
+        
+        if actual_position[0] < grid_radioactivity.shape[0]:
+            return grid_radioactivity[actual_position[0]+1][actual_position[1]] != right_zone
+        return False
+
+    def can_go_left(self):
+        _, grid_radioactivity = self.knowledge.get_grids()
+        actual_position = self.pos
+        _, _, left_zone, _ = self.get_number_wastes_max_type_waste_zone_type()
+        
+        if actual_position[0] > 0:
+            return grid_radioactivity[actual_position[0]-1][actual_position[1]] != left_zone
+        return False
+
+    def deliberate_go_to_target(self):
+        # Retrieve data from knowledge
+        target_position = self.knowledge.get_target_position()
+
+        actual_position = self.pos
+
+        list_possible_actions = []
+
+        if self.can_drop_transformed_waste():
+            list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+        if self.can_pick_up():
+            list_possible_actions.append(ACT_PICK_UP)
+        if self.can_transform():
+            list_possible_actions.append(ACT_TRANSFORM)
+        
+        # If the chief has not precise a target position for width
+        if target_position[0] is None:
+            if self.can_go_right():
+                list_possible_actions.append(ACT_GO_RIGHT)
+        # If the target position is to the right of the agent, move right
+        elif target_position[0] > actual_position[0]:
+            if self.can_go_right():
+                list_possible_actions.append(ACT_GO_RIGHT)
+        # If the target position is to the left of the agent, move left
+        elif target_position[0] < actual_position[0]:
+            if self.can_go_left():
+                list_possible_actions.append(ACT_GO_LEFT)
+
+        # If the target position is above the agent, move up
+        if target_position[1] > actual_position[1]:
+            list_possible_actions.append(ACT_GO_UP)
+        # If the target position is below the agent, move down
+        elif target_position[1] < actual_position[1]:
+            list_possible_actions.append(ACT_GO_DOWN)
+
+        return list_possible_actions
+
+    def deliberate_covering(self):
+        # Get data from knowledge
+        direction_covering = self.knowledge.get_direction_covering()
+        right = self.knowledge.get_right()
+        left = self.knowledge.get_left()
+        
+        list_possible_actions = []
+        # If the agent has not started covering its assigned row
+        if direction_covering is None:
+            list_possible_actions = self.deliberate_go_to_target()
+                
+        # If the agent is in mode covering and ready to do it
+        else:
+            # Check if there is a waste to transform
+            if self.can_transform():
+                list_possible_actions.append(ACT_TRANSFORM)
+            # Check if agent has a transformed waste and drop it
+            if self.can_drop_transformed_waste():
+                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
+            # Check if there is a waste to pick up and if we can pick up a waste
+            if self.can_pick_up():
+                list_possible_actions.append(ACT_PICK_UP)
+
+            # Clean the column in the direction from its position
+            if direction_covering == "right":
+                if self.can_go_right():
+                    list_possible_actions.append(ACT_GO_RIGHT)
+
+            elif direction_covering == "left":
+                if self.can_go_left():
+                    list_possible_actions.append(ACT_GO_LEFT)
+
+        return list_possible_actions
 
 class GreenAgent(CleaningAgent):
     
@@ -404,53 +506,14 @@ class GreenAgent(CleaningAgent):
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
-        picked_up_wastes = self.knowledge.get_picked_up_wastes()
         bool_covering = self.knowledge.get_bool_covering()
-        direction_covering = self.knowledge.get_direction_covering()
-        target_position = self.knowledge.get_target_position()
-
-        actual_position = self.pos
 
         # Check up and down available directions
         list_available_act_directions = []
 
         # If the agent is in covering mode
         if bool_covering:
-            # If the agent has not started covering its assigned row
-            if direction_covering is None:
-                # If the target position is to the right of the agent, move right
-                if target_position[0] > actual_position[0]:
-                    list_possible_actions.append(ACT_GO_RIGHT)
-                # If the target position is to the left of the agent, move left
-                elif target_position[0] < actual_position[0]:
-                    list_possible_actions.append(ACT_GO_LEFT)
-                # If the target position is above the agent, move up
-                elif target_position[1] > actual_position[1]:
-                    list_possible_actions.append(ACT_GO_UP)
-                # If the target position is below the agent, move down
-                elif target_position[1] < actual_position[1]:
-                    list_possible_actions.append(ACT_GO_DOWN)
-                    
-            # If the agent is in mode covering and ready to do it
-            else:
-                # Check if there is a waste to transform
-                if self.can_transform():
-                    list_possible_actions.append(ACT_TRANSFORM)
-                # Check if agent has a transformed waste and drop it
-                if self.can_drop_transformed_waste():
-                    list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
-                # Check if there is a waste to pick up and if we can pick up a waste
-                if self.can_pick_up():
-                    list_possible_actions.append(ACT_PICK_UP)
-
-                # Clean the column in the direction from its position
-                if direction_covering == "right":
-                    if right:
-                        list_possible_actions.append(ACT_GO_RIGHT)
-
-                elif direction_covering == "left":
-                    if left:
-                        list_possible_actions.append(ACT_GO_LEFT)
+            list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
         else:
@@ -1145,14 +1208,39 @@ class Chief(CleaningAgent):
                 closest_agent = agent
         return closest_agent
 
-    def get_green_yellow_right_column(self, mode: Literal["green", "yellow"]):
+    def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
         """
-        Get the last column for zones 1 and 2.
+        Get the first column for zones 1, 2 and 3.
         
         Parameters
         ----------
-        mode : Literal["z1", "z2"]
-            Depending if we are in zone 1 or 2.
+        mode : Literal["green", "yellow", "red"]
+            Depending if we are in zone 1, 2 or 3.
+        
+        Returns
+        -------
+        int
+            Id of the column.
+        """
+        if mode == "green":
+            return 0
+        _, grid_radioactivity = self.knowledge.get_grids()
+        former_zone = 1 if mode == "green" else 2
+        current_zone = 2 if mode == "yellow" else 3
+        for counter_column in range(1, grid_radioactivity.shape[0]):
+            former_column = grid_radioactivity[counter_column - 1]
+            current_column = grid_radioactivity[counter_column]
+            if int(former_column[0]) == former_zone and int(current_column[0]) == current_zone:
+                return counter_column
+            
+    def get_green_yellow_red_right_column(self, mode: Literal["green", "yellow", "red"]):
+        """
+        Get the first column for zones 1, 2 and 3.
+        
+        Parameters
+        ----------
+        mode : Literal["green", "yellow", "red"]
+            Depending if we are in zone 1, 2 or 3.
         
         Returns
         -------
@@ -1160,10 +1248,13 @@ class Chief(CleaningAgent):
             Id of the column.
         """
         _, grid_radioactivity = self.knowledge.get_grids()
+        if mode == "red":
+            return grid_radioactivity.shape[0] - 1
+
         zone_to_detect = 2 if mode == "green" else 3
         counter = 0
         for column in grid_radioactivity:
-            if int(column[0]) == zone_to_detect:
+            if True in [int(row) == zone_to_detect for row in column]:
                 return counter - 1
             counter += 1
 
@@ -1202,9 +1293,17 @@ class Chief(CleaningAgent):
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
-        green_right_column = self.get_green_yellow_right_column("green")
-        yellow_right_column = self.get_green_yellow_right_column("yellow")
+        green_left_column = self.get_green_yellow_red_left_column("green")
+        yellow_left_column = self.get_green_yellow_red_left_column("yellow")
+        red_left_column = self.get_green_yellow_red_left_column("red")
+        green_right_column = self.get_green_yellow_red_right_column("green")
+        yellow_right_column = self.get_green_yellow_red_right_column("yellow")
+        red_right_column = self.get_green_yellow_red_right_column("red")
 
+        print("Green right column", green_right_column)
+        print("Yellow right column", yellow_right_column)
+        print("Red right column", red_right_column)
+        
         # Send orders for each agent, depending on their current knowledge
         for agent_name in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent_name]
@@ -1229,11 +1328,22 @@ class Chief(CleaningAgent):
                         if id_row_to_go != grid_height - 1:
                             rows_being_covered[id_row_to_go+1] = 1
                         
-                        # Determine the position to go if the agent is already on the right column of its zone
-                        if agent_position[0] in [green_right_column, yellow_right_column]:
+                        # Determine the position to go if the agent is already on the left column of its zone
+                        if agent_position[0] in [green_left_column, yellow_left_column, red_left_column]:
                             position_to_go = (agent_position[0], id_row_to_go)
                         else:
-                            position_to_go = (0, id_row_to_go)
+                            if type(self) == ChiefGreenAgent:
+                                if green_right_column is not None:
+                                    green_right_column -= 1
+                                position_to_go = (green_right_column, id_row_to_go)
+                            elif type(self) == ChiefYellowAgent:
+                                if yellow_right_column is not None:
+                                    yellow_right_column -= 1
+                                position_to_go = (yellow_right_column, id_row_to_go)
+                            else:
+                                if red_right_column is not None:
+                                    red_right_column -= 1
+                                position_to_go = (red_right_column, id_row_to_go)
                         print("Chief is sending the order to cover row", id_row_to_go, "to agent", agent_name)
                         # Send the order to go to this position
                         self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, position_to_go))
