@@ -8,6 +8,16 @@ Group 3:
 - Agathe POULAIN
 """
 
+#############
+### PATHS ###
+#############
+
+PATH_RESOURCES = "resources/"
+
+#######################
+### PARAMETRIZATION ###
+#######################
+
 GRID_SIZE = (9, 18)
 GRID_HEIGHT = GRID_SIZE[0]
 GRID_WIDTH = GRID_SIZE[1]
@@ -41,3 +51,4 @@ ACT_WAIT = "wait"
 ##############
 
 STOP_COVERING = "stop_covering"
+DROP_ONE_WASTE = "drop_one_waste"

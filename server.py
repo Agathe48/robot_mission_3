@@ -32,7 +32,7 @@ from tools.tools_constants import (
     GRID_HEIGHT,
     GRID_WIDTH,
     WASTE_DENSITY,
-    DICT_CLASS_COLOR
+    PATH_RESOURCES
 )
 
 from agents import (
@@ -41,7 +41,8 @@ from agents import (
     YellowAgent,
     ChiefYellowAgent,
     RedAgent,
-    ChiefRedAgent
+    ChiefRedAgent,
+    DICT_CLASS_COLOR
 )
 
 #################
@@ -85,27 +86,17 @@ def agent_portrayal(agent):
     if type(agent) == WasteDisposalZone:
         portrayal = {
             "Layer": 1,
-            "scale" :0.95,
-            "Shape" : "ressources/waste_disposal_zone_illustration.png"}
+            "scale": 0.95,
+            "Shape": PATH_RESOURCES + "waste_disposal_zone_illustration.png"}
 
     # For the wastes objects
     if type(agent) == Waste:
         portrayal = {"Layer": 2}
         
         portrayal["Color"] = agent.type_waste
-
-        if portrayal["Color"] == "green" :
-            portrayal["Shape"] = "ressources/green_waste3.png"
-            portrayal["scale"] = 0.4
-
-        if portrayal["Color"] == "yellow" :
-            portrayal["Shape"] = "ressources/yellow_waste3.png"
-            portrayal["scale"] = 0.4
-
-        if portrayal["Color"] == "red" :
-            portrayal["Shape"] = "ressources/red_waste3.png"
-            portrayal["scale"] = 0.4
-
+        path_image = PATH_RESOURCES + agent.type_waste + "_waste.png"
+        portrayal["Shape"] = path_image
+        portrayal["scale"] = 0.4
 
     # For the cleaning and chief agents
     if type(agent) in list(DICT_CLASS_COLOR.keys()):
@@ -114,79 +105,36 @@ def agent_portrayal(agent):
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
         transformed_waste = agent.knowledge.get_transformed_waste()
 
-
+        path_image = PATH_RESOURCES
+        
+        # Change the name of the image according to the agent's color
         if type(agent) in [GreenAgent, ChiefGreenAgent]:
-
-            if type(agent) is GreenAgent:
-                portrayal["Shape"] = "ressources/green_agent.png"
-                portrayal["scale"] = 0.7
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/green_agent_1_green_waste.png"
-                    portrayal["scale"] = 0.7
-                if len(picked_up_wastes) == 2:
-                    portrayal["Shape"] = "ressources/green_agent_2_green_waste.png"
-                    portrayal["scale"] = 0.7
-                if not transformed_waste is None:
-                    portrayal["Shape"] = "ressources/green_agent_yellow_waste.png"
-                    portrayal["scale"] = 0.7
-
-            if type(agent) is ChiefGreenAgent:
-                portrayal["Shape"] = "ressources/green_chief.png"
-                portrayal["scale"] = 0.9
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/green_chief_1_green_waste.png"
-                    portrayal["scale"] = 0.9
-                if len(picked_up_wastes) == 2:
-                    portrayal["Shape"] = "ressources/green_chief_2_green_waste.png"
-                    portrayal["scale"] = 0.9
-                if not transformed_waste is None:
-                    portrayal["Shape"] = "ressources/green_chief_yellow_waste.png"
-                    portrayal["scale"] = 0.9
-
+            path_image += "green"
         elif type(agent) in [YellowAgent, ChiefYellowAgent]:
-
-            if type(agent) is YellowAgent:
-                portrayal["Shape"] = "ressources/yellow_agent.png"
-                portrayal["scale"] = 0.7
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/yellow_agent_1_yellow_waste.png"
-                    portrayal["scale"] = 0.7
-                if len(picked_up_wastes) == 2:
-                    portrayal["Shape"] = "ressources/yellow_agent_2_yellow_waste.png"
-                    portrayal["scale"] = 0.7
-                if not transformed_waste is None:
-                    portrayal["Shape"] = "ressources/yellow_agent_1_red_waste.png"
-                    portrayal["scale"] = 0.7
-
-            if type(agent) is ChiefYellowAgent:
-                portrayal["Shape"] = "ressources/yellow_chief.png"
-                portrayal["scale"] = 0.9
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/yellow_chief_1_yellow_waste.png"
-                    portrayal["scale"] = 0.9
-                if len(picked_up_wastes) == 2:
-                    portrayal["Shape"] = "ressources/yellow_chief_2_yellow_waste.png"
-                    portrayal["scale"] = 0.9
-                if not transformed_waste is None:
-                    portrayal["Shape"] = "ressources/yellow_chief_1_red_waste.png"
-                    portrayal["scale"] = 0.9
-            
+            path_image += "yellow" 
         elif type(agent) in [RedAgent, ChiefRedAgent]:
-            portrayal["Color"] = "#a90000"
-            # portrayal["text_color"] = "white"
-            if type(agent) is RedAgent:
-                portrayal["Shape"] = "ressources/red_agent.png"
-                portrayal["scale"] = 0.7
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/red_agent_1_red_waste.png"
-                    portrayal["scale"] = 0.7
+            path_image += "red"
 
-            if type(agent) is ChiefRedAgent:
-                portrayal["Shape"] = "ressources/red_chief.png"
-                portrayal["scale"] = 0.9
-                if len(picked_up_wastes) == 1:
-                    portrayal["Shape"] = "ressources/red_chief_1_red_waste.png"
-                    portrayal["scale"] = 0.9
+        # Change the name of the image according to the agent's type
+        if type(agent) in [ChiefGreenAgent, ChiefYellowAgent, ChiefRedAgent]:
+            path_image += "_chief"
+            scale = 0.9
+        else:
+            path_image += "_agent"
+            scale = 0.7
+        
+        # Change the name of the image according to the wastes it possesses
+        if len(picked_up_wastes) == 1:
+            path_image += "_1_waste"
+        elif len(picked_up_wastes) == 2:
+            path_image += "_2_waste"
+        if transformed_waste is not None:
+            path_image += "_transformed_waste"
+
+        path_image += ".png"
+
+        portrayal["Shape"] = path_image
+        portrayal["scale"] = scale
 
     return portrayal
 
@@ -207,8 +155,8 @@ chart_element = mesa.visualization.ChartModule(
 )
 
 model_params = {
-    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 0, 1, 6, 1),
-    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 0, 1, 6, 1) ,
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
+    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
     "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
     "width": mesa.visualization.Slider("Grid width", GRID_WIDTH, 6, 30, 1),
     "height": mesa.visualization.Slider("Grid height", GRID_HEIGHT, 3, 20, 1),
