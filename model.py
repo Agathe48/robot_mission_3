@@ -344,7 +344,7 @@ class RobotMission(Model):
 
         for agent in self.schedule.agents:
             # Update the knowledge of all agents with the chiefs
-            if type(agent) in [GreenAgent, YellowAgent, RedAgent, ChiefGreenAgent, ChiefYellowAgent, ChiefRedAgent]:
+            if type(agent) in list(DICT_CLASS_COLOR.keys()):
                 agent.knowledge.set_dict_chiefs(dict_chiefs)
             # Update the knowledge of the chiefs with their colored agent
             if type(agent) in [GreenAgent, YellowAgent, RedAgent]:

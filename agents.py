@@ -14,10 +14,9 @@ Group 3:
 
 ### Python imports ###
 
-from matplotlib.pyplot import grid
 import numpy as np
 from typing import Literal 
-import random
+import random as rd
 
 ### Local imports ###
 
@@ -159,9 +158,6 @@ class CleaningAgent(CommunicatingAgent):
         -------
         None 
         """
-
-        print("Percepts of Agent", self.unique_id, self.percepts)
-
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_boolean_knowledge = {
             "left": True,
@@ -344,6 +340,14 @@ class CleaningAgent(CommunicatingAgent):
                     return True
         return False
 
+    def can_drop_one_waste(self):
+        # Retrieve data from knowledge
+        grid_knowledge, _ = self.knowledge.get_grids()
+        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+
+        # The agent can drop a single waste if the tile is empty and if it has one and only one waste
+        return len(picked_up_wastes) == 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 4
+
     def can_transform(self):
         # Retrieve data from knowledge
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
@@ -360,12 +364,24 @@ class CleaningAgent(CommunicatingAgent):
 
         return len(picked_up_wastes) < number_wastes_max and transformed_waste is None and grid_knowledge[self.pos[0]][self.pos[1]] == type_waste
 
+    def can_go_up(self):
+        grid_knowledge, _ = self.knowledge.get_grids()
+        grid_height = grid_knowledge.shape[1]
+        actual_position = self.pos
+
+        return actual_position[1] + 1 < grid_height
+
+    def can_go_down(self):
+        actual_position = self.pos
+
+        return actual_position[1] > 0
+
     def can_go_right(self):
         _, grid_radioactivity = self.knowledge.get_grids()
         actual_position = self.pos
         _, _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
         
-        if actual_position[0] < grid_radioactivity.shape[0]:
+        if actual_position[0] + 1 < grid_radioactivity.shape[0]:
             return int(grid_radioactivity[actual_position[0]+1][actual_position[1]]) != right_zone
         return False
 
@@ -386,13 +402,16 @@ class CleaningAgent(CommunicatingAgent):
 
         list_possible_actions = []
 
+        # Non blocking actions when going to a target
         if self.can_drop_transformed_waste():
             list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
         if self.can_pick_up():
             list_possible_actions.append(ACT_PICK_UP)
         if self.can_transform():
             list_possible_actions.append(ACT_TRANSFORM)
-        
+        if type(self) == RedAgent and self.can_drop_one_waste():
+            list_possible_actions.append(ACT_DROP_ONE_WASTE)
+
         # If the agent has not precise a target position for width
         if target_position[0] is None:
             if self.can_go_right():
@@ -420,9 +439,19 @@ class CleaningAgent(CommunicatingAgent):
         direction_covering = self.knowledge.get_direction_covering()
         
         list_possible_actions = []
-        # If the agent has not started covering its assigned row
+        # If the agent has not started covering its assigned row, it must reach the position
         if direction_covering is None:
             list_possible_actions = self.deliberate_go_to_target()
+
+            # If the agent is blocked by another agent, move laterally randomly (we add these directions)
+            list_movement_temp = []
+            if self.can_go_right():
+                list_movement_temp.append(ACT_GO_RIGHT)
+            if self.can_go_left():
+                list_movement_temp.append(ACT_GO_LEFT)
+            rd.shuffle(list_movement_temp)
+            for element in list_movement_temp:
+                list_possible_actions.append(element)            
                 
         # If the agent is in mode covering and ready to do it
         else:
@@ -435,6 +464,9 @@ class CleaningAgent(CommunicatingAgent):
             # Check if there is a waste to pick up and if we can pick up a waste
             if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
+            # Check if the red agent is moving on the trash in order to drop the waste
+            if type(self) == RedAgent and self.can_drop_one_waste():
+                list_possible_actions.append(ACT_DROP_ONE_WASTE)
 
             # Clean the column in the direction from its position
             if direction_covering == "right":
@@ -480,13 +512,12 @@ class CleaningAgent(CommunicatingAgent):
                 # If covering line is done, set direction_covering back to None
                 if actual_position[0] == 0 and direction_covering != "right":
                     direction_covering = None
-                elif actual_position[0] + 1 == grid_radioactivity.shape[0] and direction_covering != "left":
-                    direction_covering = None
+                elif actual_position[0] + 1 == grid_radioactivity.shape[0]:
+                    if direction_covering != "left":
+                        direction_covering = None
                 elif (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == right_zone and direction_covering != "left") or (grid_radioactivity[actual_position[0] - 1][actual_position[1]] == left_zone and direction_covering != "right"):
                     direction_covering = None
                 self.knowledge.set_direction_covering(direction_covering)
-
-        print("My covering direction is", direction_covering)
 
 class GreenAgent(CleaningAgent):
     
@@ -577,7 +608,7 @@ class GreenAgent(CleaningAgent):
                     else:
                         if len(list_available_act_directions) > 0:
                             # Randomize the order of possible moves
-                            random.shuffle(list_available_act_directions)
+                            rd.shuffle(list_available_act_directions)
                             for action in list_available_act_directions:
                                 list_possible_actions.append(action)
                         else :
@@ -620,21 +651,19 @@ class GreenAgent(CleaningAgent):
 
                 # Randomize the order of possible best moves
                 if len(list_best_directions) > 0:
-                    random.shuffle(list_best_directions)
+                    rd.shuffle(list_best_directions)
                     for action in list_best_directions:
                         list_possible_actions.append(action)
 
                 # Randomize the order of possible moves
                 if len(list_available_act_directions) > 0:
-                    random.shuffle(list_available_act_directions)
+                    rd.shuffle(list_available_act_directions)
                     for action in list_available_act_directions:
                         list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        # list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
-        
    
 class YellowAgent(CleaningAgent):
 
@@ -693,7 +722,6 @@ class YellowAgent(CleaningAgent):
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
         transformed_waste = self.knowledge.get_transformed_waste()
-        picked_up_wastes = self.knowledge.get_picked_up_wastes()
         bool_covering = self.knowledge.get_bool_covering()
 
         # If the agent is in covering mode
@@ -701,7 +729,7 @@ class YellowAgent(CleaningAgent):
             list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
-        else : 
+        else: 
             # Check up and down cells for agents
             list_available_act_directions = []
             if up:
@@ -710,7 +738,7 @@ class YellowAgent(CleaningAgent):
                 list_available_act_directions.append(ACT_GO_DOWN)
 
             # Check if there is a waste to transform
-            if len(picked_up_wastes) == 2:
+            if self.can_transform():
                 list_possible_actions.append(ACT_TRANSFORM)
 
             # Check if agent has a transformed waste and if it can go right or drop it
@@ -723,7 +751,7 @@ class YellowAgent(CleaningAgent):
                     else :
                         if len(list_available_act_directions) > 0 :
                             # Randomize the order of possible moves
-                            random.shuffle(list_available_act_directions)
+                            rd.shuffle(list_available_act_directions)
                             for action in list_available_act_directions:
                                 list_possible_actions.append(action)
                         else :
@@ -732,11 +760,11 @@ class YellowAgent(CleaningAgent):
                     # Move to the right to drop the waste
                     list_possible_actions.append(ACT_GO_RIGHT)
             
-            # Check if there is a waste to pick up and if we can pick up a waste (and if we don't have a transformed waste already)
-            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2 and transformed_waste == None:
+            # Pick up the waste if the conditions are filled
+            if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
 
-            # Check for other agent in surronding cells
+            # Check for other agent in surrounding cells
             if left:
                 # Check if cell at the left is in zone 2
                 if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 1:
@@ -771,18 +799,17 @@ class YellowAgent(CleaningAgent):
 
                 # Randomize the order of possible best moves
                 if len(list_best_directions) > 0:
-                    random.shuffle(list_best_directions)
+                    rd.shuffle(list_best_directions)
                     for action in list_best_directions:
                         list_possible_actions.append(action)
 
                 # Randomize the order of possible moves
                 if len(list_available_act_directions) > 0:
-                    random.shuffle(list_available_act_directions)
+                    rd.shuffle(list_available_act_directions)
                     for action in list_available_act_directions:
                         list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
 
@@ -844,43 +871,13 @@ class RedAgent(CleaningAgent):
         down = self.knowledge.get_down()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
         bool_covering = self.knowledge.get_bool_covering()
-        target_position = self.knowledge.get_target_position()
-        direction_covering = self.knowledge.get_direction_covering()
-
-        actual_position = self.pos
 
         # If the agent is in mode covering but not at the good start position yet
-        if bool_covering and direction_covering is None: 
-            # If the target position is to the right of the agent, move right
-            if target_position[0] > actual_position[0]:
-                list_possible_actions.append(ACT_GO_RIGHT)
-            # If the target position is to the left of the agent, move left
-            elif target_position[0] < actual_position[0]:
-                list_possible_actions.append(ACT_GO_LEFT)
-            # If the target position is above the agent, move up
-            elif target_position[1] > actual_position[1]:
-                list_possible_actions.append(ACT_GO_UP)
-            # If the target position is below the agent, move down
-            elif target_position[1] < actual_position[1]:
-                list_possible_actions.append(ACT_GO_DOWN)
-                
-        # If the agent is in mode covering and ready to do it
-        elif bool_covering : 
-            # Check if there is a waste to pick up and if we can pick up a waste
-            if len(picked_up_wastes) <=0  and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
-                list_possible_actions.append(ACT_PICK_UP)
-
-            # Clean the column in the direction from its position
-            if direction_covering == "right":
-                if right:
-                    list_possible_actions.append(ACT_GO_RIGHT)
-
-            elif direction_covering == "left":
-                if left:
-                    list_possible_actions.append(ACT_GO_LEFT)
+        if bool_covering:
+            list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
-        else : 
+        else:
 
             # Check up and down cells for agents
             list_available_act_directions = []
@@ -915,10 +912,10 @@ class RedAgent(CleaningAgent):
                                 list_possible_actions.append(ACT_WAIT)
 
             # Check if there is a waste to pick up and if we can pick up a waste
-            if len(picked_up_wastes) <= 0 and grid_knowledge[self.pos[0]][self.pos[1]] == 3:
+            if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
 
-            # Check for other agent in surronding cells
+            # Check for other agent in surrounding cells
             if left:
                 # Check if cell at the left is in zone 3
                 if grid_radioactivity[self.pos[0]-1][self.pos[1]] != 2:
@@ -951,13 +948,13 @@ class RedAgent(CleaningAgent):
 
                 # Randomize the order of possible best moves
                 if len(list_best_directions) > 0:
-                    random.shuffle(list_best_directions)
+                    rd.shuffle(list_best_directions)
                     for action in list_best_directions:
                         list_possible_actions.append(action)
 
                 # Randomize the order of possible moves
                 if len(list_available_act_directions) > 0:
-                    random.shuffle(list_available_act_directions)
+                    rd.shuffle(list_available_act_directions)
                     for action in list_available_act_directions:
                         list_possible_actions.append(action)
 
@@ -1043,7 +1040,7 @@ class Chief(CleaningAgent):
 
     def update(self):
         """
-        Updates the chief agent's knowledge based on its percepts
+        Updates the chief agent's knowledge based on its percepts.
 
         Parameters
         ----------
@@ -1095,8 +1092,6 @@ class Chief(CleaningAgent):
                 mode = "red"
             # Left zone column
             if list_green_yellow_red_left_column[counter] is None:
-                if mode == "yellow":
-                    print(self.get_green_yellow_red_left_column(mode))
                 list_green_yellow_red_left_column[counter] = self.get_green_yellow_red_left_column(mode)
             # Right zone column
             if list_green_yellow_red_right_column[counter] is None:
@@ -1417,33 +1412,30 @@ class ChiefGreenAgent(Chief, GreenAgent):
         # Get data from knowledge
         bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
         direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
-        right = self.knowledge.get_right()
         up = self.knowledge.get_up()
         down = self.knowledge.get_down()
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        transformed_waste = self.knowledge.get_transformed_waste()
-        picked_up_wastes = self.knowledge.get_picked_up_wastes()
+        grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         actual_position = self.pos
         list_possible_actions = []
 
-        # First the chief goes to upper right or lower righ position
+        # First the chief goes to upper right or lower right position
         if not bool_cleaned_right_column and direction_clean_right_column is None:
             # If the chief is in the upper part of the grid, it goes up
             if actual_position[1] > grid_height // 2:
                 # If the chief can go up, it goes up
-                if up:
+                if self.can_go_up():
                     list_possible_actions.append(ACT_GO_UP)
                 # If the chief can't go up, it goes right (to still move closer to the right column)
-                elif right and grid_radioactivity[actual_position[0]+1][actual_position[1]] != 2:
+                elif self.can_go_right():
                     list_possible_actions.append(ACT_GO_RIGHT)
             # If the chief is in the lower part of the grid, it goes down
             else:
                 # If the chief can go down, it goes down
-                if down:
+                if self.can_go_down():
                     list_possible_actions.append(ACT_GO_DOWN)
                 # If the chief can't go down, it goes right (to still move closer to the right column)
-                elif right and grid_radioactivity[actual_position[0]+1][actual_position[1]] != 2:
+                elif self.can_go_right():
                     list_possible_actions.append(ACT_GO_RIGHT)
 
             list_possible_actions.append(ACT_WAIT)
@@ -1463,11 +1455,11 @@ class ChiefGreenAgent(Chief, GreenAgent):
 
             # Clean the column in the direction from its position
             if direction_clean_right_column == "up":
-                if up:
+                if self.can_go_up():
                     list_possible_actions.append(ACT_GO_UP)
 
             elif direction_clean_right_column == "down":
-                if down:
+                if self.can_go_down():
                     list_possible_actions.append(ACT_GO_DOWN)
 
             list_possible_actions.append(ACT_WAIT)

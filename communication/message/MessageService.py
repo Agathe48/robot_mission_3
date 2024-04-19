@@ -43,7 +43,6 @@ class MessageService:
     def dispatch_message(self, message):
         """ Dispatch the message to the right agent.
         """
-        print(message.get_dest())
         self.find_agent_from_name(message.get_dest()).receive_message(message)
 
     def dispatch_messages(self):

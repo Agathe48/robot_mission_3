@@ -31,7 +31,8 @@ from objects import (
 from tools.tools_constants import (
     GRID_HEIGHT,
     GRID_WIDTH,
-    WASTE_DENSITY
+    WASTE_DENSITY,
+    DICT_CLASS_COLOR
 )
 
 from agents import (
@@ -107,7 +108,7 @@ def agent_portrayal(agent):
 
 
     # For the cleaning and chief agents
-    if type(agent) in [GreenAgent, ChiefGreenAgent, YellowAgent, ChiefYellowAgent, RedAgent, ChiefRedAgent]:
+    if type(agent) in list(DICT_CLASS_COLOR.keys()):
         portrayal = {"Layer": 3}
 
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
@@ -206,8 +207,8 @@ chart_element = mesa.visualization.ChartModule(
 )
 
 model_params = {
-    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
-    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 0, 1, 6, 1),
+    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 0, 1, 6, 1) ,
     "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
     "width": mesa.visualization.Slider("Grid width", GRID_WIDTH, 6, 30, 1),
     "height": mesa.visualization.Slider("Grid height", GRID_HEIGHT, 3, 20, 1),
