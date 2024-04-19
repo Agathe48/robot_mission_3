@@ -37,9 +37,9 @@ class AgentKnowledge:
         self.picked_up_wastes = []
         self.transformed_waste = None
         self.dict_chiefs = {
-            "green": [],
-            "yellow": [],
-            "red": []
+            "green": None,
+            "yellow": None,
+            "red": None
         }
         self.target_position = None
         self.bool_covering = True

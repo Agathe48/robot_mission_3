@@ -288,9 +288,9 @@ class RobotMission(Model):
             [self.dict_nb_agents["red"], RedAgent, ChiefRedAgent, red_zone],
         ]
         dict_chiefs = {
-            "green": [],
-            "yellow": [],
-            "red": []
+            "green": None,
+            "yellow": None,
+            "red": None
         }
 
         # Create the cleaning agents randomly generated in the map
@@ -311,7 +311,7 @@ class RobotMission(Model):
                         pos_waste_disposal = self.pos_waste_disposal 
                         )
                     chief_agent = False
-                    dict_chiefs[DICT_CLASS_COLOR[chief_agent_class]].append(ag)
+                    dict_chiefs[DICT_CLASS_COLOR[chief_agent_class]] = ag
 
                 else:
                     ag = agent_class(

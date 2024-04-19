@@ -203,7 +203,7 @@ class CleaningAgent(CommunicatingAgent):
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
 
-        print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
+        # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
     
     def send_percepts_and_data(self):
         """
@@ -232,13 +232,13 @@ class CleaningAgent(CommunicatingAgent):
         percepts_and_data["bool_covering"] = bool_covering
         percepts_and_data["direction_covering"] = direction_covering
         percepts_and_data["target_position"] = target_position
+        percepts_and_data["action"] = self.percepts["action_done"]["action"]
 
         agent_color = DICT_CLASS_COLOR[type(self)]
         dict_chiefs = self.knowledge.get_dict_chiefs()
+        chief = dict_chiefs[agent_color]
 
-        for chief in dict_chiefs[agent_color]:
-            chief: Chief
-            self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
+        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
 
     def treat_order(self, content):
         # The chief asks the agent to stop covering
@@ -909,13 +909,17 @@ class Chief(CleaningAgent):
         -------
         None
         """
-        # Receive the percepts of the other agents
+        # Receive the messages
         self.receive_messages()
-        # Update agent's knowledge
+        # Update chief knowledge with the agents perception
         self.update_chief_with_agents_knowledge()
+        # Send important information to the superior chief
+        self.send_information_chief()
+        # Update chief knowledge with the information from other chiefs
+        self.update_chief_information_knowledge()
         # Send orders to the other agents
         self.send_orders()
-        # Receive the orders he just send to himself
+        # Receive the orders he just sent to himself
         self.receive_orders()
         # Determine all possible actions based on current knowledge
         list_possible_actions = self.deliberate()
@@ -928,7 +932,7 @@ class Chief(CleaningAgent):
     def receive_messages(self):
         list_messages = self.get_new_messages()
         self.list_received_percepts_and_data = []
-        self.list_orders = []
+        self.list_information_chief = []
         message: Message
         for message in list_messages:
             other_agent = message.get_exp()
@@ -939,7 +943,12 @@ class Chief(CleaningAgent):
                 # Store the percepts to later update its knowledge
                 self.list_received_percepts_and_data.append({"agent" : other_agent, "percepts" : percepts})
 
-        print("Chief", self.unique_id, "received messages :", self.list_received_percepts_and_data)
+            elif message.get_performative() == MessagePerformative.SEND_INFORMATION_CHIEF_DROP:
+                content = message.get_content()
+                self.list_information_chief.append({"chief": other_agent, "information": content})
+
+        print("Chief", self.unique_id, "received messages as perceived and data :", self.list_received_percepts_and_data)
+        print("Chief", self.unique_id, "received messages as information from other chief :", self.list_information_chief)
 
     def update(self):
         """
@@ -1003,6 +1012,10 @@ class Chief(CleaningAgent):
         self.knowledge.set_list_green_yellow_red_left_columns(list_green_yellow_red_left_columns)
         self.knowledge.set_list_green_yellow_red_right_columns(list_green_yellow_red_right_columns)
 
+    def update_chief_information_knowledge(self):
+        # print(self.list_information_chief) TODO
+        pass
+
     def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
         """
         Get the first column for zones 1, 2 and 3.
@@ -1050,6 +1063,22 @@ class Chief(CleaningAgent):
             if True in [int(row) == zone_to_detect for row in column]:
                 return counter - 1
             counter += 1
+
+    def send_information_chief(self):
+        dict_chiefs = self.knowledge.get_dict_chiefs()
+        dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
+        dict_knowledge_agents[self.get_name()] = {
+            "action": self.percepts["action_done"]["action"],
+            "position": self.pos
+        }
+
+        for agent_name in dict_knowledge_agents:
+            dict_knowledge = dict_knowledge_agents[agent_name]
+            # Inform the other chief that a transformed waste has been dropped on the border
+            if dict_knowledge["action"] == ACT_DROP_TRANSFORMED_WASTE:
+                agent_position = dict_knowledge["position"]
+                chief: Chief = dict_chiefs["yellow"] if type(self) == ChiefGreenAgent else dict_chiefs["red"]
+                self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_DROP, agent_position))
 
     def update_chief_with_agents_knowledge(self):
         """
@@ -1107,13 +1136,13 @@ class Chief(CleaningAgent):
                 "position": percepts_and_data["position"],
                 "bool_covering": percepts_and_data["bool_covering"],
                 "direction_covering": percepts_and_data["direction_covering"],
-                "target_position": percepts_and_data["target_position"]}
+                "target_position": percepts_and_data["target_position"],
+                "action": percepts_and_data["action"]}
         
         # Set the updated knowledge
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
         self.update_left_right_column()
-        print("Knowledge after of Chief", self.knowledge)
 
     def deliberate_cover_last_column(self):
         # Get data from knowledge
