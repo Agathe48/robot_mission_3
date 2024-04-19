@@ -145,6 +145,8 @@ class CleaningAgent(CommunicatingAgent):
             self.knowledge.set_transformed_waste(transformed_waste = my_object)
             self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
 
+        self.update_knowledge_target_position()
+
     def update(self):
         """
         Updates the agent's knowledge based on its percepts.
@@ -322,7 +324,7 @@ class CleaningAgent(CommunicatingAgent):
             number_wastes_max = 2
             type_waste = 2
             left_zone = 1
-            right_zone = 2
+            right_zone = 3
         else:
             number_wastes_max = 1
             type_waste = 3
@@ -364,7 +366,7 @@ class CleaningAgent(CommunicatingAgent):
         _, _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
         
         if actual_position[0] < grid_radioactivity.shape[0]:
-            return grid_radioactivity[actual_position[0]+1][actual_position[1]] != right_zone
+            return int(grid_radioactivity[actual_position[0]+1][actual_position[1]]) != right_zone
         return False
 
     def can_go_left(self):
@@ -373,7 +375,7 @@ class CleaningAgent(CommunicatingAgent):
         _, _, left_zone, _ = self.get_number_wastes_max_type_waste_zone_type()
         
         if actual_position[0] > 0:
-            return grid_radioactivity[actual_position[0]-1][actual_position[1]] != left_zone
+            return int(grid_radioactivity[actual_position[0]-1][actual_position[1]]) != left_zone
         return False
 
     def deliberate_go_to_target(self):
@@ -391,7 +393,7 @@ class CleaningAgent(CommunicatingAgent):
         if self.can_transform():
             list_possible_actions.append(ACT_TRANSFORM)
         
-        # If the chief has not precise a target position for width
+        # If the agent has not precise a target position for width
         if target_position[0] is None:
             if self.can_go_right():
                 list_possible_actions.append(ACT_GO_RIGHT)
@@ -416,8 +418,6 @@ class CleaningAgent(CommunicatingAgent):
     def deliberate_covering(self):
         # Get data from knowledge
         direction_covering = self.knowledge.get_direction_covering()
-        right = self.knowledge.get_right()
-        left = self.knowledge.get_left()
         
         list_possible_actions = []
         # If the agent has not started covering its assigned row
@@ -446,6 +446,47 @@ class CleaningAgent(CommunicatingAgent):
                     list_possible_actions.append(ACT_GO_LEFT)
 
         return list_possible_actions
+    
+    def update_knowledge_target_position(self):
+        _, grid_radioactivity = self.knowledge.get_grids()
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
+        _, _, left_zone, right_zone = self.get_number_wastes_max_type_waste_zone_type()
+        
+        actual_position = self.pos
+
+        # Set target position back to None when this position is reached (may the column be precised or not)
+        target_position = self.knowledge.get_target_position()
+        if actual_position == target_position or (target_position is not None and actual_position[1] == target_position[1] and target_position[0] is None):
+            if bool_covering:
+                # When target position is reached, set the direction to cover
+                if direction_covering is None:
+                    if actual_position[0] == 0:
+                        direction_covering = "right"
+                    elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == left_zone:
+                        direction_covering = "right"
+                    else:
+                        if actual_position[0] + 1 < grid_radioactivity.shape[0]:
+                            if grid_radioactivity[actual_position[0] + 1][actual_position[1]] == right_zone or actual_position == target_position:
+                                direction_covering = "left"
+                        else:
+                            direction_covering = "left"
+                    self.knowledge.set_direction_covering(direction_covering)
+            target_position = None
+            self.knowledge.set_target_position(target_position)
+
+        else:
+            if bool_covering:
+                # If covering line is done, set direction_covering back to None
+                if actual_position[0] == 0 and direction_covering != "right":
+                    direction_covering = None
+                elif actual_position[0] + 1 == grid_radioactivity.shape[0] and direction_covering != "left":
+                    direction_covering = None
+                elif (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == right_zone and direction_covering != "left") or (grid_radioactivity[actual_position[0] - 1][actual_position[1]] == left_zone and direction_covering != "right"):
+                    direction_covering = None
+                self.knowledge.set_direction_covering(direction_covering)
+
+        print("My covering direction is", direction_covering)
 
 class GreenAgent(CleaningAgent):
     
@@ -593,36 +634,7 @@ class GreenAgent(CleaningAgent):
         # list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
-    
-    def update_knowledge_with_action(self, performed_action):
-        super().update_knowledge_with_action(performed_action=performed_action)
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_covering = self.knowledge.get_bool_covering()
-        direction_covering = self.knowledge.get_direction_covering()
-
-        actual_position = self.pos
-
-        # Set target position back to None when this position is reached
-        target_position = self.knowledge.get_target_position()
-        if actual_position == target_position:
-            target_position = None
-            self.knowledge.set_target_position(target_position)
-            if bool_covering:
-                # When target position is reached, set the direction to cover
-                if direction_covering is None:
-                    if actual_position[0] == 0:
-                        direction_covering = "right"
-                    else:
-                        direction_covering = "left"
-                    self.knowledge.set_direction_covering(direction_covering)
-
-        else:
-            if bool_covering:
-                # If covering line is done, but direction_covering back to None
-                if (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 2  and direction_covering != "left") or (actual_position[0] == 0 and direction_covering != "right"):
-                    direction_covering = None
-                    self.knowledge.set_direction_covering(direction_covering)
-    
+        
    
 class YellowAgent(CleaningAgent):
 
@@ -683,46 +695,10 @@ class YellowAgent(CleaningAgent):
         transformed_waste = self.knowledge.get_transformed_waste()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
         bool_covering = self.knowledge.get_bool_covering()
-        target_position = self.knowledge.get_target_position()
-        direction_covering = self.knowledge.get_direction_covering()
 
-        actual_position = self.pos
-
-        # If the agent is in mode covering but not at the good start position yet
-        if bool_covering and direction_covering is None: 
-            # If the target position is to the right of the agent, move right
-            if target_position[0] > actual_position[0]:
-                list_possible_actions.append(ACT_GO_RIGHT)
-            # If the target position is to the left of the agent, move left
-            elif target_position[0] < actual_position[0]:
-                list_possible_actions.append(ACT_GO_LEFT)
-            # If the target position is above the agent, move up
-            elif target_position[1] > actual_position[1]:
-                list_possible_actions.append(ACT_GO_UP)
-            # If the target position is below the agent, move down
-            elif target_position[1] < actual_position[1]:
-                list_possible_actions.append(ACT_GO_DOWN)
-                
-        # If the agent is in mode covering and ready to do it
-        elif bool_covering : 
-            # Check if there is a waste to transform
-            if len(picked_up_wastes) == 2:
-                list_possible_actions.append(ACT_TRANSFORM)
-            # Check if agent has a transformed waste and drop it
-            if transformed_waste != None:
-                list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
-            # Check if there is a waste to pick up and if we can pick up a waste
-            if len(picked_up_wastes) <= 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 2:
-                list_possible_actions.append(ACT_PICK_UP)
-
-            # Clean the column in the direction from its position
-            if direction_covering == "right":
-                if right:
-                    list_possible_actions.append(ACT_GO_RIGHT)
-
-            elif direction_covering == "left":
-                if left:
-                    list_possible_actions.append(ACT_GO_LEFT)
+        # If the agent is in covering mode
+        if bool_covering:
+            list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
         else : 
@@ -809,33 +785,6 @@ class YellowAgent(CleaningAgent):
         list_possible_actions.append(ACT_DROP_ONE_WASTE)
         print("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
- 
-    def update_knowledge_with_action(self, performed_action):
-        super().update_knowledge_with_action(performed_action=performed_action)
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_covering = self.knowledge.get_bool_covering()
-        direction_covering = self.knowledge.get_direction_covering()
-
-        actual_position = self.pos
-
-        # Set target position back to (None, None) is position is reached
-        target_position = self.knowledge.get_target_position()
-        if actual_position == target_position :
-            target_position = (None, None)
-            self.knowledge.set_target_position(target_position)
-            if bool_covering : 
-                # When target position is reached, set direction to quadriller
-                if direction_covering is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
-                    if grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
-                        direction_covering = "right"
-                    elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3:
-                        direction_covering = "left"
-                # If covering line is done, but direction_covering bakc to None
-                elif grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 or grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 1:
-                    direction_covering = None
-                self.knowledge.set_bool_covering(False)
-                self.knowledge.set_direction_covering(direction_covering)
-
 
 class RedAgent(CleaningAgent):
 
@@ -1016,34 +965,6 @@ class RedAgent(CleaningAgent):
         print("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)
         return list_possible_actions
 
-    def update_knowledge_with_action(self, performed_action):
-        super().update_knowledge_with_action(performed_action=performed_action)
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_covering = self.knowledge.get_bool_covering()
-        direction_covering = self.knowledge.get_direction_covering()
-        grid_width = grid_knowledge.shape[0]
-
-        actual_position = self.pos
-
-        # Set target position back to (None, None) is position is reached
-        target_position = self.knowledge.get_target_position()
-        if actual_position == target_position :
-            target_position = (None, None)
-            self.knowledge.set_target_position(target_position)
-            if bool_covering : 
-                # When target position is reached, set direction to quadriller
-                if direction_covering is None:
-                    if actual_position[0] == grid_width - 1:
-                        direction_covering = "right"
-                    else:
-                        direction_covering = "left"
-                # If covering line is done, but direction_covering bakc to None
-                elif grid_radioactivity[actual_position[0] - 1][actual_position[1]] == 2 or actual_position[0] == grid_width - 1:
-                    direction_covering = None
-                self.knowledge.set_bool_covering(False)
-                self.knowledge.set_direction_covering(direction_covering)
-    
-
 class Chief(CleaningAgent):
     
     def __init__(self, unique_id, model, grid_size, pos_waste_disposal):
@@ -1120,6 +1041,118 @@ class Chief(CleaningAgent):
         # Do the update from the CleaningAgent class
         self.update()
 
+    def update(self):
+        """
+        Updates the chief agent's knowledge based on its percepts
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None 
+        """
+        # Do the update from the Chief class
+        super().update()
+        self.update_left_right_column()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
+        direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
+        _, _, _, right_zone = self.get_number_wastes_max_type_waste_zone_type()
+        grid_height = grid_knowledge.shape[1]
+
+        actual_position = self.pos
+
+        if not bool_cleaned_right_column:
+
+            # Update the boolean when he has finish to clean the right column
+            if direction_clean_right_column == "up" and actual_position[1] == grid_height - 1 :
+                bool_cleaned_right_column = True
+                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
+            if direction_clean_right_column == "down" and actual_position[1] == 0:
+                bool_cleaned_right_column = True
+                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
+            
+            # Update the direction to clean right column if he has reach one of the starting positions
+            if direction_clean_right_column is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == right_zone and actual_position[1] in [0, grid_height - 1]:
+                if actual_position[1] == 0:
+                    direction_clean_right_column = "up"
+                else:
+                    direction_clean_right_column = "down"
+                self.knowledge.set_direction_clean_right_column(direction_clean_right_column)
+
+    def update_left_right_column(self):
+        list_green_yellow_red_left_column = self.knowledge.get_list_green_yellow_red_left_column()
+        list_green_yellow_red_right_column = self.knowledge.get_list_green_yellow_red_right_column()
+        
+        for counter in range(len(list_green_yellow_red_left_column)):
+            if counter == 0:
+                mode = "green"
+            elif counter == 1:
+                mode = "yellow"
+            else:
+                mode = "red"
+            # Left zone column
+            if list_green_yellow_red_left_column[counter] is None:
+                if mode == "yellow":
+                    print(self.get_green_yellow_red_left_column(mode))
+                list_green_yellow_red_left_column[counter] = self.get_green_yellow_red_left_column(mode)
+            # Right zone column
+            if list_green_yellow_red_right_column[counter] is None:
+                list_green_yellow_red_right_column[counter] = self.get_green_yellow_red_right_column(mode)
+
+        self.knowledge.set_list_green_yellow_red_left_column(list_green_yellow_red_left_column)
+        self.knowledge.set_list_green_yellow_red_right_column(list_green_yellow_red_right_column)
+
+    def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
+        """
+        Get the first column for zones 1, 2 and 3.
+        
+        Parameters
+        ----------
+        mode : Literal["green", "yellow", "red"]
+            Depending if we are in zone 1, 2 or 3.
+        
+        Returns
+        -------
+        int
+            Id of the column.
+        """
+        if mode == "green":
+            return 0
+        _, grid_radioactivity = self.knowledge.get_grids()
+        zone_to_detect = 1 if mode == "yellow" else 2
+        for counter_column in range(grid_radioactivity.shape[0]-1, 0, -1):
+            current_column = grid_radioactivity[counter_column]
+            if True in [int(row) == zone_to_detect for row in current_column]:
+                return counter_column + 1
+            
+    def get_green_yellow_red_right_column(self, mode: Literal["green", "yellow", "red"]):
+        """
+        Get the first column for zones 1, 2 and 3.
+        
+        Parameters
+        ----------
+        mode : Literal["green", "yellow", "red"]
+            Depending if we are in zone 1, 2 or 3.
+        
+        Returns
+        -------
+        int
+            Id of the column.
+        """
+        _, grid_radioactivity = self.knowledge.get_grids()
+        if mode == "red":
+            return grid_radioactivity.shape[0] - 1
+
+        zone_to_detect = 2 if mode == "green" else 3
+        counter = 0
+        for column in grid_radioactivity:
+            if True in [int(row) == zone_to_detect for row in column]:
+                return counter - 1
+            counter += 1
+
     def update_chief_with_agents_knowledge(self):
         """
         Updates the chief agent's knowledge based on its percepts
@@ -1181,6 +1214,7 @@ class Chief(CleaningAgent):
         # Set the updated knowledge
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
+        self.update_left_right_column()
         print("Knowledge after of Chief", self.knowledge)
 
     def find_closest_agent(self, position):
@@ -1207,56 +1241,6 @@ class Chief(CleaningAgent):
                 closest_distance = distance
                 closest_agent = agent
         return closest_agent
-
-    def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
-        """
-        Get the first column for zones 1, 2 and 3.
-        
-        Parameters
-        ----------
-        mode : Literal["green", "yellow", "red"]
-            Depending if we are in zone 1, 2 or 3.
-        
-        Returns
-        -------
-        int
-            Id of the column.
-        """
-        if mode == "green":
-            return 0
-        _, grid_radioactivity = self.knowledge.get_grids()
-        former_zone = 1 if mode == "green" else 2
-        current_zone = 2 if mode == "yellow" else 3
-        for counter_column in range(1, grid_radioactivity.shape[0]):
-            former_column = grid_radioactivity[counter_column - 1]
-            current_column = grid_radioactivity[counter_column]
-            if int(former_column[0]) == former_zone and int(current_column[0]) == current_zone:
-                return counter_column
-            
-    def get_green_yellow_red_right_column(self, mode: Literal["green", "yellow", "red"]):
-        """
-        Get the first column for zones 1, 2 and 3.
-        
-        Parameters
-        ----------
-        mode : Literal["green", "yellow", "red"]
-            Depending if we are in zone 1, 2 or 3.
-        
-        Returns
-        -------
-        int
-            Id of the column.
-        """
-        _, grid_radioactivity = self.knowledge.get_grids()
-        if mode == "red":
-            return grid_radioactivity.shape[0] - 1
-
-        zone_to_detect = 2 if mode == "green" else 3
-        counter = 0
-        for column in grid_radioactivity:
-            if True in [int(row) == zone_to_detect for row in column]:
-                return counter - 1
-            counter += 1
 
     def find_best_rows_to_cover(self, agent_position, rows_being_covered):
         grid_height = len(rows_being_covered)
@@ -1293,17 +1277,9 @@ class Chief(CleaningAgent):
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
-        green_left_column = self.get_green_yellow_red_left_column("green")
-        yellow_left_column = self.get_green_yellow_red_left_column("yellow")
-        red_left_column = self.get_green_yellow_red_left_column("red")
-        green_right_column = self.get_green_yellow_red_right_column("green")
-        yellow_right_column = self.get_green_yellow_red_right_column("yellow")
-        red_right_column = self.get_green_yellow_red_right_column("red")
+        green_left_column, yellow_left_column, red_left_column = self.knowledge.get_list_green_yellow_red_left_column()
+        green_right_column, yellow_right_column, red_right_column = self.knowledge.get_list_green_yellow_red_right_column()
 
-        print("Green right column", green_right_column)
-        print("Yellow right column", yellow_right_column)
-        print("Red right column", red_right_column)
-        
         # Send orders for each agent, depending on their current knowledge
         for agent_name in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent_name]
@@ -1341,8 +1317,6 @@ class Chief(CleaningAgent):
                                     yellow_right_column -= 1
                                 position_to_go = (yellow_right_column, id_row_to_go)
                             else:
-                                if red_right_column is not None:
-                                    red_right_column -= 1
                                 position_to_go = (red_right_column, id_row_to_go)
                         print("Chief is sending the order to cover row", id_row_to_go, "to agent", agent_name)
                         # Send the order to go to this position
@@ -1357,7 +1331,7 @@ class Chief(CleaningAgent):
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
 
     def send_orders(self):
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+        grid_knowledge, _ = self.knowledge.get_grids()
         
         # If the grid is not finished to be covered, the chief will send orders of coverage if necessary
         if np.any(grid_knowledge == 9):
@@ -1527,45 +1501,6 @@ class ChiefYellowAgent(Chief, YellowAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
-    def update(self):
-        """
-        Updates the chief agent's knowledge based on its percepts
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None 
-        """
-        # Do the update from the Chief class
-        super().update()
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
-        direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
-        grid_height = grid_knowledge.shape[1]
-
-        actual_position = self.pos
-
-        if not bool_cleaned_right_column:
-
-            # Update the boolean when he has finish to clean the right column
-            if direction_clean_right_column == "up" and actual_position[1] == grid_height - 1 :
-                bool_cleaned_right_column = True
-                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
-            if direction_clean_right_column == "down" and actual_position[1] == 0 :
-                bool_cleaned_right_column = True
-                self.knowledge.set_bool_cleaned_right_column(bool_cleaned_right_column)
-            
-            # Update the direction to clean right column if he has reach one of the starting positions
-            if direction_clean_right_column is None and grid_radioactivity[actual_position[0] + 1][actual_position[1]] == 3 and actual_position[1] in [0, grid_height - 1]:
-                if actual_position[1] == 0:
-                    direction_clean_right_column = "up"
-                else:
-                    direction_clean_right_column = "down"
-                self.knowledge.set_direction_clean_right_column(direction_clean_right_column)
-
     def deliberate(self):
         """
         Determines all possible actions based on the current knowledge of the environment.
@@ -1666,6 +1601,8 @@ class ChiefRedAgent(Chief, RedAgent):
         None
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
+        # The red chief does not have to clean the last column
+        self.knowledge.set_bool_cleaned_right_column(True)
 
 
 #################
