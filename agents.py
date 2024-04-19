@@ -75,6 +75,15 @@ class CleaningAgent(CommunicatingAgent):
         """
         super().__init__(unique_id, model)
 
+        self.grid_size = grid_size
+        # Initialise waste disposal zone position in knowledge
+        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
+        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
+        self.knowledge = AgentKnowledge(
+            grid_knowledge=grid_knowledge,
+            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
     def step(self):
         """
         Performs a step in the agent's decision-making process.
@@ -486,16 +495,6 @@ class GreenAgent(CleaningAgent):
 
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
-        self.grid_size = grid_size
-        # Initialise the grid to unknown
-        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
-        # Initialise waste disposal zone position in knowledge
-        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
-        self.knowledge = AgentKnowledge(
-            grid_knowledge=grid_knowledge,
-            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = {}
-
     def deliberate(self):
         """
         Determines all possible actions based o the current knowledge of the environment.
@@ -624,14 +623,7 @@ class YellowAgent(CleaningAgent):
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
 
-        self.grid_size = grid_size
-        # Initialise waste disposal zone position in knowledge
-        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
-        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
-        self.knowledge = AgentKnowledge(
-            grid_knowledge=grid_knowledge,
-            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = {}
+
 
     def deliberate(self):
         """
@@ -765,15 +757,6 @@ class RedAgent(CleaningAgent):
             None
         """
         super().__init__(unique_id, model, grid_size, pos_waste_disposal)
-
-        self.grid_size = grid_size
-        # Initialise waste disposal zone position in knowledge
-        grid_knowledge = np.full((grid_size[0], grid_size[1]), 9)
-        grid_knowledge[pos_waste_disposal[0]][pos_waste_disposal[1]] = 4
-        self.knowledge = AgentKnowledge(
-            grid_knowledge=grid_knowledge,
-            grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
-        self.percepts = {}
 
     def deliberate(self):
         """
@@ -910,9 +893,10 @@ class Chief(CleaningAgent):
         self.knowledge = ChiefAgentKnowledge(
             grid_knowledge=grid_knowledge,
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
+        self.percepts = {}
+
         # The chiefs are not covering anything
         self.knowledge.set_bool_covering(False)
-        self.percepts = {}
 
     def receive_percepts_and_data(self):
         list_messages = self.get_new_messages()
@@ -995,10 +979,10 @@ class Chief(CleaningAgent):
                 self.knowledge.set_direction_clean_right_column(direction_clean_right_column)
 
     def update_left_right_column(self):
-        resourceslist_green_yellow_red_left_columns = self.knowledge.get_resourceslist_green_yellow_red_left_columns()
+        list_green_yellow_red_left_columns = self.knowledge.get_list_green_yellow_red_left_columns()
         list_green_yellow_red_right_columns = self.knowledge.get_list_green_yellow_red_right_columns()
         
-        for counter in range(len(resourceslist_green_yellow_red_left_columns)):
+        for counter in range(len(list_green_yellow_red_left_columns)):
             if counter == 0:
                 mode = "green"
             elif counter == 1:
@@ -1006,13 +990,13 @@ class Chief(CleaningAgent):
             else:
                 mode = "red"
             # Left zone column
-            if resourceslist_green_yellow_red_left_columns[counter] is None:
-                resourceslist_green_yellow_red_left_columns[counter] = self.get_green_yellow_red_left_column(mode)
+            if list_green_yellow_red_left_columns[counter] is None:
+                list_green_yellow_red_left_columns[counter] = self.get_green_yellow_red_left_column(mode)
             # Right zone column
             if list_green_yellow_red_right_columns[counter] is None:
                 list_green_yellow_red_right_columns[counter] = self.get_green_yellow_red_right_column(mode)
 
-        self.knowledge.set_resourceslist_green_yellow_red_left_columns(resourceslist_green_yellow_red_left_columns)
+        self.knowledge.set_list_green_yellow_red_left_columns(list_green_yellow_red_left_columns)
         self.knowledge.set_list_green_yellow_red_right_columns(list_green_yellow_red_right_columns)
 
     def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
@@ -1265,7 +1249,7 @@ class Chief(CleaningAgent):
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         rows_being_covered = self.knowledge.get_rows_being_covered()
-        green_left_column, yellow_left_column, red_left_column = self.knowledge.get_resourceslist_green_yellow_red_left_columns()
+        green_left_column, yellow_left_column, red_left_column = self.knowledge.get_list_green_yellow_red_left_columns()
         green_right_column, yellow_right_column, red_right_column = self.knowledge.get_list_green_yellow_red_right_columns()
 
         # Send orders for each agent, depending on their current knowledge

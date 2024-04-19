@@ -264,7 +264,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.bool_cleaned_right_column = False
         self.direction_clean_right_column = None # can take as values None when the agent has not started cleaning the right column, "up", "down"
         self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
-        self.resourceslist_green_yellow_red_left_columns = [None, None, None]
+        self.list_green_yellow_red_left_columns = [None, None, None]
         self.list_green_yellow_red_right_columns = [None, None, None]
 
     def get_dict_agents_knowledge(self):
@@ -323,7 +323,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         return self.rows_being_covered
     
-    def get_resourceslist_green_yellow_red_left_columns(self):
+    def get_list_green_yellow_red_left_columns(self):
         """
         Return the list of position of each area left column's.
 
@@ -335,7 +335,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         -------
         list
         """
-        return self.resourceslist_green_yellow_red_left_columns
+        return self.list_green_yellow_red_left_columns
     
     def get_list_green_yellow_red_right_columns(self):
         """
@@ -411,20 +411,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         self.rows_being_covered = rows_being_covered
 
-    def set_resourceslist_green_yellow_red_left_columns(self, resourceslist_green_yellow_red_left_columns):
+    def set_list_green_yellow_red_left_columns(self, list_green_yellow_red_left_columns):
         """
         Set the list of position of each area left column's.
 
         Parameters
         ----------
-        resourceslist_green_yellow_red_left_columns : list
+        list_green_yellow_red_left_columns : list
             The list of position of each area left column's.
 
         Returns
         -------
         None
         """
-        self.resourceslist_green_yellow_red_left_columns = resourceslist_green_yellow_red_left_columns
+        self.list_green_yellow_red_left_columns = list_green_yellow_red_left_columns
 
     def set_list_green_yellow_red_right_columns(self, list_green_yellow_red_right_columns):
         """
@@ -442,4 +442,4 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.list_green_yellow_red_right_columns = list_green_yellow_red_right_columns
 
     def __str__(self) -> str:
-        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, resourceslist_green_yellow_red_left_columns={self.resourceslist_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered})"
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_columns={self.list_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered})"
