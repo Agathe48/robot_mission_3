@@ -8,11 +8,17 @@ Group 3:
 - Agathe POULAIN
 """
 
+###############
+### Imports ###
+###############
+
+### Python imports ###
+
 import numpy as np
 
-#############
-### Class ###
-#############
+###############
+### Classes ###
+###############
 
 class AgentKnowledge:
 
@@ -266,6 +272,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
         self.list_green_yellow_red_left_columns = [None, None, None]
         self.list_green_yellow_red_right_columns = [None, None, None]
+        self.dict_target_position_agent = {}
 
     def get_dict_agents_knowledge(self):
         """"
@@ -350,6 +357,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         list
         """
         return self.list_green_yellow_red_right_columns
+    
+    def get_dict_target_position_agent(self):
+        """
+        Return the dictionary of target position agent.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dict
+        """
+        return self.dict_target_position_agent
 
     def set_dict_agents_knowledge(self, dict_agents_knowledge):
         """
@@ -441,5 +462,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         self.list_green_yellow_red_right_columns = list_green_yellow_red_right_columns
 
+    def set_dict_target_position_agent(self, dict_target_position_agent):
+        """
+        Set the dictionary of target position agent.
+
+        Parameters
+        ----------
+        dict_target_position_agent : dict
+            The dictionary of target position agent.
+
+        Returns
+        -------
+        None
+        """
+        self.dict_target_position_agent = dict_target_position_agent
+
     def __str__(self) -> str:
-        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_columns={self.list_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered})"
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_columns={self.list_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered}, dict_target_position_agent={self.dict_target_position_agent}"

@@ -18,6 +18,7 @@ class MessagePerformative(Enum):
     SEND_PERCEPTS_AND_DATA = 108 # send percepts
     SEND_ORDERS = 109 # send orders
     SEND_INFORMATION_CHIEF_DROP = 110 # send information from a chief to a chief that a transformed waste has been dropped
+    SEND_TARGET_ORDERS = 111 # send orders to go to a target
 
     def __str__(self):
         """Returns the name of the enum item.
