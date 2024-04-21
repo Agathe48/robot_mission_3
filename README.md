@@ -7,11 +7,6 @@ The project has been realized by the group 3 composed of:
 - Agathe PLU
 - Agathe POULAIN
 
-## pistes d'amélioration
-
-- situations bloquantes :
-    - quand le chef veut aller en haut pour clean la colonne de droite et qu'il y a un agent qui veut déposer dans la colonne de droite (cf image)
-
 ## Table of contents
 
 - [Robot Mission - Group 3](#robot-mission---group-3)
@@ -164,7 +159,6 @@ The `update` method updates each attributes of the agent's knowledge according t
 
 The `update_positions_around_agent` method is used in the `update` method to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
 
-
 #### The GreenAgent
 
 The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
@@ -290,11 +284,14 @@ For our communication, we choose to extend our agents' knowledge by incorporatin
 
 #### The Agent's knowledge
 
---> class chief knowledge qui hérite de knwoledge
-
 #### The Chief's knowledge
 
 ### The agents
+TODO A REDIGER
+- le chef de chaque zone (sauf rouge) va clean la colonne de droite de dépôt (Agathe Plu et Laure)
+- covering des autres agents : il se positionne a l'emplacement donné par le chef (dans une cellule le plus à gauche, en ayant divisé par le nombre d'agents classiques, sauf pour rouge où l'on compte aussi le chef), puis il avance vers la droite (ils peuvent ramasser un déchet uniquement s'il est sur la case ou l'agent se trouve (on ne devie pas)), ensuite descend/monte et mouvement droite-gauche (dans ce cas, si dechet transformer) (Oumaima et Agathe Poulain)
+- après le covering effectué, les autres vont recevoir des ordres du chef pour aller chercher des déchets (Agathe Plu et Laure)
+
 #### The CleaningAgent
 
 #### The GreenAgent
