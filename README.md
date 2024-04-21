@@ -38,8 +38,10 @@ The project has been realized by the group 3 composed of:
         - [The scheduler](#the-scheduler)
         - [The visualization](#the-visualization)
     - [With Communication](#with-communication)
-        - [Our Agents](#our-agents)
+        - [The knowledge](#the-knowledge)
             - [The Agent's knowledge](#the-agents-knowledge)
+            - [The Chief's kwonledge](#the-chiefs-knowledge)
+        - [ The agents](#the-agents)
             - [The CleaningAgent](#the-cleaningagent)
             - [The GreenAgent](#the-greenagent)
                 - [The deliberate method](#the-deliberate-method)
@@ -47,6 +49,10 @@ The project has been realized by the group 3 composed of:
                 - [The deliberate method](#the-deliberate-method)
             - [The RedAgent](#the-redagent)
                 - [The deliberate method](#the-deliberate-method)
+            - [The Chief](#the-chief)
+            - [The ChiefGreenAgent](#the-chiefgreenagent)
+            - [The ChiefYellowAgent](#the-chiefyellowagent)
+            - [The ChiefRedAgent](#the-chiefredagent)
         - [Our Model](#our-model)
         - [The scheduler](#the-scheduler)
         - [The visualization](#the-visualization)
@@ -270,18 +276,24 @@ When there are three agents per zone (purple cells on the previous picture), the
 
 According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
 
-You can see in appendix in results/graphics_without_communication the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
+You can see in appendix in `results/graphics_without_communication` the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
 
-## With Communication
+## With Communication and improved movement
 
-### Our Agents
+We worked from the previous part to add communication between our agent and we improved their movement. In this new part, we will develop all implemented changes and enhancements.
 
-TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par type)
+The key points are the creation of a Chief for each color agents: he's in charge of centering the knowledge (for each color agents), managing its agent for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented ameliorations: the code is based on the previous part, hence we only mention changed and added behaviors in this part.
+
+
+### The knowledge
 
 #### The Agent's knowledge
 
 --> class chief knowledge qui hérite de knwoledge
 
+#### The Chief's knowledge
+
+### The agents
 #### The CleaningAgent
 
 #### The GreenAgent
@@ -293,9 +305,19 @@ TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par
 #### The RedAgent
 ##### The deliberate method
 
+#### The Chief
+
+#### The ChiefGreenAgent
+
+#### The ChiefYellowAgent
+
+#### The ChiefRedAgent
+
 ### Our Model
 
 ### The scheduler
+
+TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par type)
 
 On a changer pour le scheduler : choix random pour la couleur PUIS le chef de la couleur PUIS les autres de manière aléatoire (donc les chefs passent toujours en premier à chaque step)
 
