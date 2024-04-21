@@ -7,51 +7,57 @@ The project has been realized by the group 3 composed of:
 - Agathe PLU
 - Agathe POULAIN
 
+This `README` is composed of four main parts, the [first one](#installation) describing the steps to follow to install and run our code. The [second one](#without-communication) describes our implementation choices for non-communicating agent, whereas the [third one](#with-communication-and-improved-movement) deals with our implementation choices with communication between agents. The [fourth part](#simulations-results-interpretation) presents the results obtained for both approaches.
+
 ## Table of contents
 
 - [Robot Mission - Group 3](#robot-mission---group-3)
-    - [Installation](#installation)
-        - [Cloning the repository](#cloning-the-repository)
-        - [Creation of a virtual environment](#creation-of-a-virtual-environment)
-        - [Installation of the necessary librairies](#installation-of-the-necessary-librairies)
-        - [Launch the code](#launch-the-code)
-    - [Our Objects](#our-objects)
-        - [The Radioactivity](#the-radioactivity)
-        - [The Waste](#the-waste)
-        - [The WasteDisposalZone](#the-wastedisposalzone)
-    - [Without Communication](#without-communication)
-        - [Our Agents](#our-agents)
-            - [The Agent's knowledge](#the-agents-knowledge)
-            - [The CleaningAgent](#the-cleaningagent)
-            - [The GreenAgent](#the-greenagent)
-                - [The deliberate method](#the-deliberate-method)
-            - [The YellowAgent](#the-yellowagent)
-                - [The deliberate method](#the-deliberate-method)
-            - [The RedAgent](#the-redagent)
-                - [The deliberate method](#the-deliberate-method)
-        - [Our Model](#our-model)
-        - [The scheduler](#the-scheduler)
-        - [The visualization](#the-visualization)
-    - [With Communication](#with-communication)
-        - [The knowledge](#the-knowledge)
-            - [The Agent's knowledge](#the-agents-knowledge)
-            - [The Chief's kwonledge](#the-chiefs-knowledge)
-        - [ The agents](#the-agents)
-            - [The CleaningAgent](#the-cleaningagent)
-            - [The GreenAgent](#the-greenagent)
-                - [The deliberate method](#the-deliberate-method)
-            - [The YellowAgent](#the-yellowagent)
-                - [The deliberate method](#the-deliberate-method)
-            - [The RedAgent](#the-redagent)
-                - [The deliberate method](#the-deliberate-method)
-            - [The Chief](#the-chief)
-            - [The ChiefGreenAgent](#the-chiefgreenagent)
-            - [The ChiefYellowAgent](#the-chiefyellowagent)
-            - [The ChiefRedAgent](#the-chiefredagent)
-        - [Our Model](#our-model)
-        - [The scheduler](#the-scheduler)
-        - [The visualization](#the-visualization)
- 
+  - [Table of contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Cloning the repository](#cloning-the-repository)
+    - [Creation of a virtual environment](#creation-of-a-virtual-environment)
+    - [Installation of the necessary librairies](#installation-of-the-necessary-librairies)
+    - [Launch the code](#launch-the-code)
+  - [Our Objects](#our-objects)
+    - [The Radioactivity](#the-radioactivity)
+    - [The Waste](#the-waste)
+    - [The WasteDisposalZone](#the-wastedisposalzone)
+  - [Without Communication](#without-communication)
+    - [Our Agents](#our-agents)
+      - [The agent's knowledge](#the-agents-knowledge)
+      - [The CleaningAgent](#the-cleaningagent)
+      - [The GreenAgent](#the-greenagent)
+        - [The deliberate method](#the-deliberate-method)
+      - [The YellowAgent](#the-yellowagent)
+        - [The deliberate method](#the-deliberate-method-1)
+      - [The RedAgent](#the-redagent)
+        - [The deliberate method](#the-deliberate-method-2)
+    - [Our Model](#our-model)
+    - [The scheduler](#the-scheduler)
+    - [The visualization](#the-visualization)
+  - [With Communication and improved movement](#with-communication-and-improved-movement)
+    - [The knowledge](#the-knowledge)
+      - [The Agent's knowledge](#the-agents-knowledge-1)
+      - [The Chief's knowledge](#the-chiefs-knowledge)
+    - [The agents](#the-agents)
+      - [The CleaningAgent](#the-cleaningagent-1)
+      - [The GreenAgent](#the-greenagent-1)
+        - [The deliberate method](#the-deliberate-method-3)
+      - [The YellowAgent](#the-yellowagent-1)
+        - [The deliberate method](#the-deliberate-method-4)
+      - [The RedAgent](#the-redagent-1)
+        - [The deliberate method](#the-deliberate-method-5)
+      - [The Chief](#the-chief)
+      - [The ChiefGreenAgent](#the-chiefgreenagent)
+      - [The ChiefYellowAgent](#the-chiefyellowagent)
+      - [The ChiefRedAgent](#the-chiefredagent)
+    - [Our Model](#our-model-1)
+    - [The scheduler](#the-scheduler-1)
+    - [The visualization](#the-visualization-1)
+  - [Simulation's results interpretation](#simulations-results-interpretation)
+    - [Without communication](#without-communication-1)
+    - [With communication and improved movement](#with-communication-and-improved-movement-1)
+
 
 ## Installation
 
@@ -149,7 +155,7 @@ The class provides methods to get and set these attributes. The __str__ method p
 
 #### The CleaningAgent
 
-The `CleaningAgent` class inherits from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update` and `update_positions_around_agent`.
+The `CleaningAgent` class inherits from the Mesa `Agent` class and is used to define common behaviors for the Green, Yellow and Red cleaning agents. These common behaviors are the methods `step`, `convert_pos_to_tile`, `update`, `update_positions_around_agent` and `update_knowledge_with_action`.
 
 The `step` method implements the procedural loop of our agent. It begins by updating the agent's knowledge using the `update` method. Next, the `deliberate` method is called to return a list of possible actions. Finally, the `do` method is invoked in the environment to execute the chosen action.
 
@@ -159,9 +165,11 @@ The `update` method updates each attributes of the agent's knowledge according t
 
 The `update_positions_around_agent` method is used in the `update` method to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
 
+The `update_knowledge_with_action` method is used in the `update` method to update the knowledge of the agent given the action it has performed on the previous step. For instance, if the agent has transformed a waste, `transformed_waste` will be set to the transformed created waste contained the `percepts` returned by the model.
+
 #### The GreenAgent
 
-The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
+The `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behavior of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 ##### The deliberate method
 
@@ -170,7 +178,7 @@ The `deliberate` method returns a list of actions called `list_possible_actions`
 The actions have been defined in `tools_constants` by strings. Here is the full list:
 - `ACT_TRANSFORM`, to transform two wastes in a waste from the superior color
 - `ACT_PICK_UP`, to pick up a waste
-- `ACT_DROP`, to drop a tranformed waste
+- `ACT_DROP`, to drop a transformed waste
 - `ACT_GO_LEFT`, to go left
 - `ACT_GO_RIGHT`, to go right
 - `ACT_GO_UP`, to go up
@@ -179,19 +187,19 @@ The actions have been defined in `tools_constants` by strings. Here is the full 
 
 If the agent possesses two green wastes, the top priority action is to transform them.
 
-If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, ie the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes`up` and `down` from knowledge). 
+If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, ie the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes `up` and `down` from knowledge). 
 
 If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick up action. If it can't move or drop its waste, it will wait.
 
 If the agent has less than two picked up wastes, no transformed waste and is on a cell containing a waste, then it will pick up the waste.
 
-Otherwise, we will add moving to differents directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
+Otherwise, we will add moving to different directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
 
 The last action of the list will be to wait, so the agent always has an action to preform.
 
 #### The YellowAgent
 
-The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the yellow agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
+The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behavior of the yellow agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 ##### The deliberate method
 
@@ -199,7 +207,7 @@ It has the same behavior as the GreenAgent's deliberate method. One of the few d
 
 #### The RedAgent
 
-The `RedAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behaviour of the red agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
+The `RedAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behavior of the red agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 
 ##### The deliberate method
 
@@ -211,13 +219,15 @@ The implementation of our model is in the `model.py` file. The `RobotMission` cl
 
 We begin by defining several methods to set up the grid and all agents: `init_grid`, `init_wastes` and `init_agents`.
 
+TODO - Agathe Poulain => expliquer le datacollector
+
 In `init_grid` we establish the position of the waste disposal zone and created  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we created a `WasteDisposalZone` object.
 
 In `init_wastes` we create all wastes. To do so, we first define the total number of wastes in the grid (grid height * grid width * waste density, the density is set in `tools/tools_constants.py`) and the number of cells per zone (grid width/3 * grid height). We then randomly place green, yellow and red wastes in their respective zones. However, we do not initially place a red waste in the waste disposal zone.
 
-- The number of green wastes is randomly determined within a range. The upper bound of this range is the minimum between the number of cells in the green area and the total number of wastes. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that wastes are placed in the zone if the other two areas do not have sufficient space to accommodate all remaining wastes. Then we check if that number is even so that we can clean the whole map. Otherwise we add or substract one green waste.
+- The number of green wastes is randomly determined within a range. The upper bound of this range is the minimum between the number of cells in the green area and the total number of wastes. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that wastes are placed in the zone if the other two areas do not have sufficient space to accommodate all remaining wastes. Then we check if that number is even so that we can clean the whole map. Otherwise we add or subtract one green waste.
 
-- The number of yellow wastes is randomly determined within a range. The upper bound of this range is the maximum between 0 and the minimum between the remaining wastes and the number of cells in the zone. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the red area does not have sufficient space to accommodate all remaining wastes. Then we check if that number plus the number of green wastes' pairs is even, otherwise we add or substract one yellow waste.
+- The number of yellow wastes is randomly determined within a range. The upper bound of this range is the maximum between 0 and the minimum between the remaining wastes and the number of cells in the zone. The lower bound is the maximum between 0 and the total number of waste minus the total number of cells in the rest of the grid. This allocation ensures that waste can be placed in the zone if the red area does not have sufficient space to accommodate all remaining wastes. Then we check if that number plus the number of green wastes' pairs is even, otherwise we add or subtract one yellow waste.
 
 - The number of red wastes is determined by the number of remaining wastes to place.
 
@@ -228,16 +238,16 @@ The `step` method does the scheduler step while there are still wastes to clean 
 The `run_model` method executes the `step` method for a given number of sSteps.
 
 The `do` method takes as arguments the agent performing the action and the list of all possible actions. It iterates through this list, checking if the current action is feasible. If it is feasible, the method breaks, ensuring that only one action is performed. If the current action is not feasible, the method moves on to the next action in the list. When an action is performed using the `do` method, the method also executes the changes associated with that action:
-- `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a green waste, if the agent is a `YellowAgent` it creates a red waste. It then set the agent's knowledge (trasnformed_waste to the current waste) and add it to the scheduler. It will also remove from the scheduler the two waste from the agent's knowledge picked_up_waste and the set up the picked_up_waste as an empty list.
-- `ACT_PICK_UP`, it removes the waste agent from the grid and updates the agent's knowledge picked_up_waste with the new waste.
-- `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be placed on the grid and the agent's knowledge transformed_waste will be set back to None. If  the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler and set the agent's knowledge picked_up_waste back to an empty list.
+- `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a green waste, if the agent is a `YellowAgent` it creates a red waste. It then adds the transformed created waste to the scheduler. It also removes from the scheduler the two wastes from the agent's knowledge `picked_up_waste`.
+- `ACT_PICK_UP`, it removes the waste agent from the grid.
+- `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be placed on the grid. If the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler.
 - `ACT_GO_LEFT`, it will check for another agent in the left cell and move the agent if it is empty.
 - `ACT_GO_RIGHT`, it will check for another agent in the right cell and move the agent if it is empty.
 - `ACT_GO_UP`, it will check for another agent in the upper cell and move the agent if it is empty.
 - `ACT_GO_DOWN`, it will check for another agent in the lower cell and move the agent if it is empty.
 - `ACT_WAIT`, it waits.
 
-The `do` method returns the percepts. It is a dictionary of four keys (left, right, up and down). It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). This percepts is created after an action is performed to take into account the possible new position of the agent. 
+The `do` method returns the percepts. It is a dictionary of two mains keys: `action_done` and `positions`. The first key is associated with a dictionary containing the key `action` associated to the constant representing the action executed and `object` if the agent has picked up a waste or transformed it. The second key is a dictionary with four keys: left, right, up and down. It either contains a list of agents (`Waste`, `Radioactivity`, other cleaning agents and `WasteDisposalZone`) in the surrounding cells or `None` if the cell does not exist (grid limits). This percepts is created after the action is performed to take into account the possible new position of the agent.
 
 ### The scheduler
 
@@ -250,27 +260,6 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 - the `WasteDisposalZone` object is a brown rectangle in the layer 1.
 - the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
 - the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
-
-### Simulation's results interpretation
-
-To analyse the performance of the model without communication, we launched several simulations. The variable we are interested in is the number of step needed to clean the entire map. The map size is identical for every test. Only the number of agents per zone is evolving : 
-- Simulations 1 to 10 : 1 agent per zone
-- Simulations 11 to 20 : 2 agents per zone
-- Simulations 21 to 30 : 3 agents per zone
-
-Here is the table with all the results :
-
-![alt text](results/results_without_communication.png)
-
-When there is only one agent per zone (blue cells on the previous picture), the average number of steps to complete the cleaning of the map is 1346.
-
-When there are two agents per zone (green cells on the previous picture), the average number of steps to complete the cleaning of the map is 713. It is almost two times less than the average number of steps needed with one agent per zone. However, half of the simulations launched with two agents did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
-
-When there are three agents per zone (purple cells on the previous picture), the average number of steps to complete the cleaning of the map is 404. It is almost three times less than the average number of steps needed with one agent per zone. However, 6 out of 10 simulations launched did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
-
-According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
-
-You can see in appendix in `results/graphics_without_communication` the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
 
 ## With Communication and improved movement
 
@@ -313,12 +302,55 @@ TODO A REDIGER
 
 ### Our Model
 
+We improved a few things in the model class. 
+
+First of all, we took into account the configurations where the grid width is not divisible by 3. In these cases, we attributed the one or two columns remaining to one or two zones randomly. For instance, for a grid width of 20, the green zone can have 7 columns, the yellow 6 and the red 7, at random.
+
+Moreover, we implemented the `MessageService` class to enable the communication between agents.
+
 ### The scheduler
 
-TODO : dans le schedule les chefs passent en DEBUT  de step (toujours random par type)
-
-On a changer pour le scheduler : choix random pour la couleur PUIS le chef de la couleur PUIS les autres de manière aléatoire (donc les chefs passent toujours en premier à chaque step)
-
---> ça nous permet qu'ils aient toujours une data à jour et ils envoient leurs ordres en D2BUT de step
+We improved the class `CustomRandomScheduler` by adding the chiefs in the `step` method. We choose to call the chiefs before the agents of their respecting colors, to allow them to distribute orders always at the beginning of the step.
 
 ### The visualization
+
+We improved the visualization by adding *mesa* sliders to enable the user to configure the simulation directly on the interface. The user can choose the number of green, yellow and red agents, and also the waste density.
+
+We also added clearer images for each type of object. We distinguished chiefs from agent for each color with specific images, and we also chose an image for the wastes and the waste disposal zone. All of these images are located in the folder `resources/`.
+
+## Simulation's results interpretation
+
+To compare both approaches presented above, mostly to analyse the improvements made in the second method, we decided to run many simulations for both cases and compare the terminating rate of simulations (for non communication approaches, the simulation may not terminate), and the average number of steps needed to clean the entire map. For each test, we use (9, 18) as grid size and 0.3 for the waste density.
+
+Only the number of agents per zone evolves across simulations, and for each case we have launched 10 simulations to be able to compute a correct average. Without communication, we launched simulations for 1 agent per zone, 2 and 3 agents per zone. With communication, we launched for 1, 2, 3 and 4 agents per zone. Doing it for 4 agents per zone without communication was useless as the simulation is almost never terminating in this case.
+
+### Without communication
+
+To analyse the performance of the model without communication, we launched 30 simulations corresponding to:
+- Simulations 1 to 10 : 1 agent per zone
+- Simulations 11 to 20 : 2 agents per zone
+- Simulations 21 to 30 : 3 agents per zone
+
+Here is the table with all the results:
+
+![alt text](results/results_without_communication.png)
+
+When there is only one agent per zone (blue cells on the previous picture), the average number of steps to complete the cleaning of the map is 1346.
+
+When there are two agents per zone (green cells on the previous picture), the average number of steps to complete the cleaning of the map is 713. It is almost two times less than the average number of steps needed with one agent per zone. However, half of the simulations launched with two agents did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
+
+When there are three agents per zone (purple cells on the previous picture), the average number of steps to complete the cleaning of the map is 404. It is almost three times less than the average number of steps needed with one agent per zone. However, 6 out of 10 simulations launched did not end because two agents of the same zone picked up one waste left at the end of their zone cleaning and blocked themselves from transforming the waste into a new one.
+
+According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
+
+You can see in appendix in `results/graphics_without_communication` the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
+
+### With communication and improved movement
+
+To analyse the performance of the model with communication, we launched 40 simulations corresponding to:
+- Simulations 1 to 10 : 1 agent per zone
+- Simulations 11 to 20 : 2 agents per zone
+- Simulations 21 to 30 : 3 agents per zone
+- Simulations 31 to 40 : 4 agents per zone
+
+Here is the table with all the results:
