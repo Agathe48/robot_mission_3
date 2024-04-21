@@ -272,7 +272,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
         self.list_green_yellow_red_left_columns = [None, None, None]
         self.list_green_yellow_red_right_columns = [None, None, None]
-        self.dict_target_position_agent = {}
+        self.We = {}
 
     def get_dict_agents_knowledge(self):
         """"

@@ -269,11 +269,30 @@ The key points are the creation of a Chief for each color agents: he's in charge
 
 ### The knowledge
 
-For our communication, we choose to extend our agents' knowledge by incorporating additional elements. We also created a dedicated `ChiefKnowledge` class inheriting from our `AgentKnowledge` class.
+For our communication, we choose to extend our agents' knowledge by incorporating additional elements. We also created a dedicated `ChiefAgentKnowledge` class inheriting from our `AgentKnowledge` class.
 
 #### The Agent's knowledge
 
+We added several attributes to our inital `AgentKnowledge` class, including:
+
+- `dict_chiefs` : A dictionary containing the chief agents for each color.
+- `target_position` : Represents the target position to reach, which can be None or a position tuple.
+- `bool_covering` : Boolean variable representing whether the agent is in covering mode or not, initialized at `True`.
+- `direction_covering` : Represents the direction to cover, initialized at `None` and can take values `right` or `left`.
+
 #### The Chief's knowledge
+
+The `ChiefAgentKnowledge` class inherits from the `AgentKnowledge` class and includes additional attributes:
+
+- `dict_agents_knowledge` : A dictionary containing the agents' knowledge.
+- `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned.
+- `direction_clean_right_column` : Represents the direction to clean, initialized at `None` and can take values `up` or `down`.
+- `rows_being_covered` : A list of size equal to the grid height, containing 0 if the row is being covered or has been covered, and 1 otherwise.
+- `list_green_yellow_red_left_columns` : A list of three values, initialized at `None`, representing the columns of the leftmost columns in the green, yellow, and red zones.
+- `list_green_yellow_red_right_columns` :  A list of three values, initialized at `None`, representing the columns of the rightmost columns in the green, yellow, and red zones.
+_ `dict_target_position_agent` : A dictionary containing the target positions given to each agent.
+
+The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
 ### The agents
 TODO A REDIGER
