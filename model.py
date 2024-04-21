@@ -147,7 +147,7 @@ class RobotMission(Model):
             rd.shuffle(zone_indices)
             extra_width_distribution[zone_indices[0]] += 1
             extra_width_distribution[zone_indices[1]] += 1
-        else:
+        elif remaining_width == 1:
             # Distribute the remaining width randomly among the zones
             zone_index = rd.randint(0, 2)
             extra_width_distribution[zone_index] += 1

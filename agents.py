@@ -134,6 +134,14 @@ class CleaningAgent(CommunicatingAgent):
         if y_tile > y:
             return "up"
 
+    def send_message_disable_target_position(self):
+        former_target_position = self.knowledge.get_target_position()
+        self.knowledge.set_target_position(target_position = None)
+        agent_color = DICT_CLASS_COLOR[type(self)]
+        dict_chiefs = self.knowledge.get_dict_chiefs()
+        chief = dict_chiefs[agent_color]
+        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
+
     def update_knowledge_with_action(self, performed_action):
         action = performed_action["action"]
         my_object = performed_action["object"]
@@ -143,8 +151,9 @@ class CleaningAgent(CommunicatingAgent):
             picked_up_waste = self.knowledge.get_picked_up_wastes()
             picked_up_waste.append(my_object)
             self.knowledge.set_picked_up_wastes(picked_up_waste)
-            if type(self) in [ChiefRedAgent, RedAgent]:
-                self.knowledge.set_target_position(target_position = None)
+            if not bool_covering:
+                if type(self) in [ChiefRedAgent, RedAgent]:
+                    self.send_message_disable_target_position()
 
         if action == ACT_DROP_TRANSFORMED_WASTE:
             self.knowledge.set_transformed_waste(transformed_waste = None)
@@ -157,7 +166,7 @@ class CleaningAgent(CommunicatingAgent):
             self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
             # If the agent is not in covering mode, set the target position to None so he can drop it on the border
             if not bool_covering:
-                self.knowledge.set_target_position(target_position = None)
+                self.send_message_disable_target_position()
 
         self.update_knowledge_target_position()
 
@@ -262,6 +271,10 @@ class CleaningAgent(CommunicatingAgent):
             # The message is an order from the chief
             if message.get_performative() == MessagePerformative.SEND_ORDERS:
                 self.treat_order(content=message.get_content())
+            if message.get_performative() == MessagePerformative.SEND_ORDER_CANCEL_TARGET:
+                target_position = self.knowledge.get_target_position()
+                if target_position == message.get_content():
+                    self.knowledge.set_target_position(target_position=None)
 
     def get_specificities_type_agent(self):
         """
@@ -360,13 +373,16 @@ class CleaningAgent(CommunicatingAgent):
         return False
 
     def can_go_left(self):
-        _, grid_radioactivity = self.knowledge.get_grids()
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         actual_position = self.pos
-        _, _, left_zone, _ = self.get_specificities_type_agent()
+        _, type_waste, left_zone, _ = self.get_specificities_type_agent()
         
-        if actual_position[0] > 0:
-            return int(grid_radioactivity[actual_position[0]-1][actual_position[1]]) != left_zone
-        return False
+        if type(self) in [GreenAgent, ChiefGreenAgent] and actual_position[0] > 0:
+            return True
+        if type(self) in [YellowAgent, ChiefYellowAgent, RedAgent, ChiefRedAgent]:
+            bool_has_waste_left = grid_knowledge[actual_position[0]-1][actual_position[1]] == type_waste 
+            bool_is_left_zone = grid_radioactivity[actual_position[0]-1][actual_position[1]] == left_zone
+            return not bool_is_left_zone or bool_has_waste_left
 
     def deliberate_go_to_pick_close_waste(self):
         grid_knowledge, _ = self.knowledge.get_grids()
@@ -694,7 +710,6 @@ class YellowAgent(CleaningAgent):
         list_possible_actions : list
             A list of possible actions the agent can take based on its knowledge.
         """
-        list_possible_actions = []
 
         # Get data from knowledge
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
@@ -714,6 +729,7 @@ class YellowAgent(CleaningAgent):
 
             # If the agent has no target position to reach
             else:
+                list_possible_actions = []
                 # Check up and down cells for agents
                 list_available_act_directions = []
                 if self.can_go_up():
@@ -831,6 +847,7 @@ class RedAgent(CleaningAgent):
 
             # If the agent has no target position to reach
             else:
+                list_possible_actions = []
                 # Check up and down available directions
                 list_available_act_directions = []
 
@@ -940,7 +957,7 @@ class Chief(CleaningAgent):
         # Update chief knowledge with the agents perception
         self.update_chief_with_agents_knowledge()
         # Send important information to the superior chief
-        self.send_information_chief()
+        self.send_information_according_to_previous_actions()
         # Update chief knowledge with the information from other chiefs
         self.update_chief_information_knowledge()
         # Send orders to the other agents
@@ -959,6 +976,7 @@ class Chief(CleaningAgent):
         list_messages = self.get_new_messages()
         self.list_received_percepts_and_data = []
         self.list_information_chief = []
+        self.list_former_target = []
         message: Message
         for message in list_messages:
             other_agent = message.get_exp()
@@ -973,8 +991,13 @@ class Chief(CleaningAgent):
                 content = message.get_content()
                 self.list_information_chief.append({"chief": other_agent, "information": content})
 
+            elif message.get_performative() == MessagePerformative.DISABLE_TARGET:
+                former_target_position = message.get_content()
+                self.list_former_target.append(former_target_position)
+
         print("Chief", self.unique_id, "received messages as perceived and data :", self.list_received_percepts_and_data)
         print("Chief", self.unique_id, "received messages as information from other chief :", self.list_information_chief)
+        print("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_target)
 
     def update(self):
         """
@@ -1048,6 +1071,13 @@ class Chief(CleaningAgent):
             grid_radioactivity[information_chief[0]][information_chief[1]] = left_zone # dropped cell is the left zone
         self.knowledge.set_grids(grid_knowledge, grid_radioactivity)
 
+    def update_target_position_list_orders(self):
+        dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
+        for target_position in self.list_former_target:
+            if target_position is not None:
+                del dict_target_position_agent[target_position]
+        self.knowledge.set_dict_target_position_agent(dict_target_position_agent=dict_target_position_agent)
+
     def get_green_yellow_red_left_column(self, mode: Literal["green", "yellow", "red"]):
         """
         Get the first column for zones 1, 2 and 3.
@@ -1096,13 +1126,14 @@ class Chief(CleaningAgent):
                 return counter - 1
             counter += 1
 
-    def send_information_chief(self):
+    def send_information_according_to_previous_actions(self):
         dict_chiefs = self.knowledge.get_dict_chiefs()
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
         dict_knowledge_agents[self.get_name()] = {
             "action": self.percepts["action_done"]["action"],
             "position": self.pos
         }
+        dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
 
         for agent_name in dict_knowledge_agents:
             dict_knowledge = dict_knowledge_agents[agent_name]
@@ -1111,6 +1142,11 @@ class Chief(CleaningAgent):
                 agent_position = dict_knowledge["position"]
                 chief: Chief = dict_chiefs["yellow"] if type(self) == ChiefGreenAgent else dict_chiefs["red"]
                 self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_DROP, agent_position))
+            if dict_knowledge["action"] == ACT_PICK_UP:
+                waste_picked_up_position = dict_knowledge["position"]
+                if waste_picked_up_position in dict_target_position_agent:
+                    agent_name = dict_target_position_agent[waste_picked_up_position]
+                    self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_CANCEL_TARGET, waste_picked_up_position))
 
     def update_chief_with_agents_knowledge(self):
         """
@@ -1126,6 +1162,7 @@ class Chief(CleaningAgent):
         """
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_agents_knowledge = self.knowledge.get_dict_agents_knowledge()
+        dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
 
         # Update the knowledge with the percepts received from the other agents
         for element in self.list_received_percepts_and_data:
@@ -1175,6 +1212,9 @@ class Chief(CleaningAgent):
         self.knowledge.set_dict_agents_knowledge(dict_agents_knowledge=dict_agents_knowledge)
         self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
         self.update_left_right_column()
+
+        # Update the list of distributed target positions with target positions reached or canceled
+        self.update_target_position_list_orders()
 
     def deliberate_cover_last_column(self):
         # Get data from knowledge
@@ -1292,7 +1332,7 @@ class Chief(CleaningAgent):
 
         # Write this waste has been attributed to an agent
         if position_closest_waste is not None:
-            dict_target_position_agent[(counter_column, counter_row)] = agent_name
+            dict_target_position_agent[(position_closest_waste[0], position_closest_waste[1])] = agent_name
             self.knowledge.set_dict_target_position_agent(dict_target_position_agent=dict_target_position_agent)
         
         return position_closest_waste
@@ -1395,6 +1435,7 @@ class Chief(CleaningAgent):
 
     def send_target_orders(self):
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
+        print("My target position is ", self.knowledge.get_target_position())
 
         # The chief can now send orders to himself
         dict_knowledge_agents[self.get_name()] = {
@@ -1414,8 +1455,14 @@ class Chief(CleaningAgent):
             transformed_waste = dict_knowledge["transformed_waste"]
             nb_wastes = dict_knowledge["nb_wastes"]
 
-            # If the agent is not in covering mode
-            if not bool_covering:
+            # If the chief wants to send an order to a non chief agent not in covering
+            bool_condition_order_for_classic_agent = self.get_name() != agent_name and not bool_covering
+            # If the chief wants to send an order to himself, he must have finished classic covering or covering last column, depending to its type
+            bool_condition_order_for_chief_agent =  self.get_name() == agent_name and (
+                (type(self) == ChiefRedAgent and not bool_covering) or (
+                type(self) in [ChiefGreenAgent, ChiefYellowAgent] and self.knowledge.get_bool_cleaned_right_column()))
+
+            if bool_condition_order_for_classic_agent or bool_condition_order_for_chief_agent:
                 # If the agent has no target to follow and has no waste to drop
                 if target_position is None and transformed_waste is None and (type(self) is not ChiefRedAgent or nb_wastes == 0):
                     # Find the closest waste to the agent

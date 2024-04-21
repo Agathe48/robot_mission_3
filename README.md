@@ -282,10 +282,11 @@ You can see in appendix in `results/graphics_without_communication` the graphs o
 
 We worked from the previous part to add communication between our agent and we improved their movement. In this new part, we will develop all implemented changes and enhancements.
 
-The key points are the creation of a Chief for each color agents: he's in charge of centering the knowledge (for each color agents), managing its agent for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented ameliorations: the code is based on the previous part, hence we only mention changed and added behaviors in this part.
-
+The key points are the creation of a Chief for each color agents: he's in charge of centering the knowledge (for each color agents), managing its agent for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented improvements: the code is based on the previous part, hence, we will only mention changed and/or added behaviors in this part.
 
 ### The knowledge
+
+For our communication, we choose to extend our agents' knowledge by incorporating additional elements. We also created a dedicated `ChiefKnowledge` class inheriting from our `AgentKnowledge` class.
 
 #### The Agent's knowledge
 
