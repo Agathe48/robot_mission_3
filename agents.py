@@ -133,127 +133,8 @@ class CleaningAgent(CommunicatingAgent):
             return "down"
         if y_tile > y:
             return "up"
-
-    def send_message_disable_target_position(self):
-        former_target_position = self.knowledge.get_target_position()
-        self.knowledge.set_target_position(target_position = None)
-        agent_color = DICT_CLASS_COLOR[type(self)]
-        dict_chiefs = self.knowledge.get_dict_chiefs()
-        chief = dict_chiefs[agent_color]
-        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
-
-    def update_knowledge_with_action(self, performed_action):
-        action = performed_action["action"]
-        my_object = performed_action["object"]
-        bool_covering = self.knowledge.get_bool_covering()
-
-        if action == ACT_PICK_UP:
-            picked_up_waste = self.knowledge.get_picked_up_wastes()
-            picked_up_waste.append(my_object)
-            self.knowledge.set_picked_up_wastes(picked_up_waste)
-            if not bool_covering:
-                if type(self) in [ChiefRedAgent, RedAgent]:
-                    self.send_message_disable_target_position()
-
-        if action == ACT_DROP_TRANSFORMED_WASTE:
-            self.knowledge.set_transformed_waste(transformed_waste = None)
-
-        if action == ACT_DROP_ONE_WASTE:
-            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
-
-        if action == ACT_TRANSFORM:
-            self.knowledge.set_transformed_waste(transformed_waste = my_object)
-            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
-            # If the agent is not in covering mode, set the target position to None so he can drop it on the border
-            if not bool_covering:
-                self.send_message_disable_target_position()
-
-        self.update_knowledge_target_position()
-
-    def update(self):
-        """
-        Updates the agent's knowledge based on its percepts.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None 
-        """
-        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
-
-        for key in self.percepts["positions"]:
-            list_objects_tile = self.percepts["positions"][key]
-
-            if not list_objects_tile is None:
-                # When there is no Waste or WasteDisposalZone, set to 0
-                if not any(isinstance(obj, Waste) or isinstance(obj, WasteDisposalZone) for obj in list_objects_tile):
-                    grid_knowledge[key[0]][key[1]] = 0
-
-                for element in list_objects_tile:
-                    if type(element) == Waste:
-                        if element.type_waste == "green":
-                            grid_knowledge[key[0]][key[1]] = 1
-                        elif element.type_waste == "yellow":
-                            grid_knowledge[key[0]][key[1]] = 2
-                        elif element.type_waste == "red":
-                            grid_knowledge[key[0]][key[1]] = 3
-
-                    if type(element) == WasteDisposalZone:
-                        grid_knowledge[key[0]][key[1]] = 4
-
-                    if type(element) == Radioactivity:
-                        if element.zone == "z1":
-                            grid_radioactivity[key[0]][key[1]] = 1
-                        elif element.zone == "z2":
-                            grid_radioactivity[key[0]][key[1]] = 2
-                        elif element.zone == "z3":
-                            grid_radioactivity[key[0]][key[1]] = 3
-
-        self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
-
-        # Update the knowledge of the agent with the consequences of the action
-        self.update_knowledge_with_action(self.percepts["action_done"])
-
-        # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
+        
     
-    def send_percepts_and_data(self):
-        """
-        Sends the agent's percepts to the its chief.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-        """
-        # Get agent's data
-        agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
-        agent_transformed_waste = self.knowledge.get_transformed_waste()
-        agent_position = self.pos
-        bool_covering = self.knowledge.get_bool_covering()
-        direction_covering = self.knowledge.get_direction_covering()
-        target_position = self.knowledge.get_target_position()
-        # Create the percepts and data to send
-        percepts_and_data = self.percepts.copy()
-        percepts_and_data["nb_wastes"] = agent_nb_wastes
-        percepts_and_data["transformed_waste"] = agent_transformed_waste
-        percepts_and_data["position"] = agent_position
-        percepts_and_data["bool_covering"] = bool_covering
-        percepts_and_data["direction_covering"] = direction_covering
-        percepts_and_data["target_position"] = target_position
-        percepts_and_data["action"] = self.percepts["action_done"]["action"]
-
-        agent_color = DICT_CLASS_COLOR[type(self)]
-        dict_chiefs = self.knowledge.get_dict_chiefs()
-        chief = dict_chiefs[agent_color]
-
-        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
-
     def treat_order(self, content):
         # The chief asks the agent to stop covering
         if content == STOP_COVERING:
@@ -515,7 +396,15 @@ class CleaningAgent(CommunicatingAgent):
                     list_possible_actions.append(ACT_GO_LEFT)
 
         return list_possible_actions
-    
+
+    def send_message_disable_target_position(self):
+        former_target_position = self.knowledge.get_target_position()
+        self.knowledge.set_target_position(target_position = None)
+        agent_color = DICT_CLASS_COLOR[type(self)]
+        dict_chiefs = self.knowledge.get_dict_chiefs()
+        chief = dict_chiefs[agent_color]
+        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
+
     def update_knowledge_target_position(self):
         _, grid_radioactivity = self.knowledge.get_grids()
         bool_covering = self.knowledge.get_bool_covering()
@@ -555,6 +444,119 @@ class CleaningAgent(CommunicatingAgent):
                 elif (grid_radioactivity[actual_position[0] + 1][actual_position[1]] == right_zone and direction_covering != "left") or (grid_radioactivity[actual_position[0] - 1][actual_position[1]] == left_zone and direction_covering != "right"):
                     direction_covering = None
                 self.knowledge.set_direction_covering(direction_covering)
+
+    def update_knowledge_with_action(self, performed_action):
+        action = performed_action["action"]
+        my_object = performed_action["object"]
+        bool_covering = self.knowledge.get_bool_covering()
+
+        if action == ACT_PICK_UP:
+            picked_up_waste = self.knowledge.get_picked_up_wastes()
+            picked_up_waste.append(my_object)
+            self.knowledge.set_picked_up_wastes(picked_up_waste)
+            if not bool_covering:
+                if type(self) in [ChiefRedAgent, RedAgent]:
+                    self.send_message_disable_target_position()
+
+        if action == ACT_DROP_TRANSFORMED_WASTE:
+            self.knowledge.set_transformed_waste(transformed_waste = None)
+
+        if action == ACT_DROP_ONE_WASTE:
+            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+
+        if action == ACT_TRANSFORM:
+            self.knowledge.set_transformed_waste(transformed_waste = my_object)
+            self.knowledge.set_picked_up_wastes(picked_up_wastes = [])
+            # If the agent is not in covering mode, set the target position to None so he can drop it on the border
+            if not bool_covering:
+                self.send_message_disable_target_position()
+
+        self.update_knowledge_target_position()
+
+    def update(self):
+        """
+        Updates the agent's knowledge based on its percepts.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None 
+        """
+        grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
+
+        for key in self.percepts["positions"]:
+            list_objects_tile = self.percepts["positions"][key]
+
+            if not list_objects_tile is None:
+                # When there is no Waste or WasteDisposalZone, set to 0
+                if not any(isinstance(obj, Waste) or isinstance(obj, WasteDisposalZone) for obj in list_objects_tile):
+                    grid_knowledge[key[0]][key[1]] = 0
+
+                for element in list_objects_tile:
+                    if type(element) == Waste:
+                        if element.type_waste == "green":
+                            grid_knowledge[key[0]][key[1]] = 1
+                        elif element.type_waste == "yellow":
+                            grid_knowledge[key[0]][key[1]] = 2
+                        elif element.type_waste == "red":
+                            grid_knowledge[key[0]][key[1]] = 3
+
+                    if type(element) == WasteDisposalZone:
+                        grid_knowledge[key[0]][key[1]] = 4
+
+                    if type(element) == Radioactivity:
+                        if element.zone == "z1":
+                            grid_radioactivity[key[0]][key[1]] = 1
+                        elif element.zone == "z2":
+                            grid_radioactivity[key[0]][key[1]] = 2
+                        elif element.zone == "z3":
+                            grid_radioactivity[key[0]][key[1]] = 3
+
+        self.knowledge.set_grids(grid_knowledge=grid_knowledge, grid_radioactivity=grid_radioactivity)
+
+        # Update the knowledge of the agent with the consequences of the action
+        self.update_knowledge_with_action(self.percepts["action_done"])
+
+        # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
+    
+    def send_percepts_and_data(self):
+        """
+        Sends the agent's percepts to the its chief.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        # Get agent's data
+        agent_nb_wastes = len(self.knowledge.get_picked_up_wastes())
+        agent_transformed_waste = self.knowledge.get_transformed_waste()
+        agent_position = self.pos
+        bool_covering = self.knowledge.get_bool_covering()
+        direction_covering = self.knowledge.get_direction_covering()
+        target_position = self.knowledge.get_target_position()
+        # Create the percepts and data to send
+        percepts_and_data = self.percepts.copy()
+        percepts_and_data["nb_wastes"] = agent_nb_wastes
+        percepts_and_data["transformed_waste"] = agent_transformed_waste
+        percepts_and_data["position"] = agent_position
+        percepts_and_data["bool_covering"] = bool_covering
+        percepts_and_data["direction_covering"] = direction_covering
+        percepts_and_data["target_position"] = target_position
+        percepts_and_data["action"] = self.percepts["action_done"]["action"]
+
+        agent_color = DICT_CLASS_COLOR[type(self)]
+        dict_chiefs = self.knowledge.get_dict_chiefs()
+        chief = dict_chiefs[agent_color]
+
+        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_PERCEPTS_AND_DATA, percepts_and_data))
+    
 
 class GreenAgent(CleaningAgent):
     

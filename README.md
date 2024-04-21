@@ -302,6 +302,8 @@ TODO A REDIGER
 
 #### The CleaningAgent
 
+The `CleaningAgent` class inherits from the `CommunicatingAgent` class defined in `communication/agent/CommunicatingAgent.py` and is used to define common behaviors for the Green, Yellow and Red cleaning agents and their chiefs. These common behaviors are the methods `step`, `convert_pos_to_tile` (same as part 1), `update`, `update_positions_around_agent` and `update_knowledge_with_action`.
+
 #### The GreenAgent
 ##### The deliberate method
 
