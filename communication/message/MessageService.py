@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from communication.message.MessagePerformative import MessagePerformative
 
 class MessageService:
     """MessageService class.
@@ -26,6 +27,9 @@ class MessageService:
         self.__scheduler = scheduler
         self.__instant_delivery = instant_delivery
         self.__messages_to_proceed = []
+        self.nb_messages_chief_to_agent = 0
+        self.nb_messages_agent_to_chief = 0
+        self.nb_messages_chief_to_chief = 0
 
     def set_instant_delivery(self, instant_delivery):
         """ Set the instant delivery parameter.
@@ -35,6 +39,21 @@ class MessageService:
     def send_message(self, message):
         """ Dispatch message if instant delivery active, otherwise add the message to proceed list.
         """
+        if message.get_performative() in [
+            MessagePerformative.SEND_ORDERS,
+            MessagePerformative.SEND_ORDER_STOP_ACTING,
+            MessagePerformative.SEND_ORDER_CANCEL_TARGET]:
+            self.nb_messages_chief_to_agent += 1
+        elif message.get_performative() in [
+            MessagePerformative.SEND_PERCEPTS_AND_DATA,
+            MessagePerformative.DISABLE_TARGET]:
+            self.nb_messages_agent_to_chief += 1
+        elif message.get_performative() in [
+            MessagePerformative.SEND_INFORMATION_CHIEF_DROP,
+            MessagePerformative.SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED
+        ]:
+            self.nb_messages_chief_to_chief += 1
+        
         if self.__instant_delivery:
             self.dispatch_message(message)
         else:

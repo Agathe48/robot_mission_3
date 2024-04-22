@@ -145,25 +145,33 @@ grid = CanvasGrid(
     canvas_width = 600,
     canvas_height = 600 * GRID_HEIGHT / GRID_WIDTH
 )
-chart_element = mesa.visualization.ChartModule(
+chart_element_wastes = mesa.visualization.ChartModule(
     [
         {"Label": "nb_green_waste", "Color": "#b4deb8"},
         {"Label": "nb_yellow_waste", "Color": "#fdec82"},
-        {"Label": "nb_red_waste", "Color": "#ff9688"},
+        {"Label": "nb_red_waste", "Color": "#ff9688"}
+    ],
+    data_collector_name='datacollector'
+)
+chart_element_messages = mesa.visualization.ChartModule(
+    [
+        {"Label": "nb_messages_chief_to_agent", "Color": "#e41564"},
+        {"Label": "nb_messages_agent_to_chief", "Color": "#4781b3"},
+        {"Label": "nb_messages_chief_to_chief", "Color": "#87006a"}
     ],
     data_collector_name='datacollector'
 )
 
 model_params = {
-    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
-    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
-    "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 1, 1, 6, 1),
+    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 1, 1, 6, 1) ,
+    "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 1, 1, 6, 1),
     "waste_density": mesa.visualization.Slider("Initial waste density", WASTE_DENSITY, 0, 1, 0.1)
 }
 
 server = ModularServer(
     model_cls=RobotMission,
-    visualization_elements=[grid, chart_element],
+    visualization_elements=[grid, chart_element_wastes, chart_element_messages],
     name="Area",
     model_params=model_params
 )
