@@ -941,6 +941,7 @@ class Chief(CleaningAgent):
             grid_knowledge=grid_knowledge,
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
         self.percepts = {}
+        self.list_former_targets = []
 
     def step(self):
         """
@@ -978,7 +979,6 @@ class Chief(CleaningAgent):
         list_messages = self.get_new_messages()
         self.list_received_percepts_and_data = []
         self.list_information_chief = []
-        self.list_former_target = []
         message: Message
         for message in list_messages:
             other_agent = message.get_exp()
@@ -995,18 +995,19 @@ class Chief(CleaningAgent):
 
             elif message.get_performative() == MessagePerformative.DISABLE_TARGET:
                 former_target_position = message.get_content()
-                self.list_former_target.append(former_target_position)
+                self.list_former_targets.append(former_target_position)
 
         print("Chief", self.unique_id, "received messages as perceived and data :", self.list_received_percepts_and_data)
         print("Chief", self.unique_id, "received messages as information from other chief :", self.list_information_chief)
-        print("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_target)
+        print("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_targets)
 
     def update_target_position_list_orders(self):
         dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
-        for target_position in self.list_former_target:
-            if target_position is not None:
+        for target_position in self.list_former_targets:
+            if target_position in dict_target_position_agent:
                 del dict_target_position_agent[target_position]
         self.knowledge.set_dict_target_position_agent(dict_target_position_agent=dict_target_position_agent)
+        self.list_former_targets = []
 
     def update_chief_with_agents_knowledge(self):
         """
@@ -1022,7 +1023,6 @@ class Chief(CleaningAgent):
         """
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         dict_agents_knowledge = self.knowledge.get_dict_agents_knowledge()
-        dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
 
         # Update the knowledge with the percepts received from the other agents
         for element in self.list_received_percepts_and_data:
@@ -1057,7 +1057,7 @@ class Chief(CleaningAgent):
                                 grid_radioactivity[key[0]][key[1]] = 2
                             elif element.zone == "z3":
                                 grid_radioactivity[key[0]][key[1]] = 3
-                
+
             # Update the knowledge of the chief with the number of wastes and the transformed waste
             dict_agents_knowledge[agent] = {
                 "nb_wastes" : percepts_and_data["nb_wastes"],
@@ -1094,6 +1094,8 @@ class Chief(CleaningAgent):
                 self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_DROP, agent_position))
             if dict_knowledge["action"] == ACT_PICK_UP:
                 waste_picked_up_position = dict_knowledge["position"]
+                # Add the target position to be deleted in the list_deleted_targets
+                self.list_former_targets.append(waste_picked_up_position)
                 if waste_picked_up_position in dict_target_position_agent:
                     agent_name = dict_target_position_agent[waste_picked_up_position]
                     self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_CANCEL_TARGET, waste_picked_up_position))
