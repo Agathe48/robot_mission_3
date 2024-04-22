@@ -350,6 +350,7 @@ The `RedAgent` deliberate method is quite similar to the green's and yellow's on
 
 The `Chief` class inherits from the `CleaningAgent` class, and is used to define common behaviors for the `ChiefGreenAgent`, `ChiefYellowAgent` and `ChiefRedAgent`. These common behaviors are the methods `step`, `receive_messages`, `determine_covering`, `update_target_position_list_orders`, `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions`, `update_chief_information_knowledge`, `find_best_rows_to_cover`, `send_orders_covering`, `find_closest_waste_to_agent`, `send_target_orders`, `send_orders_stop_acting`, `send_orders`, `deliberate_cover_last_column`, `deliberate`, `get_green_yellow_red_left_column`, `get_green_yellow_red_right_column`, `update_left_right_column` and `update`.
 
+In the `step` method, we implement the procedural loop of our chief. We start by receiving orders from the other chiefs and agents with `receive_messages`. We then call the `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions` and `update_chief_information_knowledge` methods to update the chief knowledge and send informations. Then, `send_orders` and `reveive_orders` methods are called to send accurate orders to its agent and himself. Finally, the `deliberate` and `do` methods are called, followed by the `update` method.
 
 
 
@@ -371,7 +372,7 @@ We improved a few things in the model class.
 
 First of all, we took into account the configurations where the grid width is not divisible by 3. In these cases, we attributed the one or two columns remaining to one or two zones randomly. For instance, for a grid width of 20, the green zone can have 7 columns, the yellow 6 and the red 7, at random.
 
-Moreover, we implemented the `MessageService` class to enable the communication between agents. We also added the number of send messages in the `DataCollector`.
+Moreover, we implemented the `MessageService` class to enable the communication between agents. We also added the number of send messages in the `DataCollector`, differenciating the chief-to-chief, agent-to-chief and chief-to-agent messages.
 
 ### The scheduler
 

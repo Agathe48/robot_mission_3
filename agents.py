@@ -137,6 +137,18 @@ class CleaningAgent(CommunicatingAgent):
         
     
     def treat_order(self, content):
+        """
+        Treats the order received from the chief.
+
+        Parameters
+        ----------
+        content : any
+            The content of the order received from the chief.
+        
+        Returns
+        -------
+        None
+        """
         # The chief asks the agent to stop covering
         if content == ORDER_STOP_COVERING:
             self.knowledge.set_bool_covering(bool_covering=False)
@@ -147,6 +159,17 @@ class CleaningAgent(CommunicatingAgent):
         print("Agent", self.unique_id, "received order :", content)
 
     def receive_orders(self):
+        """
+        Receives orders from the chief.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
         list_messages = self.get_new_messages()
         message: Message
         for message in list_messages:
@@ -200,6 +223,18 @@ class CleaningAgent(CommunicatingAgent):
         return number_wastes_max, type_waste, left_zone, right_zone
 
     def can_drop_transformed_waste(self):
+        """
+        Checks if the agent can drop the transformed waste.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if the agent can drop the transformed waste, False otherwise.
+        """
         # Retrieve data from knowledge
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         transformed_waste = self.knowledge.get_transformed_waste()
@@ -212,6 +247,18 @@ class CleaningAgent(CommunicatingAgent):
         return False
 
     def can_drop_one_waste(self):
+        """
+        Checks if the agent can drop one waste.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if the agent can drop one waste, False otherwise.
+        """
         # Retrieve data from knowledge
         grid_knowledge, _ = self.knowledge.get_grids()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
@@ -224,6 +271,18 @@ class CleaningAgent(CommunicatingAgent):
             return len(picked_up_wastes) == 1 and grid_knowledge[self.pos[0]][self.pos[1]] == 0
 
     def can_transform(self):
+        """
+        Checks if the agent can transform a waste.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            True if the agent can transform a waste, False otherwise.
+        """
         # Retrieve data from knowledge
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
         transformed_waste = self.knowledge.get_transformed_waste()
@@ -231,6 +290,18 @@ class CleaningAgent(CommunicatingAgent):
         return len(picked_up_wastes) == 2 and transformed_waste is None
 
     def can_pick_up(self):
+        """
+        Checks if the agent can pick up a waste.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if the agent can pick up a waste, False otherwise.
+        """
         # Retrieve data from knowledge
         grid_knowledge, _ = self.knowledge.get_grids()
         picked_up_wastes = self.knowledge.get_picked_up_wastes()
@@ -240,6 +311,18 @@ class CleaningAgent(CommunicatingAgent):
         return len(picked_up_wastes) < number_wastes_max and transformed_waste is None and grid_knowledge[self.pos[0]][self.pos[1]] == type_waste
 
     def can_go_up(self):
+        """
+        Checks if the agent can go up.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if the agent can go up, False otherwise.
+        """
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
         actual_position = self.pos
@@ -247,11 +330,35 @@ class CleaningAgent(CommunicatingAgent):
         return actual_position[1] + 1 < grid_height
 
     def can_go_down(self):
+        """
+        Checks if the agent can go down.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if the agent can go down, False otherwise.
+        """
         actual_position = self.pos
 
         return actual_position[1] > 0
 
     def can_go_right(self):
+        """
+        Checks if the agent can go right.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if the agent can go right, False otherwise.
+        """
         _, grid_radioactivity = self.knowledge.get_grids()
         actual_position = self.pos
         _, _, _, right_zone = self.get_specificities_type_agent()
@@ -261,6 +368,18 @@ class CleaningAgent(CommunicatingAgent):
         return False
 
     def can_go_left(self):
+        """
+        Checks if the agent can go left.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        bool
+            True if the agent can go left, False otherwise.
+        """
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         actual_position = self.pos
         _, type_waste, left_zone, _ = self.get_specificities_type_agent()
@@ -273,6 +392,18 @@ class CleaningAgent(CommunicatingAgent):
             return not bool_is_left_zone or bool_has_waste_left
 
     def deliberate_go_to_pick_close_waste(self):
+        """
+        Determines the best direction to go to pick up a waste close to the agent.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        list_best_directions : list
+            A list of the best directions to go to pick up a waste close to the agent.
+        """
         grid_knowledge, _ = self.knowledge.get_grids()
         _, type_waste, _, _ = self.get_specificities_type_agent()
     
@@ -313,6 +444,18 @@ class CleaningAgent(CommunicatingAgent):
         return list_best_directions
 
     def deliberate_go_to_target(self):
+        """
+        Determines the best direction to go to reach the target position.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        list_possible_actions : list
+            A list of the best directions to go to reach the target position.
+        """
         # Retrieve data from knowledge
         target_position = self.knowledge.get_target_position()
         bool_covering = self.knowledge.get_bool_covering()
@@ -360,6 +503,18 @@ class CleaningAgent(CommunicatingAgent):
         return list_possible_actions
 
     def deliberate_covering(self):
+        """
+        Determines all possible actions based on the current knowledge of the environment in covering mode.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        """
         # Get data from knowledge
         direction_covering = self.knowledge.get_direction_covering()
         
@@ -405,6 +560,18 @@ class CleaningAgent(CommunicatingAgent):
         return list_possible_actions
 
     def deliberate_stop_acting(self):
+        """
+        Determines all possible actions based on the current knowledge of the environment when the agent has been ordered to stop acting.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        """
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         grid_width = grid_knowledge.shape[0]
         _, _, left_zone, right_zone = self.get_specificities_type_agent()
@@ -440,6 +607,17 @@ class CleaningAgent(CommunicatingAgent):
         return list_possible_actions
 
     def send_message_disable_target_position(self):
+        """
+        Sends a message to the chief to disable the target position.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         former_target_position = self.knowledge.get_target_position()
         self.knowledge.set_target_position(target_position = None)
         agent_color = DICT_CLASS_COLOR[type(self)]
@@ -448,6 +626,17 @@ class CleaningAgent(CommunicatingAgent):
         self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
 
     def update_knowledge_target_position(self):
+        """
+        Updates the agent's knowledge with the target position.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         _, grid_radioactivity = self.knowledge.get_grids()
         bool_covering = self.knowledge.get_bool_covering()
         direction_covering = self.knowledge.get_direction_covering()
@@ -488,6 +677,18 @@ class CleaningAgent(CommunicatingAgent):
                 self.knowledge.set_direction_covering(direction_covering)
 
     def update_knowledge_with_action(self, performed_action):
+        """
+        Updates the agent's knowledge with the consequences of the action performed.
+        
+        Parameters
+        ----------
+        performed_action : dict
+            A dictionary representing the action performed by the agent.
+        
+        Returns
+        -------
+        None
+        """
         action = performed_action["action"]
         my_object = performed_action["object"]
         bool_covering = self.knowledge.get_bool_covering()
@@ -516,6 +717,17 @@ class CleaningAgent(CommunicatingAgent):
         self.update_knowledge_target_position()
 
     def update(self):
+        """
+        Updates the agent's knowledge based on its percepts.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         """
         Updates the agent's knowledge based on its percepts.
 
@@ -565,6 +777,17 @@ class CleaningAgent(CommunicatingAgent):
         # print("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
     
     def send_percepts_and_data(self):
+        """
+        Sends the agent's percepts to the its chief.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         """
         Sends the agent's percepts to the its chief.
 
@@ -1048,6 +1271,17 @@ class Chief(CleaningAgent):
         self.update()
 
     def receive_messages(self):
+        """
+        Receives messages from other agents.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         list_messages = self.get_new_messages()
         self.list_received_percepts_and_data = []
         self.list_information_chief = []
@@ -1100,6 +1334,17 @@ class Chief(CleaningAgent):
             self.bool_first_messages = False
 
     def update_target_position_list_orders(self):
+        """
+        Updates the list of distributed target positions with target positions reached or canceled.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
         for target_position in self.list_former_targets:
             if target_position in dict_target_position_agent:
@@ -1176,6 +1421,17 @@ class Chief(CleaningAgent):
         self.update_target_position_list_orders()
 
     def send_information_according_to_previous_actions(self):
+        """
+        Send information to the superior chief according to the previous actions of the agents.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         dict_chiefs = self.knowledge.get_dict_chiefs()
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
         dict_knowledge_agents[self.get_name()] = {
@@ -1214,6 +1470,17 @@ class Chief(CleaningAgent):
                 self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED, "My zone is cleaned!"))
 
     def update_chief_information_knowledge(self):
+        """
+        Updates the chief agent's knowledge with the information from other chiefs.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
         for information in self.list_information_chief:
             information_chief = information["information"] # position of the dropped waste
@@ -1224,6 +1491,22 @@ class Chief(CleaningAgent):
         self.knowledge.set_grids(grid_knowledge, grid_radioactivity)
 
     def find_best_rows_to_cover(self, agent_position, rows_being_covered):
+        """
+        Find the best row to cover for the agent.
+        
+        Parameters
+        ----------
+        agent_position : tuple
+            The position of the agent in the grid.
+        
+        rows_being_covered : list
+            A list of the rows being covered in the grid.
+        
+        Returns
+        -------
+        id_row_to_go : int
+            The id of the row to cover.
+        """
         grid_height = len(rows_being_covered)
         # First start to cover the extremities
         if rows_being_covered[1] == 0 and rows_being_covered[grid_height-2] == 0:
@@ -1254,6 +1537,17 @@ class Chief(CleaningAgent):
                 return counter
 
     def send_orders_covering(self):
+        """
+        Send orders to the agents to cover the grid.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
         grid_knowledge, _ = self.knowledge.get_grids()
         grid_height = grid_knowledge.shape[1]
@@ -1363,6 +1657,17 @@ class Chief(CleaningAgent):
         return position_closest_waste
 
     def send_target_orders(self):
+        """
+        Send orders to the agents to go to their target position.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
 
         # The chief can now send orders to himself
@@ -1405,6 +1710,17 @@ class Chief(CleaningAgent):
                             print("Chief is sending the order to", agent_name, "to go clean the waste at", closest_waste_position)
 
     def send_orders_stop_acting(self):
+        """
+        Send orders to the agents to stop acting.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         dict_knowledge_agents = self.knowledge.get_dict_agents_knowledge()
 
         # The chief can now send orders to himself
@@ -1445,6 +1761,17 @@ class Chief(CleaningAgent):
             counter += 1
 
     def send_orders(self):
+        """
+        Send orders to the agents to act according to the current knowledge.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         grid_knowledge, _ = self.knowledge.get_grids()
         bool_previous_zone_cleaned = self.knowledge.get_bool_previous_zone_cleaned()
         _, type_waste, _, _ = self.get_specificities_type_agent()
@@ -1461,6 +1788,19 @@ class Chief(CleaningAgent):
             self.send_target_orders()
 
     def deliberate_cover_last_column(self):
+        """
+        Determines all possible actions based on the current knowledge of the environment when the chief is cleaning the last column.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        list_possible_actions : list
+            A list of possible actions the agent can take based on its knowledge.
+        
+        """
         # Get data from knowledge
         direction_clean_right_column = self.knowledge.get_direction_clean_right_column()
         grid_knowledge, _ = self.knowledge.get_grids()
@@ -1587,6 +1927,17 @@ class Chief(CleaningAgent):
             counter += 1
 
     def update_left_right_column(self):
+        """
+        Updates the left and right columns of the zones in the chief's knowledge.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
         list_green_yellow_red_left_columns = self.knowledge.get_list_green_yellow_red_left_columns()
         list_green_yellow_red_right_columns = self.knowledge.get_list_green_yellow_red_right_columns()
         
