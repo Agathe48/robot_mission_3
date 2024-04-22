@@ -9,9 +9,17 @@ The project has been realized by the group 3 composed of:
 
 This `README` is composed of four main parts, the [first one](#installation) describing the steps to follow to install and run our code. The [second one](#without-communication) describes our implementation choices for non-communicating agent, whereas the [third one](#with-communication-and-improved-movement) deals with our implementation choices with communication between agents. The [fourth part](#simulations-results-interpretation) presents the results obtained for both approaches.
 
+## PISTES D'AMELIORATION A REDIGER
+- envoi de la part du chef d'un ordre pour indiquer l'endroit où drop un waste (le plus proche de l'agent) en se servant de sa knowledge et des communications du chef supérieur qui lui indique quand un déchet n'est plus là. Mettre dans knowledge un attribut drop_target_position et renommer target_position en pick_up_target_position.
+
+## PERSPECTIVES FUTURES A REDIGER
+- chef qui se casse => élection d'un nouveau chef (quand par exemple il ne répond plus aux messages envoyés par ses sous-fifres => message de confirmation à envoyer de la part du chef à chaque fois qu'il reçoit les percepts de ses sous-fifres)
+
 ## Table of contents
 
 - [Robot Mission - Group 3](#robot-mission---group-3)
+  - [PISTES D'AMELIORATION A REDIGER](#pistes-damelioration-a-rediger)
+  - [PERSPECTIVES FUTURES A REDIGER](#perspectives-futures-a-rediger)
   - [Table of contents](#table-of-contents)
   - [Installation](#installation)
     - [Cloning the repository](#cloning-the-repository)
@@ -265,7 +273,7 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 
 We worked from the previous part to add communication between our agent and we improved their movement. In this new part, we will develop all implemented changes and enhancements.
 
-The key points are the creation of a Chief for each color agents: he's in charge of centering the knowledge (for each color agents), managing its agent for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented improvements: the code is based on the previous part, hence, we will only mention changed and/or added behaviors in this part.
+The key points are the covering mode at the beginning of the cleaning to identify all wastes in the map, and the creation of a Chief for each color agents. This Chief is in charge of centering the knowledge (for each color agents), managing its agents for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented improvements: the code is based on the previous part, hence, we will only mention deleted, changed and/or added behaviors in this part.
 
 ### The knowledge
 
@@ -285,20 +293,22 @@ We added several attributes to our inital `AgentKnowledge` class, including:
 The `ChiefAgentKnowledge` class inherits from the `AgentKnowledge` class and includes additional attributes:
 
 - `dict_agents_knowledge` : A dictionary containing the agents' knowledge.
-- `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned.
+- `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned. Indeed, the green and yellow chiefs will start cleaning the rightmost column of their zone, in order to allow easier drop of transformed waste on the border.
 - `direction_clean_right_column` : Represents the direction to clean, initialized at `None` and can take values `up` or `down`.
 - `rows_being_covered` : A list of size equal to the grid height, containing 0 if the row is being covered or has been covered, and 1 otherwise.
 - `list_green_yellow_red_left_columns` : A list of three values, initialized at `None`, representing the columns of the leftmost columns in the green, yellow, and red zones.
 - `list_green_yellow_red_right_columns` :  A list of three values, initialized at `None`, representing the columns of the rightmost columns in the green, yellow, and red zones.
-_ `dict_target_position_agent` : A dictionary containing the target positions given to each agent.
+- `dict_target_position_agent` : A dictionary containing the target positions given to each agent.
 
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
 ### The agents
-TODO A REDIGER
-- le chef de chaque zone (sauf rouge) va clean la colonne de droite de dépôt (Agathe Plu et Laure)
-- covering des autres agents : il se positionne a l'emplacement donné par le chef (dans une cellule le plus à gauche, en ayant divisé par le nombre d'agents classiques, sauf pour rouge où l'on compte aussi le chef), puis il avance vers la droite (ils peuvent ramasser un déchet uniquement s'il est sur la case ou l'agent se trouve (on ne devie pas)), ensuite descend/monte et mouvement droite-gauche (dans ce cas, si dechet transformer) (Oumaima et Agathe Poulain)
-- après le covering effectué, les autres vont recevoir des ordres du chef pour aller chercher des déchets (Agathe Plu et Laure)
+
+The principle beyond the behavior of each agent given its type (chief or not) and its color is the following:
+- at the beginning of the simulation, the green and yellow chiefs are on the rightmost column of their zone to clean it, to allow easier drop of the transformed wastes. The other agents (the red chief including) will start cover their own zone, so each tile of their zone has been seen at least once. It will been done accordingly to the following image.
+![explanation_covering](images/explanations_covering.png)
+Each agent will place himself to the target position indicated by the chief to perform the coverage of the row (and the two adjacent rows at the same time); this row is chosen to be the closest non covered row to the agent. The agents performing the coverage can pick up wastes during their covering if the waste is on their way. Nevertheless, they cannot derive from their row and their target position to pick a close waste or drop a transformed waste (they can drop it only if their way to go to their cover target is on the last column, which is not always the case). 
+- after all rows being covered, the agents will receive new orders from the chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, he goes right (and indicates the chief he cancels his target if he had still one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
 
 #### The CleaningAgent
 
