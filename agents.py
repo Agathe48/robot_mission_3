@@ -393,7 +393,7 @@ class CleaningAgent(CommunicatingAgent):
             if type(self) in LIST_RED_AGENTS_TYPE and self.can_drop_one_waste():
                 list_possible_actions.append(ACT_DROP_ONE_WASTE)
 
-            # Clean the column in the direction from its position
+            # Clean the row in the direction from its position
             if direction_covering == "right":
                 if self.can_go_right():
                     list_possible_actions.append(ACT_GO_RIGHT)
@@ -1614,7 +1614,6 @@ class Chief(CleaningAgent):
 
         self.knowledge.set_list_green_yellow_red_left_columns(list_green_yellow_red_left_columns)
         self.knowledge.set_list_green_yellow_red_right_columns(list_green_yellow_red_right_columns)
-
 
     def update(self):
         """
