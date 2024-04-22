@@ -52,11 +52,12 @@ from agents import (
     CleaningAgent,
     DICT_CLASS_COLOR
 )
-from schedule import CustomRandomScheduler
-
-from communication.message.MessageService import MessageService
-
-
+from schedule import (
+    CustomRandomScheduler
+)
+from communication.message.MessageService import (
+    MessageService
+)
 
 #############
 ### Model ###
@@ -369,7 +370,8 @@ class RobotMission(Model):
             self.schedule.step()
             self.datacollector.collect(self)
         else:
-            print("END OF THE SIMULATION")
+            print("END OF THE SIMULATION <3")
+            self.running = False
             return True
         
     def run_model(self, step_count=100):

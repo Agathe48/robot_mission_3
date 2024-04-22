@@ -434,6 +434,9 @@ class CleaningAgent(CommunicatingAgent):
         if pos[0] + 1 < grid_width and grid_radioactivity[pos[0]+1][pos[1]] == right_zone:
             if self.can_go_left():
                 list_possible_actions.append(ACT_GO_LEFT)
+        if pos[0] + 1 == grid_width:
+            if self.can_go_left():
+                list_possible_actions.append(ACT_GO_LEFT)
         return list_possible_actions
 
     def send_message_disable_target_position(self):
@@ -686,7 +689,13 @@ class GreenAgent(CleaningAgent):
                             if grid_knowledge[self.pos[0]][self.pos[1]] == 0:
                                 list_possible_actions.append(ACT_DROP_TRANSFORMED_WASTE)
                             else:
-                                if len(list_available_act_directions) > 0:
+                                # If go down in action and the cell under the agent is empty it goes down to drop its waste
+                                if ACT_GO_DOWN in list_available_act_directions and grid_knowledge[self.pos[0]][self.pos[1]-1] == 0:
+                                    list_possible_actions.append(ACT_GO_DOWN)
+                                # If go up in action and the cell under the agent is empty it goes up to drop its waste
+                                elif ACT_GO_UP in list_available_act_directions and grid_knowledge[self.pos[0]][self.pos[1]+1] == 0:
+                                    list_possible_actions.append(ACT_GO_UP)
+                                elif len(list_available_act_directions) > 0:
                                     # Randomize the order of possible moves
                                     rd.shuffle(list_available_act_directions)
                                     for action in list_available_act_directions:
@@ -1198,12 +1207,11 @@ class Chief(CleaningAgent):
             if not bool_stop_acting:
                 bool_zone_finished = False
         
+        # Send to the superior chief that the current zone is cleaned
         if bool_zone_finished:
             if type(self) in [ChiefGreenAgent, ChiefYellowAgent]:
                 chief: Chief = dict_chiefs["yellow"] if type(self) == ChiefGreenAgent else dict_chiefs["red"]
                 self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED, "My zone is cleaned!"))
-            else:
-                print("This is the end of the simulation <3")
 
     def update_chief_information_knowledge(self):
         grid_knowledge, grid_radioactivity = self.knowledge.get_grids()
