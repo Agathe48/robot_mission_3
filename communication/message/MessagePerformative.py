@@ -18,11 +18,10 @@ class MessagePerformative(Enum):
     SEND_PERCEPTS_AND_DATA = 108 # send percepts
     SEND_ORDERS = 109 # send orders
     SEND_INFORMATION_CHIEF_DROP = 110 # send information from a chief to a chief that a transformed waste has been dropped
-    SEND_TARGET_ORDERS = 111 # send orders to go to a target
-    DISABLE_TARGET = 112 # send message to chief that the current target is now None
-    SEND_ORDER_CANCEL_TARGET = 113 # send the order to cancel the target position of an agent
-    SEND_ORDER_STOP_ACTING = 114 # send the order to stop acting (at the end of the cleaning)
-    SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED = 115 # send information from a chief to a chief that the previous zone is cleaned
+    DISABLE_TARGET = 111 # send message to chief that the current target is now None
+    SEND_ORDER_CANCEL_TARGET = 112 # send the order to cancel the target position of an agent
+    SEND_ORDER_STOP_ACTING = 113 # send the order to stop acting (at the end of the cleaning)
+    SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED = 114 # send information from a chief to a chief that the previous zone is cleaned
 
     def __str__(self):
         """Returns the name of the enum item.

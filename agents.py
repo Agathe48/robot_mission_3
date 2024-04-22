@@ -1013,7 +1013,8 @@ class Chief(CleaningAgent):
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
         self.percepts = {}
         self.list_former_targets = []
-        self.bool_first_messages = True # indicates if this is the first time the chief is receiving messages
+        self.bool_first_messages_received_from_agents = True # indicates if this is the first time the chief is receiving messages from the agents
+        self.bool_has_indicated_to_chief_zone_covered = False
 
     def step(self):
         """
@@ -1078,7 +1079,7 @@ class Chief(CleaningAgent):
         print("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_targets)
 
         # Determine if the chief has to cover if he is alone
-        if self.bool_first_messages:
+        if self.bool_first_messages_received_from_agents:
             self.determine_covering()
 
     def determine_covering(self):
@@ -1097,7 +1098,7 @@ class Chief(CleaningAgent):
         # If the chief is alone, it must cover the grid after the right column
         if bool_cleaned_right_column and len(self.list_received_percepts_and_data) == 0:
             self.knowledge.set_bool_covering(bool_covering=True)
-            self.bool_first_messages = False
+            self.bool_first_messages_received_from_agents = False
 
     def update_target_position_list_orders(self):
         dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
@@ -1208,7 +1209,8 @@ class Chief(CleaningAgent):
                 bool_zone_finished = False
         
         # Send to the superior chief that the current zone is cleaned
-        if bool_zone_finished:
+        if bool_zone_finished and not self.bool_has_indicated_to_chief_zone_covered:
+            self.bool_has_indicated_to_chief_zone_covered = True
             if type(self) in [ChiefGreenAgent, ChiefYellowAgent]:
                 chief: Chief = dict_chiefs["yellow"] if type(self) == ChiefGreenAgent else dict_chiefs["red"]
                 self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED, "My zone is cleaned!"))
@@ -1412,7 +1414,8 @@ class Chief(CleaningAgent):
             "position": self.pos,
             "transformed_waste": self.knowledge.get_transformed_waste(),
             "nb_wastes": len(self.knowledge.get_picked_up_wastes()),
-            "bool_covering": self.knowledge.get_bool_covering()
+            "bool_covering": self.knowledge.get_bool_covering(),
+            "bool_stop_acting": self.knowledge.get_bool_stop_acting()
         }
 
         list_agents_having_one_waste = []
@@ -1423,24 +1426,29 @@ class Chief(CleaningAgent):
             transformed_waste = dict_knowledge["transformed_waste"]
             nb_wastes = dict_knowledge["nb_wastes"]
             bool_covering = dict_knowledge["bool_covering"]
+            bool_stop_acting = dict_knowledge["bool_stop_acting"]
 
-            if type(self) in [ChiefGreenAgent, ChiefYellowAgent]:
-                condition_chief = agent_name != self.get_name() or self.knowledge.get_bool_cleaned_right_column()
-                if not bool_covering and not transformed_waste and nb_wastes < 2 and condition_chief:
-                    if nb_wastes == 1:
-                        list_agents_having_one_waste.append(agent_name)
-                    # Send the order to stop acting
-                    else:
+            # Don't send orders for agent which are static
+            if not bool_stop_acting:
+
+                if type(self) in [ChiefGreenAgent, ChiefYellowAgent]:
+                    condition_chief = agent_name != self.get_name() or self.knowledge.get_bool_cleaned_right_column()
+                    if not bool_covering and not transformed_waste and nb_wastes < 2 and condition_chief:
+                        if nb_wastes == 1:
+                            list_agents_having_one_waste.append(agent_name)
+                        # Send the order to stop acting
+                        else:
+                            self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
+
+                if type(self) == ChiefRedAgent:
+                    if not bool_covering and nb_wastes == 0:
                         self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
-
-            if type(self) == ChiefRedAgent:
-                if not bool_covering and nb_wastes == 0:
-                    self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
         
         # Ask only one agent on two to stop acting (to avoid the dead-end case)
         counter = 0
         for agent_name in list_agents_having_one_waste:
-            if counter % 2 == 0:
+            bool_stop_acting = dict_knowledge_agents[agent_name]["bool_stop_acting"]
+            if not bool_stop_acting and counter % 2 == 0:
                 self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
             counter += 1
 

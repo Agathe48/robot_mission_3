@@ -116,6 +116,9 @@ class RobotMission(Model):
                 "nb_green_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "green"),
                 "nb_yellow_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "yellow"),
                 "nb_red_waste": lambda m: sum(1 for agent in m.schedule.agents if isinstance(agent, Waste) and agent.type_waste == "red"),
+                "nb_messages_chief_to_agent": lambda m: m.__messages_service.nb_messages_chief_to_agent,
+                "nb_messages_agent_to_chief": lambda m: m.__messages_service.nb_messages_agent_to_chief,
+                "nb_messages_chief_to_chief": lambda m: m.__messages_service.nb_messages_chief_to_chief
             }
         )
 
