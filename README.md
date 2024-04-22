@@ -335,7 +335,32 @@ update knowledge target position
 The `update_knowledge_with_action` method defines which attributes to update in the agent's knowledge depending on the action it has performed. The `update` method update the agent's knowledge based on the agent's percepts after performing its action. At the end of the step, the `send_percepts_and_data` method is used by the agent to send its latest percepts and knowledge to its chief
 
 #### The GreenAgent
+As presented for the part without communication,the `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behavior of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 ##### The deliberate method
+The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first of the list which can be executed.
+
+The actions have been defined in `tools_constants` by strings. Here is the full list:
+
+- `ACT_TRANSFORM`, to transform two wastes in a waste from the superior color
+- `ACT_PICK_UP`, to pick up a waste
+- `ACT_DROP`, to drop a transformed waste
+- `ACT_GO_LEFT`, to go left
+- `ACT_GO_RIGHT`, to go right
+- `ACT_GO_UP`, to go up
+- `ACT_GO_DOWN`, to go down
+- `ACT_WAIT`, to wait
+
+If the agent possesses two green wastes, the top priority action is to transform them.
+
+If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, i.e. the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes `up` and `down` from knowledge).
+
+If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick-up action. If it can't move or drop its waste, it will wait.
+
+If the agent has less than two picked up wastes, no transformed waste and is on a cell containing a waste, then it will pick up the waste.
+
+Otherwise, we will add moving to different directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
+
+The last action of the list will be to wait, so the agent always has an action to perform.
 
 #### The YellowAgent
 ##### The deliberate method
