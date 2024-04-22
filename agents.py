@@ -179,17 +179,17 @@ class CleaningAgent(CommunicatingAgent):
         right_zone : None | int
             The number of the right zone (2 for green, 3 for yellow and None for red)
         """
-        if type(self) in [GreenAgent, ChiefGreenAgent]:
+        if type(self) in LIST_GREEN_AGENTS_TYPE:
             number_wastes_max = 2
             type_waste = 1
             left_zone = None
             right_zone = 2
-        elif type(self) in [YellowAgent, ChiefYellowAgent]:
+        elif type(self) in LIST_YELLOW_AGENTS_TYPE:
             number_wastes_max = 2
             type_waste = 2
             left_zone = 1
             right_zone = 3
-        else:
+        elif type(self) in LIST_RED_AGENTS_TYPE:
             number_wastes_max = 1
             type_waste = 3
             left_zone = 2
@@ -258,9 +258,9 @@ class CleaningAgent(CommunicatingAgent):
         actual_position = self.pos
         _, type_waste, left_zone, _ = self.get_specificities_type_agent()
         
-        if type(self) in [GreenAgent, ChiefGreenAgent] and actual_position[0] > 0:
+        if type(self) in LIST_GREEN_AGENTS_TYPE and actual_position[0] > 0:
             return True
-        if type(self) in [YellowAgent, ChiefYellowAgent, RedAgent, ChiefRedAgent]:
+        if type(self) in LIST_YELLOW_AGENTS_TYPE or type(self) in LIST_RED_AGENTS_TYPE:
             bool_has_waste_left = grid_knowledge[actual_position[0]-1][actual_position[1]] == type_waste 
             bool_is_left_zone = grid_radioactivity[actual_position[0]-1][actual_position[1]] == left_zone
             return not bool_is_left_zone or bool_has_waste_left
@@ -321,7 +321,7 @@ class CleaningAgent(CommunicatingAgent):
             list_possible_actions.append(ACT_PICK_UP)
         if self.can_transform():
             list_possible_actions.append(ACT_TRANSFORM)
-        if type(self) == RedAgent and self.can_drop_one_waste():
+        if type(self) in LIST_RED_AGENTS_TYPE and self.can_drop_one_waste():
             list_possible_actions.append(ACT_DROP_ONE_WASTE)
 
         # The agent can pick up a waste close to him if he is not in covering mode
@@ -369,7 +369,7 @@ class CleaningAgent(CommunicatingAgent):
                 list_movement_temp.append(ACT_GO_LEFT)
             rd.shuffle(list_movement_temp)
             for element in list_movement_temp:
-                list_possible_actions.append(element)            
+                list_possible_actions.append(element)           
                 
         # If the agent is in mode covering and ready to do it
         else:
@@ -383,7 +383,7 @@ class CleaningAgent(CommunicatingAgent):
             if self.can_pick_up():
                 list_possible_actions.append(ACT_PICK_UP)
             # Check if the red agent is moving on the trash in order to drop the waste
-            if type(self) == RedAgent and self.can_drop_one_waste():
+            if type(self) in LIST_RED_AGENTS_TYPE and self.can_drop_one_waste():
                 list_possible_actions.append(ACT_DROP_ONE_WASTE)
 
             # Clean the column in the direction from its position
@@ -661,7 +661,7 @@ class GreenAgent(CleaningAgent):
                 # Possible best moves if there is a waste close
                 list_new_possible_actions = self.deliberate_go_to_pick_close_waste()
                 for action in list_new_possible_actions:
-                        list_possible_actions.append(action)
+                    list_possible_actions.append(action)
 
                 # Randomize the order of possible moves
                 if len(list_available_act_directions) > 0:
@@ -883,13 +883,14 @@ class RedAgent(CleaningAgent):
                 if self.can_pick_up():
                     list_possible_actions.append(ACT_PICK_UP)
 
-                # Check if cell at the left is in zone 3
+                # Forbid the red agent to go on the waste disposal zone if it has no waste to drop
+                if ACT_GO_DOWN in list_available_act_directions and grid_knowledge[self.pos[0]][self.pos[1]-1] == 4:
+                    list_available_act_directions.remove(ACT_GO_DOWN)
+                if ACT_GO_UP in list_available_act_directions and grid_knowledge[self.pos[0]][self.pos[1]+1] == 4:
+                    list_available_act_directions.remove(ACT_GO_UP)
                 if self.can_go_left():
                     list_available_act_directions.append(ACT_GO_LEFT)
-                # Check if the cell is in zone 2 and if it contains a red waste
-                elif grid_knowledge[self.pos[0]-1][self.pos[1]] == 3:
-                    list_available_act_directions.append(ACT_GO_LEFT)
-                if self.can_go_right():
+                if self.can_go_right() and grid_knowledge[self.pos[0]+1][self.pos[1]] == 4:
                     list_available_act_directions.append(ACT_GO_RIGHT)
 
                 # Possible best moves if there is a waste close
@@ -1587,3 +1588,6 @@ DICT_CLASS_COLOR = {
     RedAgent: "red",
     ChiefRedAgent: "red"
 }
+LIST_GREEN_AGENTS_TYPE = [GreenAgent, ChiefGreenAgent]
+LIST_YELLOW_AGENTS_TYPE = [YellowAgent, ChiefYellowAgent]
+LIST_RED_AGENTS_TYPE = [RedAgent, ChiefRedAgent]
