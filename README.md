@@ -353,19 +353,39 @@ The `Chief` class inherits from the `CleaningAgent` class, and is used to define
 
 In the `step` method, we implement the procedural loop of our chief. We start by receiving orders from the other chiefs and agents with `receive_messages`. We then call the `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions` and `update_chief_information_knowledge` methods to update the chief knowledge and send informations. Then, `send_orders` and `reveive_orders` methods are called to send accurate orders to its agent and himself. Finally, the `deliberate` and `do` methods are called, followed by the `update` method.
 
+The `receive_messages` method defines the messages recpetion of the chief. It receives messages from its agents and from others chiefs.
 
+The `determine_covering` method determines if the chief needs to cover the grid. It is only used for green and yellow chiefs: if they are the only gree or yellow agent they'll need to cover, otherwise they'll clean the rightmost column of their area.
+
+The `update_target_position_list_orders` method updates the chief knowledge of given target positions. It is updates if the target position has been reached or if it has been canceled by the agent.
+
+The `update_chief_knowledge_with_agents_knowledge` method defines how the chief centralized the knowledge by using the send percepts of its agents. The chief's knowledge of the grid and radioactivity it updated at every step with information given by its agents. The chief also stores the position, number of picked up wastes, the transformed waste and mode (through our various boolean values) of each of its agents.
+
+The `send_information_accordinf_to_previous_actions` method defines how the chief send relevant information to the superior chief (to the yellow chief for the green one and to the red one for the yellow chief). The chief informs the other chief when a transformed waste is dropped at the border and when its current zone is totally cleaned.
+
+The `update_chief_information_knowledge` method updates the chief knowledge with data received from the other chiefs : position of dropped waste at the border and the position of the border.
+
+The `find_best_rows_to_cover` method finds relevant rows for all agents to cover. First, the second and penulutimate rows are attribuated as we want to make sure to cover the corners of the grid. Then, the remaining rows are attribuated to the closests agents. Then, the `send_orders_covering` method defines the way the chief sends order to its agent during their covering modes. The chief will send them location of rows to cover using the previously defined method, if they are not currently covering a row or reaching a target position.
+
+The `find_closest_waste_to_agent` method find the closest waste to each agent among the know waste in the chief's knowledge of the grid.
+
+The `send_target_orders` is used in XXXX and defines how the chief sends orders to its agents to go to a target poosition. It can send those orders if the agent can act, if the not_chief agent is not covering and, for orders to himself, if it has finished covering (red chief) or finished cleaning the rightmost column (green and yellow chiefs).
+
+The `send_orders_to_stop_acting` method TODO : Laure
+
+TODO : remaining methods LAURE
 
 #### The ChiefGreenAgent
 
-TODO 
+TODO : Laure
 
 #### The ChiefYellowAgent
 
-TODO
+TODO : Laure
 
 #### The ChiefRedAgent
 
-TODO
+TODO : Laure
 
 ### Our Model
 

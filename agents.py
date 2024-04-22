@@ -1273,7 +1273,7 @@ class Chief(CleaningAgent):
 
     def receive_messages(self):
         """
-        Receives messages from other agents.
+        Receives messages from other agents and other chiefs.
         
         Parameters
         ----------
