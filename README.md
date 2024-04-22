@@ -323,33 +323,157 @@ The `get_specificities_type_agent` method is widely used in our code as it retur
 
 The methods `can_drop_transformed_waste`, `can_drop_one_waste`, `can_transform`, `can_pick_up`, `can_go_up`, `can_go_down`, `can_go_right`, `can_go_left` each return a boolean value indicating whether the agent can perform the corresponding action. We verify all conditions in these functions and define them to simplify and clean our code.  We use them in various ♠`deliberate` functions in our program.
 
-TODO :
-deliberate go to pick close waste
-deliberate go to target
+The `deliberate_go_to_pick_close_waste` method in the `CleaningAgent` class is designed to prioritize movement towards the nearest waste, according to the type of waste the agent is designed to pick up. This method plays a crucial role in optimizing the agent's cleaning efficiency by identifying the most strategic direction to move next, based on the proximity of waste suitable for collection.
+Initially, the method assesses the agent's surroundings by examining the grid's current state and identifies the agent's specific waste type to collect. It then compiles a list of possible movement directions (`ACT_GO_RIGHT`, `ACT_GO_LEFT`, `ACT_GO_UP`, `ACT_GO_DOWN`) based on the agent's capacity to move in each direction without obstruction.
+For each potential direction, the method evaluates whether moving in that direction will bring the agent closer to its target waste type. If a particular direction leads directly to a cell containing the appropriate type of waste, that direction is prioritized and added to a list of 'best directions.' These preferred directions signify the most efficient paths for waste collection, directly aligning with the agent's objective to clean the environment effectively.
+After determining the best directions for waste collection, the method randomizes the order of these preferred paths. This randomization introduces variability in the agent's movement pattern, preventing deterministic behavior and potentially allowing for more thorough area coverage over time. The final list of shuffled best directions is then returned, providing the agent with a prioritized yet varied set of movements to execute in pursuit of nearby waste.
+
+
+The `deliberate_go_to_target` method in the `CleaningAgent` class is instrumental in guiding an agent toward a designated target location, effectively melding the agent's strategic planning with its environmental awareness. This method extracts essential information from the agent's knowledge base, such as its current and target positions, and a boolean flag indicating if the agent is in covering mode. Utilizing this data, it ascertains a suite of potential actions that could bring the agent closer to its target.
+Priority is given to actions that do not hinder the agent's movement towards the target, including dropping transformed waste, collecting waste, converting waste, or dropping a single waste item—this last action being exclusive to Red agents. These actions are considered on the fly and can be executed while the agent moves toward its goal. If the agent is not engaged in covering, it may also consider collecting nearby waste as a part of its possible actions.
+For navigation, the method evaluates the relative location of the target compared to the agent's current position. It then decides on the appropriate directional movements needed to reach the target, adding actions like `ACT_GO_RIGHT`, `ACT_GO_LEFT`, `ACT_GO_UP`, or `ACT_GO_DOWN` to the list of potential actions based on the target's direction. These calculated movements are aimed at efficiently steering the agent towards its target, ensuring the agent's activities align with its environmental objectives and constraints, be it waste management, waste transformation, or specific grid navigation.
+
 
 The `send_message_disable_target_position` methods is defined to allow the agent to notify its chief when it decides to not pursue its assigned target position. This can append in normal mode if the agent now has a transformed waste to drop, for instance.
 
-TODO:
-update knowledge target position
+The `update_knowledge_target_position` method within the `CleaningAgent` class is designed to adjust the agent's understanding and strategic planning in relation to its current objective or target position, especially within the context of covering or cleaning specific areas. This method dynamically updates the agent's target position and direction based on its current location and the status of its objectives.
+At the core of this method is the evaluation of whether the agent has reached its target position. If the agent has arrived at the specified target position—or if the target position was defined in terms of the y-axis only and this has been reached—the method proceeds to adjust the agent's covering direction if it is in covering mode. This adjustment is based on the agent's position relative to the grid's radioactivity zones, which delineate different areas of the grid for specific types of agents. If the agent finds itself at the edge of its designated zone, or if it has reached the target position, it sets a new direction to cover next—either "left" or "right," depending on its current position and the layout of the radioactivity zones.
+If the agent has not reached its target position, but it is in covering mode and has completed a line of coverage, the method evaluates whether it needs to reset its covering direction. This might happen if the agent reaches the grid's boundary or completes coverage of a specific area, necessitating a change in its approach to efficiently continue its task.
+This dynamic reassessment and updating of the agent's goals and strategies are crucial for maintaining flexibility and efficiency in its operations. By continuously adapting its target position and direction based on its progress and the environment's layout, the agent can effectively navigate the grid, cover areas as needed, and fulfill its cleaning duties.
+
 
 The `update_knowledge_with_action` method defines which attributes to update in the agent's knowledge depending on the action it has performed. The `update` method update the agent's knowledge based on the agent's percepts after performing its action. At the end of the step, the `send_percepts_and_data` method is used by the agent to send its latest percepts and knowledge to its chief
 
 #### The GreenAgent
+As presented for the part without communication,the `GreenAgent` is a class inheriting from the class `CleaningAgent` presented above. It permits to code the specific behavior of the green agent, mainly the `deliberate` method, which is not the same for all types of cleaning agents.
 ##### The deliberate method
+The `deliberate` method returns a list of actions called `list_possible_actions`, in the order of preference for the agent. Only one will be executed by the model, the first of the list which can be executed.
+
+The actions have been defined in `tools_constants` by strings. Here is the full list:
+
+- `ACT_TRANSFORM`, to transform two wastes in a waste from the superior color
+- `ACT_PICK_UP`, to pick up a waste
+- `ACT_DROP`, to drop a transformed waste
+- `ACT_GO_LEFT`, to go left
+- `ACT_GO_RIGHT`, to go right
+- `ACT_GO_UP`, to go up
+- `ACT_GO_DOWN`, to go down
+- `ACT_WAIT`, to wait
+
+If the agent possesses two green wastes, the top priority action is to transform them.
+
+If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, i.e. the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes `up` and `down` from knowledge).
+
+If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick-up action. If it can't move or drop its waste, it will wait.
+
+If the agent has less than two picked up wastes, no transformed waste and is on a cell containing a waste, then it will pick up the waste.
+
+Otherwise, we will add moving to different directions if nothing blocks its way to its list of possible actions. We will favor adjacent cells with waste by adding them first in its list. Otherwise, possible directions are added in a random order.
+
+The last action of the list will be to wait, so the agent always has an action to perform.
 
 #### The YellowAgent
+
+The `YellowAgent` is a class inheriting from the class `CleaningAgent`. This class is designed to specify the behavior of the yellow agent, particularly implementing the `deliberate` method, which differs among various types of cleaning agents.
+
 ##### The deliberate method
 
+The `deliberate` method generates a list of actions known as `list_possible_actions`, arranged in the order of the agent's preference. The model will execute only one action—the first on the list that can be performed.
+
+The actions are defined in `tools_constants` as strings, including:
+
+- `ACT_TRANSFORM` to transform two wastes into one of a superior color
+- `ACT_PICK_UP` to collect waste
+- `ACT_DROP` to dispose of transformed waste
+- `ACT_GO_LEFT` to move left
+- `ACT_GO_RIGHT` to move right
+- `ACT_GO_UP` to move up
+- `ACT_GO_DOWN` to move down
+- `ACT_WAIT` to pause action
+
+Priority actions for the YellowAgent are as follows:
+
+- If the agent has two yellow wastes, it prioritizes transforming them.
+- With a yellow transformed waste, it moves right until reaching the border (zone 3). If the current tile is empty, it will drop the waste; otherwise, it will randomly move up or down if unobstructed, as determined by `up` and `down` knowledge attributes.
+- When positioned on a tile with a yellow waste and lacking two wastes or a transformed one, it will opt to pick up the waste. If unable to move or drop the waste, it waits.
+- Should the agent have fewer than two collected wastes, no transformed waste, and is on a tile with waste, it will collect the waste.
+- In the absence of blockages, the agent will add moving to various directions to its list of potential actions, prioritizing adjacent cells containing waste. Otherwise, directions are randomized in order.
+- The final action listed is always to wait, ensuring the agent has a constant action available.
+
+
 #### The RedAgent
+
+The `RedAgent` class inherits from the `CleaningAgent` class, tailored specifically to define the red agent's behavior, particularly through its unique `deliberate` method.
+
 ##### The deliberate method
+
+This method constructs a sequence of potential actions, designated as `list_possible_actions`, ordered according to the agent's programmed preferences. Only the foremost executable action in the list will be carried out by the model.
+
+The actions are defined within `tools_constants` using string identifiers. These actions encompass:
+
+- `ACT_TRANSFORM`, which converts two pieces of waste into a higher-tier waste
+- `ACT_PICK_UP`, to collect waste
+- `ACT_DROP`, to dispose of transformed waste
+- `ACT_GO_LEFT`, to move leftward
+- `ACT_GO_RIGHT`, for rightward movement
+- `ACT_GO_UP`, to ascend
+- `ACT_GO_DOWN`, to descend
+- `ACT_WAIT`, for inaction
+
+The RedAgent prioritizes actions in the following manner:
+
+- It seeks to transform two red wastes into a superior waste form when possible.
+- If it holds a transformed red waste, it will strive to move right towards the disposal area, zone 4. The agent will dispose of the waste if the current cell is unoccupied; otherwise, it moves vertically if there's no obstacle, according to the `up` and `down` attributes of its knowledge base.
+- When on a cell with a red waste, without possessing two wastes or a transformed one, the agent will opt to collect the waste. If unable to move or drop the waste, the agent defaults to waiting.
+- If the agent has fewer than two collected wastes, no transformed waste, and is on a cell with waste, it will engage in waste collection.
+- If not obstructed, the agent will consider moving in various directions, favoring cells with waste nearby. If no specific pattern is established, the directions are determined randomly.
+- The concluding action on the list is invariably to wait, ensuring that the agent has a consistent action to perform.
+
 
 #### The Chief
 
+The `Chief` class extends the `CleaningAgent` class, forming the central command unit for coordinating cleaning agents within the simulation environment. It encapsulates methods necessary for orchestrating the agents' collective efforts in maintaining grid cleanliness and waste disposal efficiency.
+
+The chief's cycle of operations is orchestrated through the `step` method. This method sequentially initiates the reception of messages via `receive_messages`, updates the chief's knowledge with the agents' percepts through `update_chief_with_agents_knowledge`, sends relevant information to the superior chief using `send_information_according_to_previous_actions`, updates its own knowledge with other chiefs' input with `update_chief_information_knowledge`, and issues directives to its subordinate agents via `send_orders`. Upon self-reception of these orders through `receive_orders`, the chief utilizes `deliberate` to determine its potential actions, followed by the execution of said actions and the updating of percepts. The operational cycle concludes with the `update` method.
+
+Specific functions within the Chief class are tasked with particular operational roles:
+
+- `receive_messages` for processing incoming communications.
+- `determine_covering` for deciding on coverage actions in the absence of subordinate agents.
+- `update_chief_with_agents_knowledge` and `update_chief_information_knowledge` for knowledge acquisition and synthesis.
+- `send_information_according_to_previous_actions` for disseminating action-based information.
+- `send_orders_covering`, `send_target_orders`, and `deliberate_cover_last_column` for strategizing and issuing orders related to grid coverage and waste disposal.
+- `update` for assimilating the results of performed actions into the chief's knowledge base.
+  
+These specialized methods are utilized to maintain a structured approach to grid management, ensuring that each waste item is accounted for and appropriately disposed of, while also directing the agents in a manner that optimizes their cleaning routes and actions.
+
+
 #### The ChiefGreenAgent
+
+The `ChiefGreenAgent` class is a specialized Chief agent tailored to manage Green agents within the simulation. This class inherits from both the `Chief` and `GreenAgent` classes, combining the leadership role of the Chief with the GreenAgent's specific behavior.
+
+The ChiefGreenAgent's role is to oversee Green agents, guiding them in environmental maintenance and waste disposal tasks. The initialization method sets up the ChiefGreenAgent with unique identifiers and situational awareness of the grid it operates within.
+
+Upon initialization, the ChiefGreenAgent is defined as not covering any particular zone, indicating its primary role is to coordinate rather than directly engage in the coverage of the grid. This is signified by the attribute `set_bool_covering` being set to `False`. This agent is thus primarily responsible for the strategic direction of Green agents under its command.
+
 
 #### The ChiefYellowAgent
 
+The `ChiefYellowAgent` class is a distinct type of Chief agent specifically designed to command Yellow agents in the simulation. As a subclass of both `Chief` and `YellowAgent`, it holds the command functions of a Chief while also encapsulating the unique attributes of a YellowAgent.
+
+The ChiefYellowAgent's purpose is to direct Yellow agents through tasks related to environmental cleaning and waste management. It is equipped with a unique identifier and an understanding of the grid's layout, which is essential for efficient coordination and decision-making.
+
+Upon instantiation, the ChiefYellowAgent is not assigned any coverage responsibilities, as indicated by the property `set_bool_covering` being initialized to `False`. This configuration emphasizes its role as a coordinator, focusing on the management and operational guidance of Yellow agents, rather than direct participation in grid coverage.
+
+
 #### The ChiefRedAgent
+
+The `ChiefRedAgent` class integrates the responsibilities of a Chief with the attributes of a RedAgent, managing Red agents within the simulated environment. This class inherits from both the `Chief` and `RedAgent` classes, empowering it to oversee and command Red agents.
+
+As the leader of Red agents, the ChiefRedAgent is established with a unique identity and a comprehensive layout of the grid, which facilitates effective command and logistical planning of cleaning tasks.
+
+The ChiefRedAgent is initialized with a distinction in its role: unlike the Green and Yellow Chief agents, it does not bear the responsibility of cleaning the last column of the grid. This is denoted by setting the `set_bool_cleaned_right_column` property to `True` during its initiation. This special designation underscores the agent's primary focus on leadership and strategic oversight, deviating from direct cleaning duties often associated with the chiefs of other agent colors.
+
 
 ### Our Model
 
