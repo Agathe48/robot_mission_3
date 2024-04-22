@@ -943,6 +943,7 @@ class Chief(CleaningAgent):
             grid_radioactivity=np.zeros((grid_size[0], grid_size[1])))
         self.percepts = {}
         self.list_former_targets = []
+        self.bool_first_messages = True # indicates if this is the first time the chief is receiving messages
 
     def step(self):
         """
@@ -1001,6 +1002,28 @@ class Chief(CleaningAgent):
         print("Chief", self.unique_id, "received messages as perceived and data :", self.list_received_percepts_and_data)
         print("Chief", self.unique_id, "received messages as information from other chief :", self.list_information_chief)
         print("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_targets)
+
+        # Determine if the chief has to cover if he is alone
+        if self.bool_first_messages:
+            self.determine_covering()
+
+    def determine_covering(self):
+        """
+        Determine if the chief (green or yellow) needs to cover in the case there are no other agent.
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        None
+        """
+        bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
+        # If the chief is alone, it must cover the grid after the right column
+        if bool_cleaned_right_column and len(self.list_received_percepts_and_data) == 0:
+            self.knowledge.set_bool_covering(bool_covering=True)
+            self.bool_first_messages = False
 
     def update_target_position_list_orders(self):
         dict_target_position_agent = self.knowledge.get_dict_target_position_agent()
@@ -1148,6 +1171,7 @@ class Chief(CleaningAgent):
         rows_being_covered = self.knowledge.get_rows_being_covered()
         green_left_column, yellow_left_column, red_left_column = self.knowledge.get_list_green_yellow_red_left_columns()
         green_right_column, yellow_right_column, red_right_column = self.knowledge.get_list_green_yellow_red_right_columns()
+        print("BEFORE ROWS BEING COVERED", rows_being_covered)
 
         # The chief can now send orders to himself
         dict_knowledge_agents[self.get_name()] = {
@@ -1205,6 +1229,7 @@ class Chief(CleaningAgent):
                         print("Chief is sending the order to stop covering to agent", agent_name)
                         
         # Update the knowledge of the chief with the rows being covered
+        print("AFTER ROWS BEING COVERED", rows_being_covered)
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
 
     def find_closest_waste_to_agent(self, agent_name, agent_position):
@@ -1275,9 +1300,9 @@ class Chief(CleaningAgent):
             # If the chief wants to send an order to a non chief agent not in covering
             bool_condition_order_for_classic_agent = self.get_name() != agent_name and not bool_covering
             # If the chief wants to send an order to himself, he must have finished classic covering or covering last column, depending to its type
-            bool_condition_order_for_chief_agent =  self.get_name() == agent_name and (
+            bool_condition_order_for_chief_agent = self.get_name() == agent_name and (
                 (type(self) == ChiefRedAgent and not bool_covering) or (
-                type(self) in [ChiefGreenAgent, ChiefYellowAgent] and self.knowledge.get_bool_cleaned_right_column()))
+                type(self) in [ChiefGreenAgent, ChiefYellowAgent] and self.knowledge.get_bool_cleaned_right_column() and not bool_covering))
 
             if bool_condition_order_for_classic_agent or bool_condition_order_for_chief_agent:
                 # If the agent has no target to follow and has no waste to drop
@@ -1297,7 +1322,6 @@ class Chief(CleaningAgent):
             self.send_orders_covering()
         # If the grid is covered, the chief will send orders to the agents to clean the nearest waste
         self.send_target_orders()
-
 
     def deliberate_cover_last_column(self):
         # Get data from knowledge
