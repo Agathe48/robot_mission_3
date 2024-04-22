@@ -50,6 +50,7 @@ class AgentKnowledge:
         self.target_position = None
         self.bool_covering = True
         self.direction_covering = None
+        self.bool_stop_acting = False # boolean to ask the agent to wait when the grid is cleaned
 
     def get_transformed_waste(self):
         """
@@ -148,6 +149,20 @@ class AgentKnowledge:
         None, "right" or "left"
         """
         return self.direction_covering
+
+    def get_bool_stop_acting(self):
+        """
+        Return the boolean according to which the agent can continue to act or not.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
+        return self.bool_stop_acting
 
     def set_transformed_waste(self, transformed_waste):
         """
@@ -258,8 +273,23 @@ class AgentKnowledge:
         """
         self.direction_covering = direction_covering
 
+    def set_bool_stop_acting(self, bool_stop_acting):
+        """
+        Set the boolean according to which the agent can continue to act or not.
+
+        Parameters
+        ----------
+        bool_stop_acting : bool
+            Boolean according to which the agent can continue to act or not.
+
+        Returns
+        -------
+        None
+        """
+        self.bool_stop_acting = bool_stop_acting
+
     def __str__(self) -> str:
-        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position}, direction_covering={self.direction_covering}, bool_covering={self.bool_covering})"
+        return f"AgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, target_position={self.target_position}, direction_covering={self.direction_covering}, bool_covering={self.bool_covering}, bool_stop_acting={self.bool_stop_acting})"
         
 
 class ChiefAgentKnowledge(AgentKnowledge):
@@ -273,6 +303,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.list_green_yellow_red_left_columns = [None, None, None]
         self.list_green_yellow_red_right_columns = [None, None, None]
         self.dict_target_position_agent = {}
+        self.bool_previous_zone_cleaned = False # if the previous zone (green for yellow and yellow for red) is totally cleaned
 
     def get_dict_agents_knowledge(self):
         """"
@@ -371,6 +402,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         dict
         """
         return self.dict_target_position_agent
+
+    def get_bool_previous_zone_cleaned(self):
+        """"
+        Return the boolean according to which the previous zone is cleaned.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+        """
+        return self.bool_previous_zone_cleaned
 
     def set_dict_agents_knowledge(self, dict_agents_knowledge):
         """
@@ -477,5 +522,20 @@ class ChiefAgentKnowledge(AgentKnowledge):
         """
         self.dict_target_position_agent = dict_target_position_agent
 
+    def set_bool_previous_zone_cleaned(self, bool_previous_zone_cleaned):
+        """
+        Set the boolean regarding if the previous zone is cleaned or not.
+
+        Parameters
+        ----------
+        bool_previous_zone_cleaned : bool
+            Boolean regarding if the previous zone is cleaned or not.
+
+        Returns
+        -------
+        None
+        """
+        self.bool_previous_zone_cleaned = bool_previous_zone_cleaned
+
     def __str__(self) -> str:
-        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_columns={self.list_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered}, dict_target_position_agent={self.dict_target_position_agent}"
+        return f"ChiefAgentKnowledge(grid_knowledge={np.flip(self.grid_knowledge.T,0)}, grid_radioactivity={np.flip(self.grid_radioactivity.T,0)}, picked_up_wastes={self.picked_up_wastes}, transformed_waste={self.transformed_waste}, dict_chiefs={self.dict_chiefs}, dict_agents_knowledge={self.dict_agents_knowledge}, target_position={self.target_position}), bool_cleaned_right_column={self.bool_cleaned_right_column}, direction_clean_right_column={self.direction_clean_right_column}, list_green_yellow_red_left_columns={self.list_green_yellow_red_left_columns}, list_green_yellow_red_right_columns={self.list_green_yellow_red_right_columns}, rows_being_covered={self.rows_being_covered}, dict_target_position_agent={self.dict_target_position_agent}, , bool_stop_acting={self.bool_stop_acting})"

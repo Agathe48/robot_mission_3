@@ -50,5 +50,5 @@ ACT_WAIT = "wait"
 ### ORDERS ###
 ##############
 
-STOP_COVERING = "stop_covering"
-DROP_ONE_WASTE = "drop_one_waste"
+ORDER_STOP_COVERING = "stop_covering"
+ORDER_STOP_ACTING = "stop_acting"
