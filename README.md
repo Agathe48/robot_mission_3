@@ -380,23 +380,31 @@ The `find_best_rows_to_cover` method finds relevant rows for all agents to cover
 
 The `find_closest_waste_to_agent` method finds the closest waste to each agent among the known wastes positions in the chief's knowledge of the grid.
 
-The `send_target_orders` is used in XXXX (TODO Laure je ne comprends pas trop ce que tu voulais mettre ^^') and defines how the chief sends orders to its agents to go to a target position. It can send those orders if the agent can act and is not covering. If the chief is sending a target order to himself, he must not be covering, the grid or the rightmost column.
+The `send_target_orders` is used in `send_orders` and defines how the chief sends orders to its agents to go to a target position. It can send those orders if the agent can act and is not covering. If the chief is sending a target order to himself, he must not be covering, the grid or the rightmost column.
 
-The `send_orders_to_stop_acting` method TODO : Laure
+The `send_orders_stop_acting` method defines how and when the chief send to its agents (and himself) the order to stop acting. This order is sent to the agent if the agent is not static (i.e., the chief will send this order only once to each agent) and if it does not have picked up or transformed wastes. For the ending scenario where two agent have picked up the two last remaining wastes, the chief will order on of them to drop its waste and will attribute the dropped location as target position to the second one.
 
-TODO : remaining methods LAURE
+The `send_orders` regroup all send orders methods and is the one called in the `step` method.
+
+The `deliberate_cover_last_column` method determines all possible actions for the chief during its cleaning of the rightmost column (hence, only for green and yellow chiefs.) We move the chief to the upper or lower right corner of its area based on its initial vertical position. Then, we move it up or down according to its position to clean the column (picking up, transforming and dropping wastes).
+
+The`deliberate` method calls the previously defined method if the chief has not finished to clean the rightmost column and its mothers classes deliberate functions otherwise.
+
+The `get_green_yellow_red_left_column` and `get_green_yellow_red_right_column` are respectively defined to return the first (leftmost) and last (rightmost) column of each area. They are then called in the `update_left_right_column` method. In this method, the left and right columns of the chief's zone are updated in its knowledge.
+
+Finally, the `update` method is used to update the chief's knowledge during the initial phase : while the rightmost column is not cleaned.
 
 #### The ChiefGreenAgent
 
-TODO : Laure
+The `ChiefGreenAgent` inherit from our `Chief` and `GreenAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our green chief has, by default, to clean its rightmost column. We also set its `bool_previous_zone_cleaned` as true : the previous zone for green agents (i.e. None) is already cleaned.
 
 #### The ChiefYellowAgent
 
-TODO : Laure
+The `ChiefYellowAgent` inherit from our `Chief` and `YellowAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our yellow chief has, by default and as the green chief, to clean its rightmost column. 
 
 #### The ChiefRedAgent
 
-TODO : Laure
+The `ChiefRedAgent` inherit from our `Chief` and `RedAgent` classes. In its init method, we initiate its `bool_covering` attribute as true, as our red chief has no rightmost column to clean : it is in covering mode in the begining as all other red agents.
 
 ### Our Model
 
