@@ -299,7 +299,7 @@ class ChiefAgentKnowledge(AgentKnowledge):
         self.dict_agents_knowledge = {}
         self.bool_cleaned_right_column = False
         self.direction_clean_right_column = None # can take as values None when the agent has not started cleaning the right column, "up", "down"
-        self.rows_being_covered = [0] * grid_knowledge.shape[1] # 0 if the row is being covered or has been covered, 1 elsewhere
+        self.rows_being_covered = [0] * grid_knowledge.shape[1] # 1 if the row is being covered or has been covered, 0 elsewhere
         self.list_green_yellow_red_left_columns = [None, None, None]
         self.list_green_yellow_red_right_columns = [None, None, None]
         self.dict_target_position_agent = {}

@@ -9,19 +9,11 @@ The project has been realized by the group 3 composed of:
 
 This `README` is composed of four main parts, the [first one](#installation) describing the steps to follow to install and run our code. The [second one](#without-communication) describes our implementation choices for non-communicating agent, whereas the [third one](#with-communication-and-improved-movement) deals with our implementation choices with communication between agents. The [fourth part](#simulations-results-interpretation) presents the results obtained for both approaches.
 
-## PISTES D'AMELIORATION A REDIGER
-- envoi de la part du chef d'un ordre pour indiquer l'endroit où drop un waste (le plus proche de l'agent) en se servant de sa knowledge et des communications du chef supérieur qui lui indique quand un déchet n'est plus là. Mettre dans knowledge un attribut drop_target_position et renommer target_position en pick_up_target_position.
-- faire en sorte que les jaunes déposent leur déchet le plus proche possible de la waste disposal zone (pour éviter que les rouges aient des trop longs trajets à faire)
-- beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
-
-## PERSPECTIVES FUTURES A REDIGER
-- chef qui se casse => élection d'un nouveau chef (quand par exemple il ne répond plus aux messages envoyés par ses sous-fifres => message de confirmation à envoyer de la part du chef à chaque fois qu'il reçoit les percepts de ses sous-fifres)
+---
 
 ## Table of contents
 
 - [Robot Mission - Group 3](#robot-mission---group-3)
-  - [PISTES D'AMELIORATION A REDIGER](#pistes-damelioration-a-rediger)
-  - [PERSPECTIVES FUTURES A REDIGER](#perspectives-futures-a-rediger)
   - [Table of contents](#table-of-contents)
   - [Installation](#installation)
     - [Cloning the repository](#cloning-the-repository)
@@ -63,7 +55,11 @@ This `README` is composed of four main parts, the [first one](#installation) des
   - [Simulation's results interpretation](#simulations-results-interpretation)
     - [Without communication](#without-communication-1)
     - [With communication and improved movement](#with-communication-and-improved-movement-1)
+  - [Conclusion and future perspectives for this work](#conclusion-and-future-perspectives-for-this-work)
+    - [PISTES D'AMELIORATION A REDIGER](#pistes-damelioration-a-rediger)
+    - [PERSPECTIVES FUTURES A REDIGER](#perspectives-futures-a-rediger)
 
+---
 
 ## Installation
 
@@ -120,9 +116,11 @@ It can also be launched with the visualisation by running the following command:
 python server.py
 ```
 
+---
+
 ## Our Objects
 
-Our objects are agent types without any behaviour, and they are defined in `objects.py`.
+Our objects are agent types without any behavior, and they are defined in `objects.py`.
 
 ### The Radioactivity
 
@@ -140,8 +138,13 @@ The `Waste` object represents the waste. It has one attribute: `type_waste` whic
 
 The `WasteDisposalZone` object represents a cell in the last right column of the grid, chosen randomly from the cells in that column.
 
+---
 
 ## Without Communication
+
+The following UML class diagram is explaining the inheritance links between all different types of agents.
+
+![Class_diagram](images/Classes_SMA_V2.png)
 
 ### Our Agents
 
@@ -195,7 +198,7 @@ If the agent possesses two green wastes, the top priority action is to transform
 
 If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, ie the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes `up` and `down` from knowledge). 
 
-If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick up action. If it can't move or drop its waste, it will wait.
+If the agent is on a tile with a green waste and if it doesn't have two wastes or a transformed waste, it will ask to perform the pick up action. If it cannot move or drop its waste, it will wait.
 
 If the agent has less than two picked up wastes, no transformed waste and is on a cell containing a waste, then it will pick up the waste.
 
@@ -267,6 +270,8 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 - the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
 - the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
 
+---
+
 ## With Communication and improved movement
 
 We worked from the previous part to add communication between our agent and we improved their movement. In this new part, we will develop all implemented changes and enhancements.
@@ -285,7 +290,7 @@ We added several attributes to our inital `AgentKnowledge` class, including:
 - `target_position` : Represents the target position to reach, which can be None or a position tuple.
 - `bool_covering` : Boolean variable representing whether the agent is in covering mode or not, initialized at `True`.
 - `direction_covering` : Represents the direction to cover, initialized at `None` and can take values `right` or `left`.
-- `bool_stop_acting` : Boolean variable representing whether the agent is in waiting mode (the grid is cleaned) or not.
+- `bool_stop_acting` : Boolean variable representing whether the agent is in waiting mode (its zone is cleaned) or not.
 
 #### The Chief's knowledge
 
@@ -294,9 +299,9 @@ The `ChiefAgentKnowledge` class inherits from the `AgentKnowledge` class and inc
 - `dict_agents_knowledge` : A dictionary containing the agents' knowledge.
 - `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned. Indeed, the green and yellow chiefs will start cleaning the rightmost column of their zone, in order to allow easier drop of transformed waste on the border.
 - `direction_clean_right_column` : Represents the direction to clean, initialized at `None` and can take values `up` or `down`.
-- `rows_being_covered` : A list of size equal to the grid height, containing 0 if the row is being covered or has been covered, and 1 otherwise.
+- `rows_being_covered` : A list of size equal to the grid height, containing 1 if the row is being covered or has been covered, and 0 otherwise.
 - `list_green_yellow_red_left_columns` : A list of three values, initialized at `None`, representing the columns of the leftmost columns in the green, yellow, and red zones.
-- `list_green_yellow_red_right_columns` :  A list of three values, initialized at `None`, representing the columns of the rightmost columns in the green, yellow, and red zones.
+- `list_green_yellow_red_right_columns` :  A list of three values, initialized at `None`, representing the id of columns of the rightmost columns in the green, yellow, and red zones.
 - `dict_target_position_agent` : A dictionary containing the target positions given to each agent.
 - `bool_previous_zone_cleaned` : Boolean value representing whether the previous zone is totally cleaned or not (if the green area is cleaned for yellow agents or if the yellow are is cleaned for red agents).
 
@@ -311,6 +316,10 @@ Each agent will place himself to the target position indicated by the chief to p
 - after all rows have been covered, the agents will receive new orders from their chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, it goes right (and indicates the chief he canceled his target if he still had one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
 - at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it.
 
+The following UML class diagram is explaining the inheritance links between all different types of agents.
+
+![Class_diagram](images/Classes_SMA_V2.png)
+
 #### The CleaningAgent
 
 The `CleaningAgent` class inherits from the `CommunicatingAgent` class defined in `communication/agent/CommunicatingAgent.py` and is used to define common behaviors for the Green, Yellow and Red cleaning agents and their chiefs. These common behaviors are the methods `step`, `convert_pos_to_tile` (same as part 1), `treat_order`, `receive_orders`, `get_specificities_type_agent`, `can_drop_transformed_waste`, `can_drop_one_waste`, `can_transform`, `can_pick_up`, `can_go_up`, `can_go_down`, `can_go_right`, `can_go_left`, `deliberate_go_to_pick_close_waste`, `deliberate_go_to_target`, `deliberate_covering`, `deliberate_stop_acting`, `send_message_disable_target_position`, `update_knowledge_target_position`, `update_knowledge_with_action`, `update` and `send_percepts_and_data`.
@@ -319,23 +328,25 @@ In the `step` method, we implement the improved procedural loop of our agent. We
 
 The `treat_order` method defines the agent's action corresponding to received orders from its chief. The message reception of the agent is defined in the `receive_orders` method.
 
-The `get_specificities_type_agent` method is widely used in our code as it returns specific values depending on the agent's type (i.e., its color). It returns the maximum number of waste items that can be picked up (2 for green and yellow, 1 for red agents), the type of waste that can be picked up (1 for green, 2 for yellow, 3 for red agents), and the type of the right (2 for green, 3 for yellow and None for red agents) and left (None for green, 1 for yellow and 2 for red agents) zones for the agent.
+The `get_specificities_type_agent` method is often used in our code as it returns specific values depending on the agent's type (*i.e.*, its color). It returns the maximum number of waste items that can be picked up (2 for green and yellow, 1 for red agents), the type of waste that can be picked up (1 for green, 2 for yellow, 3 for red agents), and the type of the right (2 for green, 3 for yellow and None for red agents) and left (None for green, 1 for yellow and 2 for red agents) zones for the agent.
 
-The methods `can_drop_transformed_waste`, `can_drop_one_waste`, `can_transform`, `can_pick_up`, `can_go_up`, `can_go_down`, `can_go_right`, `can_go_left` each return a boolean value indicating whether the agent can perform the corresponding action. We verify all conditions in these functions and define them to simplify and clean our code.  We use them in various ♠`deliberate` functions in our program.
+The methods `can_drop_transformed_waste`, `can_drop_one_waste`, `can_transform`, `can_pick_up`, `can_go_up`, `can_go_down`, `can_go_right`, `can_go_left` each return a boolean value indicating whether the agent can perform the corresponding action. We verify all conditions in these functions and define them to simplify and clean our code. We use them in various `deliberate` functions in our program.
 
 The `deliberate_go_to_pick_close_waste` method defines the agent's behavior whether there are wastes in its surrounding cells. It then adds the action of going to these directions in the list of available actions if the agent can perform the action (by using the previously described methods).
 
 The `deliberate_go_to_target` method defines the agent's behavior when it has a target position to reach. We prioritize actions such as dropping (if in the rightmost column), picking up, or transforming waste. If the agent is not in covering mode, we allow it to pick up a nearby waste by using the previously defined deliberate method. To reach the target position, we first move the agent to the correct column and then to the correct row, ultimately reaching the desired position. We also handled a specific case: when the target position had a row ID but not a column ID. This occurs in the covering phase when the chief does not know the exact size of its area. In this case, the agent moves to the right until it detects the end of its zone, after which it moves to the correct row.
 
-The `deliberate_covering` method defines the agent's behavior during the covering phase. We prioritize actions such as dropping (if in the rightmost column), picking up, or transforming waste. Using the `direction_covering` attribute of the agent, the agent covers its row in the right direction. The function also defines a small avoidance strategy : if blocked by another agent, the agent will move randomly in its current row.
+The `deliberate_covering` method defines the agent's behavior during the covering phase. We prioritize actions such as dropping (if in the rightmost column), picking up, or transforming waste. Using the `direction_covering` attribute of the agent, the agent covers its row in the correct direction. The function also defines a small avoidance strategy : if blocked by another agent, the agent will move randomly in its current row.
 
-The `deliberate_stop_acting` method defines the agent's behavior before it stops moving. It needs to drop its last waste before stopping, it can't stop on a cell containing a waste and it can't stop in a cell on the rightmost or leftmost columns.
+The `deliberate_stop_acting` method defines the agent's behavior before it stops moving. It needs to drop its last waste before stopping, it cannot stop on a cell containing a waste and it cannot stop in a cell on the rightmost or leftmost columns.
 
 The `send_message_disable_target_position` methods is defined to allow the agent to notify its chief when it decides to not pursue its assigned target position. This can append in normal mode if the agent now has a transformed waste to drop, for instance.
 
 The `update_knowledge_target_position` method modifies the agent's knowledge: its target position is set back to None when reached and if the agent is in covering mode, directions to cover are set according to its current position.
 
-The `update_knowledge_with_action` method defines which attributes to update in the agent's knowledge depending on the action it has performed. The `update` method update the agent's knowledge based on the agent's percepts after performing its action. At the end of the step, the `send_percepts_and_data` method is used by the agent to send its latest percepts and knowledge to its chief
+The `update_knowledge_with_action` method defines which attributes to update in the agent's knowledge depending on the action it has performed. The `update` method updates the agent's knowledge based on the agent's percepts after performing its action.
+
+At the end of the step, the `send_percepts_and_data` method is used by the agent to send its latest percepts and knowledge to its chief.
 
 #### The GreenAgent and the YellowAgent
 
@@ -351,25 +362,25 @@ The `RedAgent` deliberate method is quite similar to the green's and yellow's on
 
 The `Chief` class inherits from the `CleaningAgent` class, and is used to define common behaviors for the `ChiefGreenAgent`, `ChiefYellowAgent` and `ChiefRedAgent`. These common behaviors are the methods `step`, `receive_messages`, `determine_covering`, `update_target_position_list_orders`, `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions`, `update_chief_information_knowledge`, `find_best_rows_to_cover`, `send_orders_covering`, `find_closest_waste_to_agent`, `send_target_orders`, `send_orders_stop_acting`, `send_orders`, `deliberate_cover_last_column`, `deliberate`, `get_green_yellow_red_left_column`, `get_green_yellow_red_right_column`, `update_left_right_column` and `update`.
 
-In the `step` method, we implement the procedural loop of our chief. We start by receiving orders from the other chiefs and agents with `receive_messages`. We then call the `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions` and `update_chief_information_knowledge` methods to update the chief knowledge and send informations. Then, `send_orders` and `reveive_orders` methods are called to send accurate orders to its agent and himself. Finally, the `deliberate` and `do` methods are called, followed by the `update` method.
+In the `step` method, we implement the procedural loop of our chief. We start by receiving messages from the other chiefs and its agents with `receive_messages`. We then call the `update_chief_with_agents_knowledge`, `send_information_according_to_previous_actions` and `update_chief_information_knowledge` methods to update the chief knowledge and send information to other chiefs. Then, `send_orders` and `receive_orders` methods are called to send accurate orders to its agents and himself, and to receive its own orders for the step. Finally, the `deliberate` and `do` methods are called, followed by the `update` method.
 
-The `receive_messages` method defines the messages recpetion of the chief. It receives messages from its agents and from others chiefs.
+The `receive_messages` method defines the messages reception of the chief. It receives messages from its agents and from the other chiefs.
 
-The `determine_covering` method determines if the chief needs to cover the grid. It is only used for green and yellow chiefs: if they are the only gree or yellow agent they'll need to cover, otherwise they'll clean the rightmost column of their area.
+The `determine_covering` method determines if the chief needs to cover the grid. It is only used for green and yellow chiefs: if they are the only green or yellow agent, they will need to cover their whole zone, otherwise they will only clean the rightmost column of their area.
 
-The `update_target_position_list_orders` method updates the chief knowledge of given target positions. It is updates if the target position has been reached or if it has been canceled by the agent.
+The `update_target_position_list_orders` method updates the chief knowledge of given target positions. It is updated if the target position has been reached or if it has been canceled by the agent.
 
-The `update_chief_knowledge_with_agents_knowledge` method defines how the chief centralized the knowledge by using the send percepts of its agents. The chief's knowledge of the grid and radioactivity it updated at every step with information given by its agents. The chief also stores the position, number of picked up wastes, the transformed waste and mode (through our various boolean values) of each of its agents.
+The `update_chief_knowledge_with_agents_knowledge` method defines how the chief centralized the knowledge by using the sent percepts of its agents. The chief's knowledge of the grid and radioactivity is updated at every step with information provided by its agents. The chief also stores the position, number of picked up wastes, the transformed waste and mode (through our various boolean values) of each of its agents.
 
-The `send_information_accordinf_to_previous_actions` method defines how the chief send relevant information to the superior chief (to the yellow chief for the green one and to the red one for the yellow chief). The chief informs the other chief when a transformed waste is dropped at the border and when its current zone is totally cleaned.
+The `send_information_according_to_previous_actions` method defines how the chief send relevant information to the superior chief (to the yellow chief for the green one and to the red one for the yellow chief). The chief informs the other chief when a transformed waste is dropped at the border and when its current zone is totally cleaned.
 
 The `update_chief_information_knowledge` method updates the chief knowledge with data received from the other chiefs : position of dropped waste at the border and the position of the border.
 
-The `find_best_rows_to_cover` method finds relevant rows for all agents to cover. First, the second and penulutimate rows are attribuated as we want to make sure to cover the corners of the grid. Then, the remaining rows are attribuated to the closests agents. Then, the `send_orders_covering` method defines the way the chief sends order to its agent during their covering modes. The chief will send them location of rows to cover using the previously defined method, if they are not currently covering a row or reaching a target position.
+The `find_best_rows_to_cover` method finds relevant rows for all agents to cover. First, the second and penultimate rows are attributed as we want to make sure to cover the corners of the grid (for instance, by covering the second row, the first and the third rows are also covered in the same time). Then, the remaining rows are attributed to the closest agents, making sure to optimize the number of rows covered (3 rows all at once, then 2 rows all at once in the grid height is not divisible by 3). Then, the `send_orders_covering` method defines the way the chief sends order to its agent during their covering modes. The chief will send them location of rows to cover using the previously defined method, if they are not currently covering a row or reaching a target position.
 
-The `find_closest_waste_to_agent` method find the closest waste to each agent among the know waste in the chief's knowledge of the grid.
+The `find_closest_waste_to_agent` method finds the closest waste to each agent among the known wastes positions in the chief's knowledge of the grid.
 
-The `send_target_orders` is used in XXXX and defines how the chief sends orders to its agents to go to a target poosition. It can send those orders if the agent can act, if the not_chief agent is not covering and, for orders to himself, if it has finished covering (red chief) or finished cleaning the rightmost column (green and yellow chiefs).
+The `send_target_orders` is used in XXXX (TODO Laure je ne comprends pas trop ce que tu voulais mettre ^^') and defines how the chief sends orders to its agents to go to a target position. It can send those orders if the agent can act and is not covering. If the chief is sending a target order to himself, he must not be covering, the grid or the rightmost column.
 
 The `send_orders_to_stop_acting` method TODO : Laure
 
@@ -404,6 +415,8 @@ We improved the class `CustomRandomScheduler` by adding the chiefs in the `step`
 We improved the visualization by adding *mesa* sliders to enable the user to configure the simulation directly on the interface. The user can choose the number of green, yellow and red agents, and also the waste density.
 
 We also added clearer images for each type of object. We distinguished chiefs from agent for each color with specific images, and we also chose an image for the wastes and the waste disposal zone. All of these images are located in the folder `resources/`.
+
+---
 
 ## Simulation's results interpretation
 
@@ -441,3 +454,19 @@ To analyse the performance of the model with communication, we launched 40 simul
 - Simulations 31 to 40 : 4 agents per zone
 
 Here is the table with all the results:
+
+TODO
+
+---
+
+## Conclusion and future perspectives for this work
+
+TODO
+
+### PISTES D'AMELIORATION A REDIGER
+- envoi de la part du chef d'un ordre pour indiquer l'endroit où drop un waste (le plus proche de l'agent) en se servant de sa knowledge et des communications du chef supérieur qui lui indique quand un déchet n'est plus là. Mettre dans knowledge un attribut drop_target_position et renommer target_position en pick_up_target_position.
+- faire en sorte que les jaunes déposent leur déchet le plus proche possible de la waste disposal zone (pour éviter que les rouges aient des trop longs trajets à faire)
+- beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
+
+### PERSPECTIVES FUTURES A REDIGER
+- chef qui se casse => élection d'un nouveau chef (quand par exemple il ne répond plus aux messages envoyés par ses sous-fifres => message de confirmation à envoyer de la part du chef à chaque fois qu'il reçoit les percepts de ses sous-fifres)
