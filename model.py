@@ -208,35 +208,45 @@ class RobotMission(Model):
         number_yellow_tiles = (yellow_zone[1] - yellow_zone[0]) * self.height
         number_red_tiles = (red_zone[1] - red_zone[0]) * self.height
 
-        wasted_correctly_placed = False
-        while not wasted_correctly_placed:
-            self.nb_wastes_green = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_green_tiles + 1),
-                min(self.nb_wastes_total, number_green_tiles))
-
-            # Check that we have an even number of green wastes
+        # Treat the edge case of waste density equal to 1
+        if self.waste_density == 1:
+            self.nb_wastes_green = number_green_tiles
             if self.nb_wastes_green % 2 != 0:
-                if self.nb_wastes_green == min(self.nb_wastes_total, number_yellow_tiles):
-                    self.nb_wastes_green -= 1
-                else:
-                    self.nb_wastes_green += 1
-            
-            self.nb_wastes_yellow = rd.randint(
-                max(0, self.nb_wastes_total - 2*number_red_tiles + 1), 
-                max(0, min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles)))
-
-            # Check that we have an even number of yellow and green pairs wastes
+                self.nb_wastes_green -= 1
+            self.nb_wastes_yellow = number_yellow_tiles
             if (self.nb_wastes_yellow + self.nb_wastes_green//2) % 2 != 0:
-                if self.nb_wastes_yellow == min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles):
-                    self.nb_wastes_yellow -= 1
-                else:
-                    self.nb_wastes_yellow += 1
-            
-            self.nb_wastes_red = max(0, self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow)
-            
-            # If there are not too many wastes in one single zone
-            if self.nb_wastes_red <= number_red_tiles - 1:
-                wasted_correctly_placed = True
+                self.nb_wastes_yellow -= 1
+            self.nb_wastes_red = number_red_tiles - 1
+        else:
+            wasted_correctly_placed = False
+            while not wasted_correctly_placed:
+                self.nb_wastes_green = rd.randint(
+                    max(0, self.nb_wastes_total - 2*number_green_tiles + 1),
+                    min(self.nb_wastes_total, number_green_tiles))
+
+                # Check that we have an even number of green wastes
+                if self.nb_wastes_green % 2 != 0:
+                    if self.nb_wastes_green == min(self.nb_wastes_total, number_yellow_tiles):
+                        self.nb_wastes_green -= 1
+                    else:
+                        self.nb_wastes_green += 1
+                
+                self.nb_wastes_yellow = rd.randint(
+                    max(0, self.nb_wastes_total - 2*number_red_tiles + 1), 
+                    max(0, min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles)))
+
+                # Check that we have an even number of yellow and green pairs wastes
+                if (self.nb_wastes_yellow + self.nb_wastes_green//2) % 2 != 0:
+                    if self.nb_wastes_yellow == min(self.nb_wastes_total - self.nb_wastes_green, number_yellow_tiles):
+                        self.nb_wastes_yellow -= 1
+                    else:
+                        self.nb_wastes_yellow += 1
+                
+                self.nb_wastes_red = max(0, self.nb_wastes_total - self.nb_wastes_green - self.nb_wastes_yellow)
+                
+                # If there are not too many wastes in one single zone
+                if self.nb_wastes_red <= number_red_tiles - 1:
+                    wasted_correctly_placed = True
 
         print("nb initial green waste : ", self.nb_wastes_green)
         print("nb initial yellow waste : ", self.nb_wastes_yellow)
