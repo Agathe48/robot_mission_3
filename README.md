@@ -56,8 +56,8 @@ This `README` is composed of four main parts, the [first one](#installation) des
     - [Without communication](#without-communication-1)
     - [With communication and improved movement](#with-communication-and-improved-movement-1)
   - [Conclusion and future perspectives for this work](#conclusion-and-future-perspectives-for-this-work)
-    - [PISTES D'AMELIORATION A REDIGER](#pistes-damelioration-a-rediger)
-    - [PERSPECTIVES FUTURES A REDIGER](#perspectives-futures-a-rediger)
+    - [Areas for improvement](#areas-for-improvement)
+    - [Perspectives](#perspectives)
 
 ---
 
@@ -471,13 +471,22 @@ TODO
 
 ## Conclusion and future perspectives for this work
 
-TODO
+TODO : (en se basant sur la partie des résultats de pt2 (je peux le faire en rentrant demain soir))
 
-### PISTES D'AMELIORATION A REDIGER
-- envoi de la part du chef d'un ordre pour indiquer l'endroit où drop un waste (le plus proche de l'agent) en se servant de sa knowledge et des communications du chef supérieur qui lui indique quand un déchet n'est plus là. Mettre dans knowledge un attribut drop_target_position et renommer target_position en pick_up_target_position.
-- faire en sorte que les jaunes déposent leur déchet le plus proche possible de la waste disposal zone (pour éviter que les rouges aient des trop longs trajets à faire)
-- beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
-- il existe toujours des cas bloquants dus aux déplacements trop stricts (surtout quand il y a beaucoup d'agents à la fin quand ils s'arrêtent ils peuvent bloquer)
+### Areas for improvement
 
-### PERSPECTIVES FUTURES A REDIGER
-- chef qui se casse => élection d'un nouveau chef (quand par exemple il ne répond plus aux messages envoyés par ses sous-fifres => message de confirmation à envoyer de la part du chef à chaque fois qu'il reçoit les percepts de ses sous-fifres)
+While we are satisifed with our implementation to solve the problem, we have identified a few possible improvements in our implementation.
+
+First of all, our chief currently sends picking up target position to our agents, but it could also send dropping cells positions to our agent. These cells would be calculated to be the closest to the agent. This could be done by using the chief's knowledge, which contains all waste position in its grid (thanks to the covering phase) and the current emptied cell in the rightmost column, obtained in messages from its superior chief. To do so, we would add the `drop_target_position` in the knowledge and rename our current `target_position` to `pick_up_target_position`.
+
+We could then enhance this behavior for our yellow agents : the dropping position could be determine to be as close as possible to the waste dispozal zone (while remaining in the rightmost column of course), which would give easier jobs to the red agents.
+
+- TODO (?): beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
+
+Our last area for improvement lies in addressing potential dead-end situations caused by our strict movements, particularly when many agents are involved. Implementing a more flexible movement strategy could help reduce the occurence of these issues, thereby ensuring smoother and more efficient solving of the initial problem.
+
+### Perspectives
+
+In our context of hierarchy (chiefs and their working agents) we can imagine one of our chief agents to become unresponsive, leading to the need for a new chief to be elected. A solution could involve implementing a confirmation message system: for instance, if the chief agent fails to respond to messages sent by its agents, a confirmation message could be required from the chief each time it receives the agent's percepts. This method ensures that the chief remains active, facilitating the smooth operation of our overall system.
+
+This particular case became possible when we consider the radioactivity impact on our agents. It can easily be imagined that the radioactivity,defined at every cell by our `Radioactivity` object with diversified levels, can affect and slowly deteriorate our agents. Consequently, xe will have to deal with cases of unresponsive agents, including our chiefs.
