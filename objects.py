@@ -13,7 +13,6 @@ Group 3:
 ###############
 
 from typing import Literal
-import random as rd
 
 ### Mesa imports ###
 from mesa import Agent

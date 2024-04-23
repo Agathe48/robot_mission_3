@@ -7,15 +7,20 @@ Group 3:
 - Agathe PLU
 - Agathe POULAIN
 """
+###############
+### Imports ###
+###############
+
+from colorama import Fore
 
 #############
-### PATHS ###
+### Paths ###
 #############
 
 PATH_RESOURCES = "resources/"
 
 #######################
-### PARAMETRIZATION ###
+### Parametrization ###
 #######################
 
 GRID_SIZE = (9, 18)
@@ -33,7 +38,7 @@ DICT_NUMBER_TYPE_CONTENT = {
 }
 
 ###############
-### ACTIONS ###
+### Actions ###
 ###############
 
 ACT_PICK_UP = "pick_up"
@@ -47,8 +52,30 @@ ACT_GO_DOWN = "go_down"
 ACT_WAIT = "wait"
 
 ##############
-### ORDERS ###
+### Orders ###
 ##############
 
 ORDER_STOP_COVERING = "stop_covering"
 ORDER_STOP_ACTING = "stop_acting"
+
+##############
+### Prints ###
+##############
+
+def print_green_agent(*args, **kwargs):
+    print("[" + Fore.GREEN + "Green" + Fore.RESET + "] ", *args, **kwargs)
+
+def print_yellow_agent(*args, **kwargs):
+    print("[" + Fore.YELLOW + "Yellow" + Fore.RESET + "] ", *args, **kwargs)
+
+def print_red_agent(*args, **kwargs):
+    print("[" + Fore.RED + "Red" + Fore.RESET + "] ", *args, **kwargs)
+
+def print_green_chief(*args, **kwargs):
+    print("[" + Fore.GREEN + "Green Chief" + Fore.RESET + "] ", *args, **kwargs)
+
+def print_yellow_chief(*args, **kwargs):
+    print("[" + Fore.YELLOW + "Yellow Chief" + Fore.RESET + "] ", *args, **kwargs)
+
+def print_red_chief(*args, **kwargs):
+    print("[" + Fore.RED + "Red Chief" + Fore.RESET + "] ", *args, **kwargs)
