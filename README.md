@@ -404,7 +404,9 @@ We improved a few things in the model class.
 
 First of all, we took into account the configurations where the grid width is not divisible by 3. In these cases, we attributed the one or two columns remaining to one or two zones randomly. For instance, for a grid width of 20, the green zone can have 7 columns, the yellow 6 and the red 7, at random.
 
-Moreover, we implemented the `MessageService` class to enable the communication between agents. We also added the number of send messages in the `DataCollector`, differenciating the chief-to-chief, agent-to-chief and chief-to-agent messages.
+Moreover, we implemented the `MessageService` class to enable the communication between agents. We also added the number of send messages in the `DataCollector`, differentiating the chief-to-chief, agent-to-chief and chief-to-agent messages.
+
+Finally, we added the termination condition with `self.running = False` all red agents have their `bool_stop_acting` set to True. It thus no longer the model which determines if the simulation is over by checking if there is no longer wastes, but the agents themselves which say they have finished their job. This is closer to a real case simulation.
 
 ### The scheduler
 

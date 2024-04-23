@@ -62,6 +62,9 @@ ORDER_STOP_ACTING = "stop_acting"
 ### Prints ###
 ##############
 
+# To display the prints or not
+DEBUG_MODE = True
+
 def print_green_agent(*args, **kwargs):
     print("[" + Fore.GREEN + "Green" + Fore.RESET + "] ", *args, **kwargs)
 

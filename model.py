@@ -15,7 +15,7 @@ Group 3:
 ### Python imports ###
 
 import random as rd
-rd.seed(1)
+rd.seed(6)
 
 ### Mesa imports ###
 
@@ -366,11 +366,12 @@ class RobotMission(Model):
         Returns
         -------
         bool: 
-            True if there are no more wastes left in the simulation, indicating the end of the simulation.
+            True if this is the end of the simulation.
         """
         self.__messages_service.dispatch_messages()
-        # if there is no waste left, the model stops
-        if any(type(agent) == Waste for agent in self.schedule.agents):
+        # If all red agents are in bool_stop_acting, stop the simulation
+        if any(type(agent) in [RedAgent, ChiefRedAgent] and not agent.knowledge.get_bool_stop_acting() for agent in self.schedule.agents):
+        # if any(type(agent) == Waste for agent in self.schedule.agents):
             self.schedule.step()
             self.datacollector.collect(self)
         else:

@@ -17,7 +17,7 @@ Group 3:
 import numpy as np
 from typing import Literal 
 import random as rd
-rd.seed(1)
+rd.seed(6)
 
 ### Local imports ###
 
@@ -33,6 +33,7 @@ from tools.tools_constants import (
     ACT_WAIT,
     ORDER_STOP_COVERING,
     ORDER_STOP_ACTING,
+    DEBUG_MODE,
     print_green_agent,
     print_yellow_agent,
     print_red_agent,
@@ -93,18 +94,19 @@ class CleaningAgent(CommunicatingAgent):
         self.percepts = {}
 
     def print_custom(self, *args, **kwargs):
-        if type(self) == GreenAgent:
-            print_green_agent(*args, **kwargs)
-        elif type(self) == YellowAgent:
-            print_yellow_agent(*args, **kwargs)
-        elif type(self) == RedAgent:
-            print_red_agent(*args, **kwargs)
-        elif type(self) == ChiefGreenAgent:
-            print_green_chief(*args, **kwargs)
-        elif type(self) == ChiefYellowAgent:
-            print_yellow_chief(*args, **kwargs)
-        elif type(self) == ChiefRedAgent:
-            print_red_chief(*args, **kwargs)
+        if DEBUG_MODE:
+            if type(self) == GreenAgent:
+                print_green_agent(*args, **kwargs)
+            elif type(self) == YellowAgent:
+                print_yellow_agent(*args, **kwargs)
+            elif type(self) == RedAgent:
+                print_red_agent(*args, **kwargs)
+            elif type(self) == ChiefGreenAgent:
+                print_green_chief(*args, **kwargs)
+            elif type(self) == ChiefYellowAgent:
+                print_yellow_chief(*args, **kwargs)
+            elif type(self) == ChiefRedAgent:
+                print_red_chief(*args, **kwargs)
 
     def step(self):
         """

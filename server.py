@@ -163,9 +163,9 @@ chart_element_messages = mesa.visualization.ChartModule(
 )
 
 model_params = {
-    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 2, 1, 6, 1),
-    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 2, 1, 6, 1) ,
-    "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 2, 1, 6, 1),
+    "nb_green_agents": mesa.visualization.Slider("Initial number of green agents", 3, 1, 6, 1),
+    "nb_yellow_agents": mesa.visualization.Slider("Initial number of yellow agents", 3, 1, 6, 1) ,
+    "nb_red_agents": mesa.visualization.Slider("Initial number of red agents", 3, 1, 6, 1),
     "waste_density": mesa.visualization.Slider("Initial waste density", WASTE_DENSITY, 0, 1, 0.1)
 }
 
