@@ -15,7 +15,6 @@ Group 3:
 ### Python imports ###
 
 import random as rd
-rd.seed(6)
 
 ### Mesa imports ###
 

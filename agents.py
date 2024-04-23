@@ -17,7 +17,6 @@ Group 3:
 import numpy as np
 from typing import Literal 
 import random as rd
-rd.seed(6)
 
 ### Local imports ###
 
@@ -96,17 +95,17 @@ class CleaningAgent(CommunicatingAgent):
     def print_custom(self, *args, **kwargs):
         if DEBUG_MODE:
             if type(self) == GreenAgent:
-                print_green_agent(*args, **kwargs)
+                print_green_agent(self.get_name(), *args, **kwargs)
             elif type(self) == YellowAgent:
-                print_yellow_agent(*args, **kwargs)
+                print_yellow_agent(self.get_name(), *args, **kwargs)
             elif type(self) == RedAgent:
-                print_red_agent(*args, **kwargs)
+                print_red_agent(self.get_name(), *args, **kwargs)
             elif type(self) == ChiefGreenAgent:
-                print_green_chief(*args, **kwargs)
+                print_green_chief(self.get_name(), *args, **kwargs)
             elif type(self) == ChiefYellowAgent:
-                print_yellow_chief(*args, **kwargs)
+                print_yellow_chief(self.get_name(), *args, **kwargs)
             elif type(self) == ChiefRedAgent:
-                print_red_chief(*args, **kwargs)
+                print_red_chief(self.get_name(), *args, **kwargs)
 
     def step(self):
         """
@@ -178,7 +177,7 @@ class CleaningAgent(CommunicatingAgent):
         elif type(content) == tuple:
             self.knowledge.set_target_position(target_position=content)
 
-        self.print_custom("Agent", self.unique_id, "received order :", content)
+        self.print_custom("I received the order:", content)
 
     def receive_orders(self):
         """
@@ -203,7 +202,7 @@ class CleaningAgent(CommunicatingAgent):
                 if target_position == message.get_content():
                     self.knowledge.set_target_position(target_position=None)
             if message.get_performative() == MessagePerformative.SEND_ORDER_STOP_ACTING:
-                self.print_custom("The agent received the order to stop acting.")
+                self.print_custom("I received the order to stop acting.")
                 self.knowledge.set_bool_stop_acting(bool_stop_acting=True)
 
     def get_specificities_type_agent(self):
@@ -535,6 +534,7 @@ class CleaningAgent(CommunicatingAgent):
 
         # To avoid the agents are blocking themselves
         for action in list_possible_act_directions:
+            rd.shuffle(list_possible_act_directions)
             list_possible_actions.append(action)
 
         return list_possible_actions
@@ -656,11 +656,12 @@ class CleaningAgent(CommunicatingAgent):
         None
         """
         former_target_position = self.knowledge.get_target_position()
-        self.knowledge.set_target_position(target_position = None)
-        agent_color = DICT_CLASS_COLOR[type(self)]
-        dict_chiefs = self.knowledge.get_dict_chiefs()
-        chief = dict_chiefs[agent_color]
-        self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
+        if former_target_position is not None:
+            self.knowledge.set_target_position(target_position = None)
+            agent_color = DICT_CLASS_COLOR[type(self)]
+            dict_chiefs = self.knowledge.get_dict_chiefs()
+            chief = dict_chiefs[agent_color]
+            self.send_message(Message(self.get_name(), chief.get_name(), MessagePerformative.DISABLE_TARGET, former_target_position))
 
     def update_knowledge_target_position(self):
         """
@@ -811,7 +812,7 @@ class CleaningAgent(CommunicatingAgent):
         # Update the knowledge of the agent with the consequences of the action
         self.update_knowledge_with_action(self.percepts["action_done"])
 
-        # self.print_custom("Knowledge after of Agent", self.unique_id, np.flip(grid_knowledge.T,0))
+        # self.print_custom("My grid knowledge is", np.flip(grid_knowledge.T,0))
     
     def send_percepts_and_data(self):
         """
@@ -916,19 +917,18 @@ class GreenAgent(CleaningAgent):
 
         # If the agent is in covering mode
         if bool_covering:
-            self.print_custom("The agent is in covering mode")
+            self.print_custom("I am in covering mode.")
             list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
         else:
-            self.print_custom("The agent is in normal mode with bool stop acting", bool_stop_acting)
+            self.print_custom(f"I am in normal mode with bool stop acting {bool_stop_acting} and my target position is {target_position}.")
 
             # If the agent has received the order to stop acting
             if bool_stop_acting:
                 list_possible_actions = self.deliberate_stop_acting()
 
             else:
-                self.print_custom("My target position is", target_position)
                 # If the agent has a target position to reach
                 if target_position is not None:
                     list_possible_actions = self.deliberate_go_to_target()
@@ -994,7 +994,7 @@ class GreenAgent(CleaningAgent):
                             list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        self.print_custom("Green agent", self.unique_id, "has the possible actions :", list_possible_actions)
+        self.print_custom("I have the possible actions:", list_possible_actions)
         return list_possible_actions
    
 class YellowAgent(CleaningAgent):
@@ -1046,19 +1046,18 @@ class YellowAgent(CleaningAgent):
 
         # If the agent is in covering mode
         if bool_covering:
-            self.print_custom("The agent is in covering mode")
+            self.print_custom("I am in covering mode.")
             list_possible_actions = super().deliberate_covering()
 
         # If the agent is in normal mode
         else:
-            self.print_custom("The agent is in normal mode with bool stop acting", bool_stop_acting)
+            self.print_custom(f"I am in normal mode with bool stop acting {bool_stop_acting} and my target position is {target_position}.")
 
             # If the agent has received the order to stop acting
             if bool_stop_acting:
                 list_possible_actions = self.deliberate_stop_acting()
 
             else:
-                self.print_custom("My target position is", target_position)
 
                 # If the agent has a target position to reach
                 if target_position is not None:
@@ -1130,7 +1129,7 @@ class YellowAgent(CleaningAgent):
                             list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        self.print_custom("Yellow agent", self.unique_id, "has the possible actions :", list_possible_actions)
+        self.print_custom("I have the possible actions:", list_possible_actions)
         return list_possible_actions
 
 class RedAgent(CleaningAgent):
@@ -1252,7 +1251,7 @@ class RedAgent(CleaningAgent):
                             list_possible_actions.append(action)
 
         list_possible_actions.append(ACT_WAIT)
-        self.print_custom("Red agent", self.unique_id, "has the possible actions :", list_possible_actions)
+        self.print_custom("I have the possible actions:", list_possible_actions)
         return list_possible_actions
 
 class Chief(CleaningAgent):
@@ -1362,9 +1361,9 @@ class Chief(CleaningAgent):
             elif message.get_performative() == MessagePerformative.SEND_INFORMATION_CHIEF_PREVIOUS_ZONE_CLEANED:
                 self.knowledge.set_bool_previous_zone_cleaned(True)
 
-        # self.print_custom("Chief", self.unique_id, "received messages as perceived and data :", self.list_received_percepts_and_data)
-        self.print_custom("Chief", self.unique_id, "received messages as information from other chief :", self.list_information_chief)
-        self.print_custom("Chief", self.unique_id, "received messages as target positions to delete :", self.list_former_targets)
+        self.print_custom("I received messages as perceived and data:", self.list_received_percepts_and_data)
+        self.print_custom("I received messages as information from other chief:", self.list_information_chief)
+        self.print_custom("I received messages as target positions to delete:", self.list_former_targets)
 
         # Determine if the chief has to cover if he is alone
         if self.bool_first_messages_received_from_agents:
@@ -1664,7 +1663,7 @@ class Chief(CleaningAgent):
                     # Send the order to stop covering when there is nothing more to cover
                     else:
                         self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, ORDER_STOP_COVERING))
-                        self.print_custom("Chief is sending the order to stop covering to agent", agent_name)
+                        self.print_custom(f"I am sending the order to stop covering to agent {agent_name}.")
                         
         # Update the knowledge of the chief with the rows being covered
         self.knowledge.set_rows_being_covered(rows_being_covered=rows_being_covered)
@@ -1763,7 +1762,7 @@ class Chief(CleaningAgent):
                         if closest_waste_position is not None:
                             # Send the order to go to this closest waste
                             self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDERS, closest_waste_position))
-                            self.print_custom("Chief is sending the order to", agent_name, "to go clean the waste at", closest_waste_position)
+                            self.print_custom(f"I am sending the order to {agent_name} to go clean the waste at {closest_waste_position}.")
 
     def send_orders_stop_acting(self):
         """
@@ -1811,7 +1810,7 @@ class Chief(CleaningAgent):
                             self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
                             dict_knowledge_agents[agent_name]["bool_stop_acting"] = True
                             self.knowledge.set_dict_agents_knowledge(dict_knowledge_agents)
-                            self.print_custom("The chief is sending the order to stop acting to", agent_name)
+                            self.print_custom("I am sending the order to stop acting to", agent_name)
                             
                 if type(self) == ChiefRedAgent:
                     if not bool_covering and nb_wastes == 0:
@@ -1819,7 +1818,7 @@ class Chief(CleaningAgent):
 
                         dict_knowledge_agents[agent_name]["bool_stop_acting"] = True
                         self.knowledge.set_dict_agents_knowledge(dict_knowledge_agents)
-                        self.print_custom("The chief is sending the order to stop acting to", agent_name)
+                        self.print_custom("I am sending the order to stop acting to", agent_name)
 
         # Ask only one agent on two to stop acting (to avoid the dead-end case)
         counter = 0
@@ -1829,7 +1828,7 @@ class Chief(CleaningAgent):
                 self.send_message(Message(self.get_name(), agent_name, MessagePerformative.SEND_ORDER_STOP_ACTING, ORDER_STOP_ACTING))
                 dict_knowledge_agents[agent_name]["bool_stop_acting"] = True
                 self.knowledge.set_dict_agents_knowledge(dict_knowledge_agents)
-                self.print_custom("The chief is sending the order to stop acting to", agent_name)
+                self.print_custom("I am sending the order to stop acting to", agent_name)
             counter += 1
 
     def send_orders(self):
@@ -1853,7 +1852,6 @@ class Chief(CleaningAgent):
             self.send_orders_covering()
 
         # If the grid no longer contains its type of waste and the previous zone is cleaned, ask the agents to stop acting
-        self.print_custom("Will I send stop acting orders ? ", np.any(grid_knowledge == type_waste), bool_previous_zone_cleaned)
         if not np.any(grid_knowledge == type_waste) and bool_previous_zone_cleaned:
             self.send_orders_stop_acting()
         else:
@@ -1945,7 +1943,7 @@ class Chief(CleaningAgent):
         bool_cleaned_right_column = self.knowledge.get_bool_cleaned_right_column()
 
         if not bool_cleaned_right_column:
-            self.print_custom("The chief has not finished to clean last column")
+            self.print_custom("I have not finished to clean last column.")
             list_possible_actions = self.deliberate_cover_last_column()
         else:
             list_possible_actions = super().deliberate()

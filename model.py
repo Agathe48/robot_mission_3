@@ -15,7 +15,6 @@ Group 3:
 ### Python imports ###
 
 import random as rd
-rd.seed(6)
 
 ### Mesa imports ###
 
@@ -425,7 +424,7 @@ class RobotMission(Model):
 
         transformed_waste = agent.knowledge.get_transformed_waste()
         picked_up_wastes = agent.knowledge.get_picked_up_wastes()
-        print("Agent", agent.unique_id, "is in position", agent_position, ", has the transformed waste", transformed_waste, "and has the picked up wastes", picked_up_wastes)
+        agent.print_custom(f"I am in position {agent_position}, I have the transformed waste {transformed_waste} and have the picked up wastes {picked_up_wastes}.")
 
         for action in list_possible_actions:
             if action == ACT_PICK_UP:
@@ -442,7 +441,7 @@ class RobotMission(Model):
                     counter += 1
 
                 if has_performed_action:
-                    print("Agent", agent.unique_id, "picked up the waste", obj)
+                    agent.print_custom("I picked up the waste", obj)
                     action_done["object"] = obj
                     break
 
@@ -452,7 +451,7 @@ class RobotMission(Model):
                     if color != "red":
                         # Get the transformed waste object and place it on the grid
                         self.grid.place_agent(transformed_waste, agent_position)
-                        print("Agent", agent.unique_id, "dropped a waste")
+                        agent.print_custom("I dropped a waste.")
                     break
 
             elif action == ACT_DROP_ONE_WASTE:
@@ -461,10 +460,10 @@ class RobotMission(Model):
                     if color!= "red":
                         # Get the picked up waste and place it on the grid 
                         self.grid.place_agent(picked_up_wastes[0], agent_position)
-                        print(f"Agent {agent.unique_id} dropped a {color} waste")
+                        agent.print_custom(f"I dropped a {color} waste.")
                     else:
                         self.schedule.remove(picked_up_wastes[0])
-                        print("Red agent", agent.unique_id, "destroyed a waste")
+                        agent.print_custom("I destroyed a waste in the waste disposal zone.")
                     break
 
 
@@ -483,7 +482,7 @@ class RobotMission(Model):
                 for waste in picked_up_wastes:
                     self.schedule.remove(waste)
 
-                print("Agent", agent.unique_id, "transformed a waste")
+                agent.print_custom("I transformed a waste.")
                 break
 
             elif action == ACT_GO_LEFT:
@@ -492,7 +491,7 @@ class RobotMission(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
-                    print("Agent", agent.unique_id, "went left")
+                    agent.print_custom("I went left.")
                     break
 
             elif action == ACT_GO_RIGHT:
@@ -501,7 +500,7 @@ class RobotMission(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
-                    print("Agent", agent.unique_id, "went right")
+                    agent.print_custom("I went right.")
                     break
 
             elif action == ACT_GO_UP:
@@ -510,7 +509,7 @@ class RobotMission(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
-                    print("Agent", agent.unique_id, "went up")
+                    agent.print_custom("I went up.")
                     break
             
             elif action == ACT_GO_DOWN:
@@ -519,11 +518,11 @@ class RobotMission(Model):
                 next_cell_contents = self.grid.get_cell_list_contents((next_x, next_y))
                 if not any(isinstance(obj, CleaningAgent) for obj in next_cell_contents):
                     self.grid.move_agent(agent, (next_x, next_y))
-                    print("Agent", agent.unique_id, "went down")
+                    agent.print_custom("I went down.")
                     break
 
             elif action == ACT_WAIT:
-                print("Agent", agent.unique_id, "waited")
+                agent.print_custom("I waited.")
                 break
 
         action_done["action"] = action

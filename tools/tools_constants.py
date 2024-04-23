@@ -65,20 +65,20 @@ ORDER_STOP_ACTING = "stop_acting"
 # To display the prints or not
 DEBUG_MODE = True
 
-def print_green_agent(*args, **kwargs):
-    print("[" + Fore.GREEN + "Green" + Fore.RESET + "] ", *args, **kwargs)
+def print_green_agent(agent_id, *args, **kwargs):
+    print("[" + Fore.GREEN + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)
 
-def print_yellow_agent(*args, **kwargs):
-    print("[" + Fore.YELLOW + "Yellow" + Fore.RESET + "] ", *args, **kwargs)
+def print_yellow_agent(agent_id, *args, **kwargs):
+    print("[" + Fore.YELLOW + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)
 
-def print_red_agent(*args, **kwargs):
-    print("[" + Fore.RED + "Red" + Fore.RESET + "] ", *args, **kwargs)
+def print_red_agent(agent_id, *args, **kwargs):
+    print("[" + Fore.RED + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)
 
-def print_green_chief(*args, **kwargs):
-    print("[" + Fore.GREEN + "Green Chief" + Fore.RESET + "] ", *args, **kwargs)
+def print_green_chief(agent_id, *args, **kwargs):
+    print("[" + Fore.GREEN + "Chief " + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)
 
-def print_yellow_chief(*args, **kwargs):
-    print("[" + Fore.YELLOW + "Yellow Chief" + Fore.RESET + "] ", *args, **kwargs)
+def print_yellow_chief(agent_id, *args, **kwargs):
+    print("[" + Fore.YELLOW + "Chief " + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)
 
-def print_red_chief(*args, **kwargs):
-    print("[" + Fore.RED + "Red Chief" + Fore.RESET + "] ", *args, **kwargs)
+def print_red_chief(agent_id, *args, **kwargs):
+    print("[" + Fore.RED + "Chief " + str(agent_id) + Fore.RESET + "] ", *args, **kwargs)

@@ -469,6 +469,7 @@ TODO
 - envoi de la part du chef d'un ordre pour indiquer l'endroit où drop un waste (le plus proche de l'agent) en se servant de sa knowledge et des communications du chef supérieur qui lui indique quand un déchet n'est plus là. Mettre dans knowledge un attribut drop_target_position et renommer target_position en pick_up_target_position.
 - faire en sorte que les jaunes déposent leur déchet le plus proche possible de la waste disposal zone (pour éviter que les rouges aient des trop longs trajets à faire)
 - beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
+- il existe toujours des cas bloquants dus aux déplacements trop stricts (surtout quand il y a beaucoup d'agents à la fin quand ils s'arrêtent ils peuvent bloquer)
 
 ### PERSPECTIVES FUTURES A REDIGER
 - chef qui se casse => élection d'un nouveau chef (quand par exemple il ne répond plus aux messages envoyés par ses sous-fifres => message de confirmation à envoyer de la part du chef à chaque fois qu'il reçoit les percepts de ses sous-fifres)
