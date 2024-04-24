@@ -142,13 +142,15 @@ The `WasteDisposalZone` object represents a cell in the last right column of the
 
 ## Without Communication
 
-The following UML class diagram is explaining the inheritance links between all different types of agents.
-
-![Class_diagram](images/Classes_SMA_V2.png)
+To tackle this map cleaning problem, we decided to use three types of agents, one for each zone (green, yellow and red). In a first approach, we provided our agents a random movement while searching the wastes to pick up and they had no possibility of communication between each other. The only intelligence we added to them in this first approach was when going to drop their waste, either on the border or the waste disposal zone; they are going right, and then up or down until reaching the correct place to drop their waste.
 
 ### Our Agents
 
 The implementation of our different cleaning agents is in the `agents.py` file.
+
+The following UML class diagram is explaining the inheritance links between all different types of agents we will present later.
+
+![Class_diagram](images/Classes_SMA_V1.png)
 
 #### The agent's knowledge
 
@@ -430,7 +432,7 @@ We also added clearer images for each type of object. We distinguished chiefs fr
 
 ## Simulation's results interpretation
 
-To compare both approaches presented above, mostly to analyse the improvements made in the second method, we decided to run many simulations for both cases and compare the terminating rate of simulations (for non communication approaches, the simulation may not terminate), and the average number of steps needed to clean the entire map. For each test, we use (9, 18) as grid size and 0.3 for the waste density.
+To compare both approaches presented above, mostly to analyse the improvements made in the second method, we decided to run many simulations for both cases and compare the terminating rate of simulations (for non-communicating approaches, the simulation may not terminate), and the average number of steps needed to clean the entire map. For each test, we use (9, 18) as grid size and 0.3 for the waste density.
 
 Only the number of agents per zone evolves across simulations, and for each case we have launched 10 simulations to be able to compute a correct average. Without communication, we launched simulations for 1 agent per zone, 2 and 3 agents per zone. With communication, we launched for 1, 2, 3 and 4 agents per zone. Doing it for 4 agents per zone without communication was useless as the simulation is almost never terminating in this case.
 
@@ -453,7 +455,7 @@ When there are three agents per zone (purple cells on the previous picture), the
 
 According to these results, we can conclude that, on one hand, the higher the number of agents per zone, the fewer steps needed to clean the map. On the other hand, the higher the number of agents per zone, the higher the number of simulations that could not be terminated because of a conflict between two agents at the end of their zone cleaning. Therefore, we want to add communication between the agents to optimize the cleaning of the map and avoid non-terminated simulations.
 
-You can see in appendix in `results/graphics_without_communication` the graphs obtained at the end of each of the simulations previously studied and indicating the number of waste remaining per zone at the end of the simulation. 
+You can see in appendix in `results/graphics_without_communication` the graphs obtained at the end of each of the simulations previously studied and indicating the number of wastes remaining per zone at the end of the simulation. 
 
 ### With communication and improved movement
 
@@ -465,28 +467,38 @@ To analyse the performance of the model with communication, we launched 40 simul
 
 Here is the table with all the results:
 
-TODO
+![results_with_communication](results/results_with_communication.PNG)
+
+For each type of simulation we computed the mean of needed steps to complete the simulation and the average number of messages exchanged. Here is a table summarizing these results, in comparison to our first simulations without communication.
+
+![comparison_without_with_communication](results/results_mean_comparison.PNG)
+
+We thus remark that we divided in average by 3.5 the number of steps needed to clean the map for a given number of agents. The orders sent by the chiefs combined with the covering of the map at the beginning to locate all wastes was an efficient strategy. Furthermore, our communicating strategy permits to solve the problem of termination with simulations where two agents of the same zone were picking the two last wastes. Indeed, all the forty simulations we launched for these results worked until the end.
+
+Moreover, with this new approach, we noticed the number of steps needed to clean the map depends a lot of the wastes distribution at the beginning, sometimes leading to 100 steps of difference: as a matter of fact, when there are more green wastes than others, the map is cleaned faster, which is logical as four green wastes give one red waste. The red agents, which are clearly the limiting factor of the simulation, thus need to perform less round trips to go pick up the wastes.
+
+Nevertheless, this approach with communication uses lots of exchanged messages to work correctly. For simulation with one agent, roughly 200 messages are needed in average, mostly messages from chief to agent (*i.e.* from the chief to himself when setting its target position). The distribution of messages for each simulation can be found in the graphs in `results/graphics_with_communication`, by differentiating messages between chiefs, from chief to agent and from agent to chief. For simulations with more than one agent per zone, the number of messages is highly increasing due to exchanges from the agent to its chief, because the agents send at each step their percept to the chief.
 
 ---
 
 ## Conclusion and future perspectives for this work
 
-TODO : (en se basant sur la partie des résultats de pt2 (je peux le faire en rentrant demain soir))
+TODO : (en se basant sur la partie des résultats de pt2 (je peux le faire en rentrant demain soir: merci <3))
 
 ### Areas for improvement
 
-While we are satisifed with our implementation to solve the problem, we have identified a few possible improvements in our implementation.
+While we are satisfied with our implementation to solve the problem, we have identified a few possible improvements in our implementation.
 
-First of all, our chief currently sends picking up target position to our agents, but it could also send dropping cells positions to our agent. These cells would be calculated to be the closest to the agent. This could be done by using the chief's knowledge, which contains all waste position in its grid (thanks to the covering phase) and the current emptied cell in the rightmost column, obtained in messages from its superior chief. To do so, we would add the `drop_target_position` in the knowledge and rename our current `target_position` to `pick_up_target_position`.
+First of all, our chief currently sends picking up target position to our agents, but it could also send dropping cells positions to our agent. These cells would be calculated to be the closest to the agent. This could be done by using the chief's knowledge, which contains all wastes positions in its grid (thanks to the covering phase and the exchanges with the other chiefs) and the current emptied cell in the rightmost column, obtained in messages from its superior chief. To do so, we would add the `drop_target_position` in the knowledge and rename our current `target_position` to `pick_up_target_position`.
 
-We could then enhance this behavior for our yellow agents : the dropping position could be determine to be as close as possible to the waste dispozal zone (while remaining in the rightmost column of course), which would give easier jobs to the red agents.
+We could then further enhance this behavior for our yellow agents: the dropping position could be determine to be as close as possible to the waste disposal zone (while remaining in the rightmost column of course), which would give easier jobs to the red agents.
 
-- TODO (?): beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop.
+- TODO (?): beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop. ON POURRAIT DIRE QUE LE CHEF NE S'ENVOIE PAS D'ORDRE A LUI-MÊME, IL SET LUI MEME SA TARGET POSITION. ça réduirait beaucoup pour les simulations avec un seul agent par zone, ne laissant que les messages entre chefs de couleur différente, et ça réduirait aussi pour les autres simulations.
 
-Our last area for improvement lies in addressing potential dead-end situations caused by our strict movements, particularly when many agents are involved. Implementing a more flexible movement strategy could help reduce the occurence of these issues, thereby ensuring smoother and more efficient solving of the initial problem.
+Our last area for improvement lies in addressing potential dead-end situations caused by our strict movements, particularly when many agents are involved; the agents could block each other in some very specific and rare cases. Implementing a more flexible movement strategy when reaching a target position could help reduce the occurrence of these issues, thereby ensuring smoother and more efficient solving of the initial problem.
 
 ### Perspectives
 
-In our context of hierarchy (chiefs and their working agents) we can imagine one of our chief agents to become unresponsive, leading to the need for a new chief to be elected. A solution could involve implementing a confirmation message system: for instance, if the chief agent fails to respond to messages sent by its agents, a confirmation message could be required from the chief each time it receives the agent's percepts. This method ensures that the chief remains active, facilitating the smooth operation of our overall system.
+With the aim of creating the most realistic simulation possible, we can imagine our agents to become unresponsive when considering the radioactivity impact on them. It can easily be imagined that the radioactivity, defined at every cell by our `Radioactivity` object with diversified levels, can affect and slowly deteriorate our agents. Consequently, we will have to deal with cases of unresponsive agents, including our chiefs. This will lead to the need for a new chief to be elected. A solution could involve implementing a confirmation message system: for instance, a confirmation message could be required from the chief each time it receives the agent's percepts. If the chief agent fails to respond to messages sent by its agents, they will know that a new chief needs to be elected. This method ensures that the chief remains active, facilitating the smooth operation of our overall system. Nevertheless, this approach will require even more messages to be sent.
 
-This particular case became possible when we consider the radioactivity impact on our agents. It can easily be imagined that the radioactivity,defined at every cell by our `Radioactivity` object with diversified levels, can affect and slowly deteriorate our agents. Consequently, xe will have to deal with cases of unresponsive agents, including our chiefs.
+Furthermore, with a view to produce a realistic simulation, some messages could be lost in the process, given a very small probability, may it be in sending and in reception. If this is not particularly impacting for the messages exchanged between chiefs and agents as they communicate very often together, it could be more problematic for messages exchanged between chiefs. These messages are indeed for now not sent several times and if the message indicating the current zone is entirely cleaned, this could be lead to a non-terminating simulation; adding confirmation messages for these crucial information can be a solution to tackle this problem.
