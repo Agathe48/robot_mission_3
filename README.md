@@ -20,6 +20,7 @@ This `README` is composed of four main parts, the [first one](#installation) des
     - [Creation of a virtual environment](#creation-of-a-virtual-environment)
     - [Installation of the necessary librairies](#installation-of-the-necessary-librairies)
     - [Launch the code](#launch-the-code)
+  - [Project presentation](#project-presentation)
   - [Our Objects](#our-objects)
     - [The Radioactivity](#the-radioactivity)
     - [The Waste](#the-waste)
@@ -119,6 +120,16 @@ python server.py
 
 ---
 
+## Project presentation
+
+This project involves modeling the mission of robots tasked with collecting dangerous waste, transforming it, and transporting it to a secure area. The robots operate in an environment divided into zones with varying levels of radioactivity, from low to high. Not all robots have access to all areas of the environment. The environment consists of three zones, progressing from west to east: zone 1 (z1), an area with low radioactivity containing a random number of initial green waste; zone 2 (z2), an area with medium radioactivity; and zone 3 (z3), the last area with high radioactivity where completely transformed waste must be stored. There are three types of waste: green waste, yellow waste, and red waste. Additionally, there are three types of robots: Green Robots, Yellow Robots, and Red Robots, each with specific capabilities and restrictions based on their color and zone permissions.
+
+The Green Robots collect two initial green wastes, which they can then transform into one yellow waste. They transport the transformed waste to the rightmost side of zone z1, and they are restricted from moving beyond z1.
+
+The Yellow Robots collect two initial yellow wastes, which they can then transform into one red waste. They transport the transformed waste to the rightmost side of zone z2, and they are restricted from moving beyond z2 but are allowed to move to z1.
+
+The Red Robots collect only one red waste and immediatly transport it to the waste dispozal zone to put it away. They are allowed to move through all three zones.
+
 ## Our Objects
 
 Our objects are agent types without any behavior, and they are defined in `objects.py`.
@@ -159,7 +170,7 @@ The `AgentKnowledge` class represents the knowledge and state of an agent in the
 
 - `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone. It is a numpy array with the same dimensions as the grid.
 - `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the different zones. It is a numpy array with the same dimensions as the grid.
-- `picked_up_wastes`: Represents a list of the Waste agents that our Cleaning agent has picked up.
+- `picked_up_wastes`: Represents a list of the Waste agents that our cleaning agent has picked up.
 - `transformed_waste`: Represents whether the agent has transformed the wastes or not. Its values are `None` or the new transformed waste object.
 - `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move in the corresponding directions. It depends on the presence of an other agent in the agent's surrounding cells and on the borders of the grid.
 
@@ -290,15 +301,13 @@ Each agent will place himself to the target position indicated by the chief to p
 - after all rows have been covered, the agents will receive new orders from their chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, it goes right (and indicates the chief he canceled his target if he still had one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
 - at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it up.
 
-To perform this strategy, we implemented different messages, from agent to chief, chief to agent and chief to chief (from the green to the yellow chief, and the yellow chief to the red chief). All of theses types of messages are listed in the enumeration defined in the file `communication/message/MessagePerformative.py`.
+To perform this strategy, we implemented different messages, from agent-to-chief, chief-to-agent and chief-to-chief (from the green to the yellow chief, and the yellow chief to the red chief). All of theses types of messages are listed in the enumeration defined in the file `communication/message/MessagePerformative.py`.
 
 More generally, the agents will send their respective chief their perception after each action, allowing the chief to have a global view of the waste positions in the zone.
 
 The chief will issue covering orders to indicate which row the agent should cover and whether it should stop covering once the entire zone has been covered. Following the covering phase, the chief will send target positions for each agent to reach, corresponding to the closest waste to each agent. Additionally, the chief will issue orders to cease action when there are no more wastes to pick up. Moreover, it is with this order that the agent will drop its waste if it has one, thus addressing the dead-end issue we encountered in the first part, where the last wastes were separated among several agents.
 
 Finally, the chief will relay information to its superior chief, indicating when a waste has been dropped at a certain position and informing when its zone is fully cleaned.
-
-TODO Laure est-ce que tu peux relire ? Je ne pense pas que ce soit nécessaire de détailler chaque ordre, en soit il y a des commentaires dans le code
 
 ### The knowledge
 
@@ -496,7 +505,7 @@ Nevertheless, this approach with communication uses a lot of exchanged messages 
 
 ## Conclusion and future perspectives for this work
 
-TODO : (en se basant sur la partie des résultats de pt2 (je peux le faire en rentrant demain soir: merci <3))
+In conclusion, the combination of orders sent by chiefs and the initial covering of the map to locate all wastes proved to be an effective strategy. This approach significantly reduced the number of steps required to clean the map and resolved previously encountered dead-end situations. However, these improvements come at the cost of a communication-intensive approach where a significant number of messages is required per simulation.
 
 ### Areas for improvement
 
@@ -506,7 +515,7 @@ First of all, our chief currently sends picking up target position to our agents
 
 We could then further enhance this behavior for our yellow agents: the dropping position could be determine to be as close as possible to the waste disposal zone (while remaining in the rightmost column of course), which would give easier jobs to the red agents.
 
-- TODO (?): beaucoup de messages envoyés, surtout de chef à agent mais ça c'est parce qu'il y a bcp d'ordres. On aurait pu demander aux agents d'arrêter d'envoyer leur percept et data au chef s'ils sont en mode stop. ON POURRAIT DIRE QUE LE CHEF NE S'ENVOIE PAS D'ORDRE A LUI-MÊME, IL SET LUI MEME SA TARGET POSITION. ça réduirait beaucoup pour les simulations avec un seul agent par zone, ne laissant que les messages entre chefs de couleur différente, et ça réduirait aussi pour les autres simulations.
+To reduce the significant number of messages per simulation we could alter how the chiefs receive their targets positions. Currently, they send orders to themselves with the new target position. However, they could directly fix this new target in their knowledge, hence reducing the number of send messages. This modification would greatly decrease the number of send message in simulation with only one agent, leaving only chief-to-chief messages.
 
 Our last area for improvement lies in addressing potential dead-end situations caused by our strict movements, particularly when many agents are involved; the agents could block each other in some very specific and rare cases. Implementing a more flexible movement strategy when reaching a target position could help reduce the occurrence of these issues, thereby ensuring smoother and more efficient solving of the initial problem.
 
