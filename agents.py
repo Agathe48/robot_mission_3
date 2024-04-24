@@ -49,9 +49,15 @@ from objects import (
     WasteDisposalZone,
     Radioactivity
 )
-from communication.agent.CommunicatingAgent import CommunicatingAgent
-from communication.message.Message import Message
-from communication.message.MessagePerformative import MessagePerformative
+from communication.agent.CommunicatingAgent import (
+    CommunicatingAgent
+)
+from communication.message.Message import (
+    Message
+)
+from communication.message.MessagePerformative import (
+    MessagePerformative
+)
 
 ##############
 ### Agents ###

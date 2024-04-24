@@ -34,7 +34,6 @@ from tools.tools_constants import (
     WASTE_DENSITY,
     PATH_RESOURCES
 )
-
 from agents import (
     GreenAgent,
     ChiefGreenAgent,
@@ -45,10 +44,9 @@ from agents import (
     DICT_CLASS_COLOR
 )
 
-#################
-### Main code ###
-#################
-
+########################
+### Display function ###
+########################
 
 def agent_portrayal(agent):
     """
@@ -137,6 +135,10 @@ def agent_portrayal(agent):
         portrayal["scale"] = scale
 
     return portrayal
+
+#################
+### Main code ###
+#################
 
 grid = CanvasGrid(
     portrayal_method = agent_portrayal,

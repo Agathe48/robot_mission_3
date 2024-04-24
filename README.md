@@ -38,6 +38,7 @@ This `README` is composed of four main parts, the [first one](#installation) des
     - [The scheduler](#the-scheduler)
     - [The visualization](#the-visualization)
   - [With Communication and improved movement](#with-communication-and-improved-movement)
+    - [Principle of the method](#principle-of-the-method)
     - [The knowledge](#the-knowledge)
       - [The Agent's knowledge](#the-agents-knowledge-1)
       - [The Chief's knowledge](#the-chiefs-knowledge)
@@ -280,13 +281,32 @@ We worked from the previous part to add communication between our agent and we i
 
 The key points are the covering mode at the beginning of the cleaning to identify all wastes in the map, and the creation of a Chief for each color agents. This Chief is in charge of centering the knowledge (for each color agents), managing its agents for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented improvements: the code is based on the previous part, hence, we will only mention deleted, changed and/or added behaviors in this part.
 
+### Principle of the method
+
+The principle beyond the behavior of each agent given its type (chief or not) and its color is the following:
+- at the beginning of the simulation, the green and yellow chiefs go to the rightmost column of their zone to clean it, to allow futur easier drop of the transformed wastes. The other agents (including the red chief) will start to cover their own zone, so each tile of their zone has been seen at least once. It will be done accordingly to the following image.
+![explanation_covering](images/explanations_covering.png)
+Each agent will place himself to the target position indicated by the chief to perform the coverage of the row (and the two adjacent rows at the same time through its percept); this row is chosen by being the closest non covered row to the agent. The agents performing the coverage can pick up wastes during their covering if the waste is on their way. Nevertheless, they cannot derive from their row and their target position to pick a close waste or drop a transformed waste (they can drop it only if during their covering phase they go to the last column, which is not always the case). 
+- after all rows have been covered, the agents will receive new orders from their chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, it goes right (and indicates the chief he canceled his target if he still had one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
+- at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it.
+
+To perform this strategy, we implemented different messages, from agent to chief, chief to agent and chief to chief (from the green to the yellow chief, and the yellow chief to the red chief). All of theses types of messages are defined in the enumeration defined in the file `communication/message/MessagePerformative.py`.
+
+More generally, the agents will send to their respecting chief at each step their percept after an action, so the chief can have a global view of the positions of the wastes in the zone.
+
+The chief will send orders for covering, to indicate which row the agent should cover, and if it must stop covering when the whole zone has been covered. After the covering phase, the chief will send target positions to reach for each agent, corresponding to the closest waste to the agent. The chief will also send the order to stop acting when there is no more waste to pick up; besides, it is with this order that the agent will drop its waste if it has one, thus tackling the dead-end issue we had in the first part with the last wastes separated among several agents.
+
+Finally, the chief will send information to its superior chief; it will indicate it that a waste has been dropped at a certain position. It will also inform when its zone is fully cleaned.
+
+TODO Laure est-ce que tu peux relire ? Je ne pense pas que ce soit nécessaire de détailler chaque ordre, en soit il y a des commentaires dans le code
+
 ### The knowledge
 
 For our communication, we choose to extend our agents' knowledge by incorporating additional elements. We also created a dedicated `ChiefAgentKnowledge` class inheriting from our `AgentKnowledge` class.
 
 #### The Agent's knowledge
 
-We added several attributes to our inital `AgentKnowledge` class, including:
+We added several attributes to our initial `AgentKnowledge` class, including:
 
 - `dict_chiefs` : A dictionary containing the chief agents for each color.
 - `target_position` : Represents the target position to reach, which can be None or a position tuple.
@@ -310,13 +330,6 @@ The `ChiefAgentKnowledge` class inherits from the `AgentKnowledge` class and inc
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
 ### The agents
-
-The principle beyond the behavior of each agent given its type (chief or not) and its color is the following:
-- at the beginning of the simulation, the green and yellow chiefs go to the rightmost column of their zone to clean it, to allow futur easier drop of the transformed wastes. The other agents (including the red chief) will start to cover their own zone, so each tile of their zone has been seen at least once. It will be done accordingly to the following image.
-![explanation_covering](images/explanations_covering.png)
-Each agent will place himself to the target position indicated by the chief to perform the coverage of the row (and the two adjacent rows at the same time through its percept); this row is chosen by being the closest non covered row to the agent. The agents performing the coverage can pick up wastes during their covering if the waste is on their way. Nevertheless, they cannot derive from their row and their target position to pick a close waste or drop a transformed waste (they can drop it only if during their covering phase they go to the last column, which is not always the case). 
-- after all rows have been covered, the agents will receive new orders from their chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, it goes right (and indicates the chief he canceled his target if he still had one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
-- at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it.
 
 The following UML class diagram is explaining the inheritance links between all different types of agents.
 
@@ -384,29 +397,29 @@ The `find_closest_waste_to_agent` method finds the closest waste to each agent a
 
 The `send_target_orders` is used in `send_orders` and defines how the chief sends orders to its agents to go to a target position. It can send those orders if the agent can act and is not covering. If the chief is sending a target order to himself, he must not be covering, the grid or the rightmost column.
 
-The `send_orders_stop_acting` method defines how and when the chief send to its agents (and himself) the order to stop acting. This order is sent to the agent if the agent is not static (i.e., the chief will send this order only once to each agent) and if it does not have picked up or transformed wastes. For the ending scenario where two agent have picked up the two last remaining wastes, the chief will order on of them to drop its waste and will attribute the dropped location as target position to the second one.
+The `send_orders_stop_acting` method defines how and when the chief send to its agents (and himself) the order to stop acting. This order is sent to the agent if the agent is not static (i.e., the chief will send this order only once to each agent) and if it does not have picked up or transformed wastes. For the ending scenario where two agents have picked up the two last remaining wastes, the chief will order to one of them to drop its waste and will attribute the dropped location as target position to the second one.
 
-The `send_orders` regroup all send orders methods and is the one called in the `step` method.
+The `send_orders` regroups all send orders methods and is the one called in the `step` method.
 
-The `deliberate_cover_last_column` method determines all possible actions for the chief during its cleaning of the rightmost column (hence, only for green and yellow chiefs.) We move the chief to the upper or lower right corner of its area based on its initial vertical position. Then, we move it up or down according to its position to clean the column (picking up, transforming and dropping wastes).
+The `deliberate_cover_last_column` method determines all possible actions for the chief during its cleaning of the rightmost column (hence, only for green and yellow chiefs). We move the chief to the upper or lower right corner of its area based on its initial vertical position. Then, we move it up or down according to its position to clean the column (picking up, transforming and dropping wastes).
 
 The`deliberate` method calls the previously defined method if the chief has not finished to clean the rightmost column and its mothers classes deliberate functions otherwise.
 
-The `get_green_yellow_red_left_column` and `get_green_yellow_red_right_column` are respectively defined to return the first (leftmost) and last (rightmost) column of each area. They are then called in the `update_left_right_column` method. In this method, the left and right columns of the chief's zone are updated in its knowledge.
+The `get_green_yellow_red_left_column` and `get_green_yellow_red_right_column` are respectively defined to return the first (leftmost) and last (rightmost) columns of each area. They are then called in the `update_left_right_column` method. In this method, the left and right columns of the chief's zone are updated in its knowledge.
 
 Finally, the `update` method is used to update the chief's knowledge during the initial phase : while the rightmost column is not cleaned.
 
 #### The ChiefGreenAgent
 
-The `ChiefGreenAgent` inherit from our `Chief` and `GreenAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our green chief has, by default, to clean its rightmost column. We also set its `bool_previous_zone_cleaned` as true : the previous zone for green agents (i.e. None) is already cleaned.
+The `ChiefGreenAgent` inherits from our `Chief` and `GreenAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our green chief has, by default, to clean its rightmost column. We also set its `bool_previous_zone_cleaned` as true: the previous zone for green agents (i.e. None) is already cleaned.
 
 #### The ChiefYellowAgent
 
-The `ChiefYellowAgent` inherit from our `Chief` and `YellowAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our yellow chief has, by default and as the green chief, to clean its rightmost column. 
+The `ChiefYellowAgent` inherits from our `Chief` and `YellowAgent` classes. In its init method, we initiate its `bool_covering` attribute as false, as our yellow chief has, by default and as the green chief, to clean its rightmost column. 
 
 #### The ChiefRedAgent
 
-The `ChiefRedAgent` inherit from our `Chief` and `RedAgent` classes. In its init method, we initiate its `bool_covering` attribute as true, as our red chief has no rightmost column to clean : it is in covering mode in the begining as all other red agents.
+The `ChiefRedAgent` inherits from our `Chief` and `RedAgent` classes. In its init method, we initiate its `bool_covering` attribute as true, as our red chief has no rightmost column to clean: it is in covering mode in the beginning as all other red agents.
 
 ### Our Model
 
