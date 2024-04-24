@@ -129,11 +129,11 @@ The `Radioactivity` object represents the radioactivity of an area. It has two a
 - `zone`, which defines the area it belongs to and can only take three values ("z1", "z2", "z3")
 - `radioactivity_level`, which defines its level of radioactivity. It is a random number comprised between 0 and 0.33 for z1, 0.33 and 0.66 for z2 and 0.66 and 1 for z3.
 
-The `Radioactivity` object is placed in each cell of the grid to define our different areas. Its `zone` attribute then is used by our agents to determine which zone they are in.
+The `Radioactivity` object is placed on each cell of the grid to define our different areas. Its `zone` attribute is then used by our agents to determine which zone they are in.
 
 ### The Waste 
 
-The `Waste` object represents the waste. It has one attribute: `type_waste` which defines the type of the waste and can only take three values ("green", "yellow", "red"). 
+The `Waste` object represents the radioactive waste. It has one attribute: `type_waste` which defines the type of the waste and can only take three values ("green", "yellow", "red"). 
 
 ### The WasteDisposalZone
 
@@ -143,7 +143,7 @@ The `WasteDisposalZone` object represents a cell in the last right column of the
 
 ## Without Communication
 
-To tackle this map cleaning problem, we decided to use three types of agents, one for each zone (green, yellow and red). In a first approach, we provided our agents a random movement while searching the wastes to pick up and they had no possibility of communication between each other. The only intelligence we added to them in this first approach was when going to drop their waste, either on the border or the waste disposal zone; they are going right, and then up or down until reaching the correct place to drop their waste.
+To tackle this map cleaning problem, we decided to use three types of agents, one for each zone (green, yellow, and red). In the first approach, we provided our agents with random movement while searching for the waste to pick up, and they had no possibility of communication between each other. The only intelligence we added to them in this first approach was when they went to drop their waste, either on the border or in the waste disposal zone; they would go right, and then up or down until reaching the correct place to drop their waste.
 
 ### Our Agents
 
@@ -159,9 +159,9 @@ The `AgentKnowledge` class represents the knowledge and state of an agent in the
 
 - `grid_knowledge`: Represents the agent's knowledge of the grid. Its values are set to `0` for an empty tile, `1` for a green waste, `2` for a yellow waste, `3` for a red waste and `4` for the waste disposal zone. It is a numpy array with the same dimensions as the grid.
 - `grid_radioactivity`: Represents the agent's knowledge of the grid's radioactivity. Its values are set to `1`, `2` or `3` according to the different zones. It is a numpy array with the same dimensions as the grid.
-- `picked_up_wastes`: Represents a list of the Waste agents that our cleaning agent has picked up.
-- `transformed_waste`: Represents whether the agent has transformed waste. Its values are `None` or the new transformed waste object.
-- `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move in the corresponding direction. It depends on the presence of an other agent in the agent's surrounding cells and on the limits of the grid.
+- `picked_up_wastes`: Represents a list of the Waste agents that our Cleaning agent has picked up.
+- `transformed_waste`: Represents whether the agent has transformed the wastes or not. Its values are `None` or the new transformed waste object.
+- `left`, `right`, `up`, `down`: Boolean variables representing the possibility for the agent to move in the corresponding directions. It depends on the presence of an other agent in the agent's surrounding cells and on the borders of the grid.
 
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
@@ -177,7 +177,7 @@ The `update` method updates each attributes of the agent's knowledge according t
 
 The `update_positions_around_agent` method is used in the `update` method to update `left`, `right`, `up` and `down` boolean values of the agent's knowledge.
 
-The `update_knowledge_with_action` method is used in the `update` method to update the knowledge of the agent given the action it has performed on the previous step. For instance, if the agent has transformed a waste, `transformed_waste` will be set to the transformed created waste contained the `percepts` returned by the model.
+The `update_knowledge_with_action` method is used in the `update` method to update the knowledge of the agent given the action it has performed in the previous step. For instance, if the agent has transformed a waste, `transformed_waste` will be set to the transformed created waste containing the `percepts` returned by the model.
 
 #### The GreenAgent
 
@@ -197,7 +197,7 @@ The actions have been defined in `tools_constants` by strings. Here is the full 
 - `ACT_GO_DOWN`, to go down
 - `ACT_WAIT`, to wait
 
-If the agent possesses two green wastes, the top priority action is to transform them.
+If the agent possesses two green wastes, the top priority action is to transform them into a new yellow waste.
 
 If the agent possesses a yellow transformed waste, it will ask to go right until its right tile is on zone 2, ie the border. When it is on the border, it will ask to drop its waste if the current tile is empty, otherwise it will go up or down randomly, if nothing is blocking its way (thanks to the attributes `up` and `down` from knowledge). 
 
@@ -215,7 +215,7 @@ The `YellowAgent` is a class inheriting from the class `CleaningAgent` presented
 
 ##### The deliberate method
 
-It has the same behavior as the GreenAgent's deliberate method. One of the few differences is that it can move to the green area to pick up yellow waste at the border.
+It has the same behavior as the GreenAgent's deliberate method. One of the few differences is that it can move to the green area to pick up yellow wastes at the border.
 
 #### The RedAgent
 
@@ -223,7 +223,7 @@ The `RedAgent` is a class inheriting from the class `CleaningAgent` presented ab
 
 ##### The deliberate method
 
-This method's behavior is still quite similar to the tow other agents' deliberate methods. However, the red agents won't transform wastes, they will only pick up one waste and then put it in the waste disposal zone. To do so, it will go right after picking up a waste and then move up or down to join the waste disposal zone whose position is stored in the agent's knowledge.
+This method's behavior is still quite similar to the two other agents' deliberate methods. However, the red agents won't transform wastes, they will only pick up one waste and then put it in the waste disposal zone. To do so, it will go right after picking up a waste and then move up or down to join the waste disposal zone whose position is stored in the red agent's knowledge.
 
 ### Our Model
 
@@ -231,9 +231,9 @@ The implementation of our model is in the `model.py` file. The `RobotMission` cl
 
 We begin by defining several methods to set up the grid and all agents: `init_grid`, `init_wastes` and `init_agents`.
 
-TODO - Agathe Poulain => expliquer le datacollector
+Then, we also create a `DataCollector` to collect specific data at each step of the simulation. In the `model.py` file, the `DataCollector` is used to gather the number of remaining wastes of each color. This data is collected at each step of the simulation. In the `server.py` file, the `DataCollector` is also employed to display the data in visualization modules. This enables users to track the evolution of simulation data in real-time.
 
-In `init_grid` we establish the position of the waste disposal zone and created  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we created a `WasteDisposalZone` object.
+In `init_grid` we establish the position of the waste disposal zone and create  `Radioactivity` objects in every cells of the grid except at the waste disposal zone position, where we create a `WasteDisposalZone` object.
 
 In `init_wastes` we create all wastes. To do so, we first define the total number of wastes in the grid (grid height * grid width * waste density, the density is set in `tools/tools_constants.py`) and the number of cells per zone (grid width/3 * grid height). We then randomly place green, yellow and red wastes in their respective zones. However, we do not initially place a red waste in the waste disposal zone.
 
@@ -243,14 +243,14 @@ In `init_wastes` we create all wastes. To do so, we first define the total numbe
 
 - The number of red wastes is determined by the number of remaining wastes to place.
 
-In `init_agents` we create and place the cleaning agent according to their colors and respective areas. We choose to initially place cleaning agent in their color zone. We also do not allow two agents to be in the same cell, this will stay true during the simulations.
+In `init_agents` we create and place the cleaning agents according to their colors and respective areas. We choose to initially place cleaning agents in their color zone. We also do not allow two agents to be on the same cell, this will stay true during the simulations.
 
 The `step` method does the scheduler step while there are still wastes to clean up, otherwise the simulation will terminate.
 
-The `run_model` method executes the `step` method for a given number of sSteps.
+The `run_model` method executes the `step` method for a given number of steps.
 
-The `do` method takes as arguments the agent performing the action and the list of all possible actions. It iterates through this list, checking if the current action is feasible. If it is feasible, the method breaks, ensuring that only one action is performed. If the current action is not feasible, the method moves on to the next action in the list. When an action is performed using the `do` method, the method also executes the changes associated with that action:
-- `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a green waste, if the agent is a `YellowAgent` it creates a red waste. It then adds the transformed created waste to the scheduler. It also removes from the scheduler the two wastes from the agent's knowledge `picked_up_waste`.
+The `do` method takes as arguments the agent performing the action and the list of all possible actions. It iterates through this list, checking if the current action is feasible. If it is feasible, the method breaks, ensuring that only one action is performed. If the current action is not feasible, the method moves on to the next action on the list. When an action is performed using the `do` method, the method also executes the changes associated with that action:
+- `ACT_TRANSFORM`, if the agent is a `GreenAgent` it creates a yellow waste, if the agent is a `YellowAgent` it creates a red waste. It then adds the transformed created waste to the scheduler. It also removes from the scheduler the two wastes from the agent's knowledge `picked_up_waste`.
 - `ACT_PICK_UP`, it removes the waste agent from the grid.
 - `ACT_DROP`, if the agent is not a `RedAgent` the transformed waste will be placed on the grid. If the agent is a `RedAgent` it will remove the picked_up_waste from the scheduler.
 - `ACT_GO_LEFT`, it will check for another agent in the left cell and move the agent if it is empty.
@@ -271,13 +271,13 @@ The visualization is defined in the `server.py`. Each agent and object is there 
 - the `Radioactivity` objects are rectangles in the layer 0 in the corresponding color (light green, light yellow, light red): they map the grid.
 - the `WasteDisposalZone` object is a brown rectangle in the layer 1.
 - the `Waste` objects are small rectangles in the corresponding color (green, yellow, red), in the layer 2.
-- the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo  (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
+- the `CleaningAgent` are represented by circles in the layer 3 in the corresponding colo (dark green, dark yellow, dark red). When they have one or two wastes on them, the number of wastes is display in the circle. When they have a transformed waste on them, the letter "T" is displayed in the circle.
 
 ---
 
 ## With Communication and improved movement
 
-We worked from the previous part to add communication between our agent and we improved their movement. In this new part, we will develop all implemented changes and enhancements.
+We worked from the previous part to add communication between our agents, and we improved their movements. In this new part, we will develop all implemented changes and enhancements.
 
 The key points are the covering mode at the beginning of the cleaning to identify all wastes in the map, and the creation of a Chief for each color agents. This Chief is in charge of centering the knowledge (for each color agents), managing its agents for the new covering phase and sending appropriate orders. For this purpose, we create a new super class `Chief` and we create a dedicated `ChiefKnowledge` class in `tools/tools_knowledge.py`. We will now delve into our implemented improvements: the code is based on the previous part, hence, we will only mention deleted, changed and/or added behaviors in this part.
 
@@ -288,15 +288,15 @@ The principle beyond the behavior of each agent given its type (chief or not) an
 ![explanation_covering](images/explanations_covering.png)
 Each agent will place himself to the target position indicated by the chief to perform the coverage of the row (and the two adjacent rows at the same time through its percept); this row is chosen by being the closest non covered row to the agent. The agents performing the coverage can pick up wastes during their covering if the waste is on their way. Nevertheless, they cannot derive from their row and their target position to pick a close waste or drop a transformed waste (they can drop it only if during their covering phase they go to the last column, which is not always the case). 
 - after all rows have been covered, the agents will receive new orders from their chief, indicating the position of the closest waste to the agent (the chief will also receive this kind of orders from himself). The agent will thus go to this target; if he finds a waste on his way, he can pick it and warn the chief of this action. When the agent has a transformed waste, it goes right (and indicates the chief he canceled his target if he still had one) to drop it on the last column. This principle is the same for red agents with the waste disposal zone.
-- at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it.
+- at the end of the cleaning of the green or yellow zone, some blocking situations can exist. For instance, if the two last green wastes have been picked up by different agents. To overcome this dead-end, we added a special action `ACT_DROP_ONE_WASTE` and we used communication; the chief will send a message to one of the agents to drop its waste and let the other agent pick it up.
 
-To perform this strategy, we implemented different messages, from agent to chief, chief to agent and chief to chief (from the green to the yellow chief, and the yellow chief to the red chief). All of theses types of messages are defined in the enumeration defined in the file `communication/message/MessagePerformative.py`.
+To perform this strategy, we implemented different messages, from agent to chief, chief to agent and chief to chief (from the green to the yellow chief, and the yellow chief to the red chief). All of theses types of messages are listed in the enumeration defined in the file `communication/message/MessagePerformative.py`.
 
-More generally, the agents will send to their respecting chief at each step their percept after an action, so the chief can have a global view of the positions of the wastes in the zone.
+More generally, the agents will send their respective chief their perception after each action, allowing the chief to have a global view of the waste positions in the zone.
 
-The chief will send orders for covering, to indicate which row the agent should cover, and if it must stop covering when the whole zone has been covered. After the covering phase, the chief will send target positions to reach for each agent, corresponding to the closest waste to the agent. The chief will also send the order to stop acting when there is no more waste to pick up; besides, it is with this order that the agent will drop its waste if it has one, thus tackling the dead-end issue we had in the first part with the last wastes separated among several agents.
+The chief will issue covering orders to indicate which row the agent should cover and whether it should stop covering once the entire zone has been covered. Following the covering phase, the chief will send target positions for each agent to reach, corresponding to the closest waste to each agent. Additionally, the chief will issue orders to cease action when there are no more wastes to pick up. Moreover, it is with this order that the agent will drop its waste if it has one, thus addressing the dead-end issue we encountered in the first part, where the last wastes were separated among several agents.
 
-Finally, the chief will send information to its superior chief; it will indicate it that a waste has been dropped at a certain position. It will also inform when its zone is fully cleaned.
+Finally, the chief will relay information to its superior chief, indicating when a waste has been dropped at a certain position and informing when its zone is fully cleaned.
 
 TODO Laure est-ce que tu peux relire ? Je ne pense pas que ce soit nécessaire de détailler chaque ordre, en soit il y a des commentaires dans le code
 
@@ -319,13 +319,13 @@ We added several attributes to our initial `AgentKnowledge` class, including:
 The `ChiefAgentKnowledge` class inherits from the `AgentKnowledge` class and includes additional attributes:
 
 - `dict_agents_knowledge` : A dictionary containing the agents' knowledge.
-- `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned. Indeed, the green and yellow chiefs will start cleaning the rightmost column of their zone, in order to allow easier drop of transformed waste on the border.
+- `bool_cleaned_right_column` : Boolean variable representing whether the Chief's zone's rightmost column has been cleaned. Indeed, the green and yellow chiefs will start cleaning the rightmost column of their zone, in order to allow easier drop of transformed wastes on the borders.
 - `direction_clean_right_column` : Represents the direction to clean, initialized at `None` and can take values `up` or `down`.
 - `rows_being_covered` : A list of size equal to the grid height, containing 1 if the row is being covered or has been covered, and 0 otherwise.
 - `list_green_yellow_red_left_columns` : A list of three values, initialized at `None`, representing the columns of the leftmost columns in the green, yellow, and red zones.
 - `list_green_yellow_red_right_columns` :  A list of three values, initialized at `None`, representing the id of columns of the rightmost columns in the green, yellow, and red zones.
 - `dict_target_position_agent` : A dictionary containing the target positions given to each agent.
-- `bool_previous_zone_cleaned` : Boolean value representing whether the previous zone is totally cleaned or not (if the green area is cleaned for yellow agents or if the yellow are is cleaned for red agents).
+- `bool_previous_zone_cleaned` : Boolean value representing whether the previous zone is totally cleaned or not (if the green area is cleaned for yellow agents or if the yellow area is cleaned for red agents).
 
 The class provides methods to get and set these attributes. The __str__ method provides a string representation of the object's state.
 
@@ -341,7 +341,7 @@ The `CleaningAgent` class inherits from the `CommunicatingAgent` class defined i
 
 In the `step` method, we implement the improved procedural loop of our agent. We start by receiving orders from the chief with `receive_orders`. We then call the `deliberate` and `do` methods, followed by the `update` method. Finally, the step is finished by the agent sending its percept and data to the chief using `send_percepts_and_data`. We chose to move the `update` method after the `deliberate` and `do` methods as this new order best fits our implementation and our needs.
 
-The `treat_order` method defines the agent's action corresponding to received orders from its chief. The message reception of the agent is defined in the `receive_orders` method.
+The `treat_order` method defines the agent's action corresponding to the received orders from its chief. The message reception of the agent is defined in the `receive_orders` method.
 
 The `get_specificities_type_agent` method is often used in our code as it returns specific values depending on the agent's type (*i.e.*, its color). It returns the maximum number of waste items that can be picked up (2 for green and yellow, 1 for red agents), the type of waste that can be picked up (1 for green, 2 for yellow, 3 for red agents), and the type of the right (2 for green, 3 for yellow and None for red agents) and left (None for green, 1 for yellow and 2 for red agents) zones for the agent.
 
@@ -367,11 +367,11 @@ At the end of the step, the `send_percepts_and_data` method is used by the agent
 
 Their new deliberate methods uses the various deliberate methods defined in the `CleaningAgent` class. We call these deliberate methods by using all previously defined boolean values specifying the behavior phases of our agents.
 
-The difference between the `GreenAgent` and `YellowAgent` deliberate method resides in the authorized zone and type of waste to pick up. Also, the `YellowAgent` can still go to the green area to pick up yellow waste.
+The difference between the `GreenAgent` and `YellowAgent` deliberate method resides in the authorized zone and type of waste to pick up. Also, the `YellowAgent` can still go to the green area to pick up yellow wastes.
 
 #### The RedAgent
 
-The `RedAgent` deliberate method is quite similar to the green's and yellow's one, except that the red agents will go to the waste disposal zone to drop waste one by one.
+The `RedAgent` deliberate method is quite similar to the green's and yellow's one, except that the red agents will go to the waste disposal zone to drop wastes one by one.
 
 #### The Chief
 
@@ -385,19 +385,19 @@ The `determine_covering` method determines if the chief needs to cover the grid.
 
 The `update_target_position_list_orders` method updates the chief knowledge of given target positions. It is updated if the target position has been reached or if it has been canceled by the agent.
 
-The `update_chief_knowledge_with_agents_knowledge` method defines how the chief centralized the knowledge by using the sent percepts of its agents. The chief's knowledge of the grid and radioactivity is updated at every step with information provided by its agents. The chief also stores the position, number of picked up wastes, the transformed waste and mode (through our various boolean values) of each of its agents.
+The `update_chief_knowledge_with_agents_knowledge` method defines how the chief centralizes the knowledge by using the sent percepts of its agents. The chief's knowledge of the grid and radioactivity is updated at every step with information provided by its agents. The chief also stores the position, number of picked up wastes, the transformed wastes and mode (through our various boolean values) of each of its agents.
 
 The `send_information_according_to_previous_actions` method defines how the chief send relevant information to the superior chief (to the yellow chief for the green one and to the red one for the yellow chief). The chief informs the other chief when a transformed waste is dropped at the border and when its current zone is totally cleaned.
 
-The `update_chief_information_knowledge` method updates the chief knowledge with data received from the other chiefs : position of dropped waste at the border and the position of the border.
+The `update_chief_information_knowledge` method updates the chief knowledge with data received from the other chiefs : position of dropped wastes at the border and the position of the borders.
 
-The `find_best_rows_to_cover` method finds relevant rows for all agents to cover. First, the second and penultimate rows are attributed as we want to make sure to cover the corners of the grid (for instance, by covering the second row, the first and the third rows are also covered in the same time). Then, the remaining rows are attributed to the closest agents, making sure to optimize the number of rows covered (3 rows all at once, then 2 rows all at once in the grid height is not divisible by 3). Then, the `send_orders_covering` method defines the way the chief sends order to its agent during their covering modes. The chief will send them location of rows to cover using the previously defined method, if they are not currently covering a row or reaching a target position.
+The `find_best_rows_to_cover` method finds relevant rows for all agents to cover. First, the second and penultimate rows are attributed as we want to make sure to cover the corners of the grid (for instance, by covering the second row, the first and the third rows are also covered in the same time). Then, the remaining rows are attributed to the closest agents, making sure to optimize the number of rows covered (3 rows all at once, then 2 rows all at once if the grid height is not divisible by 3). Then, the `send_orders_covering` method defines the way the chief sends order to its agents during their covering modes. The chief will send them location of rows to cover using the previously defined method, if they are not currently covering a row or reaching a target position.
 
 The `find_closest_waste_to_agent` method finds the closest waste to each agent among the known wastes positions in the chief's knowledge of the grid.
 
 The `send_target_orders` is used in `send_orders` and defines how the chief sends orders to its agents to go to a target position. It can send those orders if the agent can act and is not covering. If the chief is sending a target order to himself, he must not be covering, the grid or the rightmost column.
 
-The `send_orders_stop_acting` method defines how and when the chief send to its agents (and himself) the order to stop acting. This order is sent to the agent if the agent is not static (i.e., the chief will send this order only once to each agent) and if it does not have picked up or transformed wastes. For the ending scenario where two agents have picked up the two last remaining wastes, the chief will order to one of them to drop its waste and will attribute the dropped location as target position to the second one.
+The `send_orders_stop_acting` method defines how and when the chief sends to its agents (and himself) the order to stop acting. This order is sent to the agent if the agent is not static (i.e., the chief will send this order only once to each agent) and if it does not have picked up or transformed wastes. For the ending scenario where two agents have picked up the two last remaining wastes, the chief will order to one of them to drop its waste and will attribute the dropped location as target position to the second one.
 
 The `send_orders` regroups all send orders methods and is the one called in the `step` method.
 
@@ -429,7 +429,7 @@ First of all, we took into account the configurations where the grid width is no
 
 Moreover, we implemented the `MessageService` class to enable the communication between agents. We also added the number of send messages in the `DataCollector`, differentiating the chief-to-chief, agent-to-chief and chief-to-agent messages.
 
-Finally, we added the termination condition with `self.running = False` all red agents have their `bool_stop_acting` set to True. It thus no longer the model which determines if the simulation is over by checking if there is no longer wastes, but the agents themselves which say they have finished their job. This is closer to a real case simulation.
+Finally, we added the termination condition with `self.running = False` all red agents have their `bool_stop_acting` set to True. Thus, it is no longer the model that determines if the simulation is over by checking for the absence of waste, but rather the agents themselves who indicate when they have completed their tasks. This approach is closer to a real-life simulation scenario.
 
 ### The scheduler
 
@@ -486,11 +486,11 @@ For each type of simulation we computed the mean of needed steps to complete the
 
 ![comparison_without_with_communication](results/results_mean_comparison.PNG)
 
-We thus remark that we divided in average by 3.5 the number of steps needed to clean the map for a given number of agents. The orders sent by the chiefs combined with the covering of the map at the beginning to locate all wastes was an efficient strategy. Furthermore, our communicating strategy permits to solve the problem of termination with simulations where two agents of the same zone were picking the two last wastes. Indeed, all the forty simulations we launched for these results worked until the end.
+We thus remark that we divided in average by 3.5 the number of steps needed to clean the map for a given number of agents. The orders sent by the chiefs combined with the covering of the map at the beginning to locate all wastes was an efficient strategy. Furthermore, our communicating strategy permits to solve the problem of termination with simulations where two agents of the same zone were picking up the last two wastes. Indeed, all the forty simulations we launched for these results worked until the end.
 
 Moreover, with this new approach, we noticed the number of steps needed to clean the map depends a lot of the wastes distribution at the beginning, sometimes leading to 100 steps of difference: as a matter of fact, when there are more green wastes than others, the map is cleaned faster, which is logical as four green wastes give one red waste. The red agents, which are clearly the limiting factor of the simulation, thus need to perform less round trips to go pick up the wastes.
 
-Nevertheless, this approach with communication uses lots of exchanged messages to work correctly. For simulation with one agent, roughly 200 messages are needed in average, mostly messages from chief to agent (*i.e.* from the chief to himself when setting its target position). The distribution of messages for each simulation can be found in the graphs in `results/graphics_with_communication`, by differentiating messages between chiefs, from chief to agent and from agent to chief. For simulations with more than one agent per zone, the number of messages is highly increasing due to exchanges from the agent to its chief, because the agents send at each step their percept to the chief.
+Nevertheless, this approach with communication uses a lot of exchanged messages to work correctly. For simulation with one agent, roughly 200 messages are needed in average, mostly messages from chief to agent (*i.e.* from the chief to himself when setting its target position). The distribution of messages for each simulation can be found in the graphs in `results/graphics_with_communication`, by differentiating messages between chiefs, from chief to agent and from agent to chief. For simulations with more than one agent per zone, the number of messages is highly increasing due to exchanges from the agents to their chief, because the agents send at each step their percepts to the chief.
 
 ---
 
