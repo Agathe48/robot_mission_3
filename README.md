@@ -7,7 +7,7 @@ The project has been realized by the group 3 composed of:
 - Agathe PLU
 - Agathe POULAIN
 
-This `README` is composed of four main parts, the [first one](#installation) describing the steps to follow to install and run our code. The [second one](#without-communication) describes our implementation choices for non-communicating agent, whereas the [third one](#with-communication-and-improved-movement) deals with our implementation choices with communication between agents. The [fourth part](#simulations-results-interpretation) presents the results obtained for both approaches.
+This `README` is composed of four main parts, the [first one](#installation) describing the steps to follow to install and run our code. The [second one](#project-presentation) presents the main goal of the project. The [third one](#without-communication) describes our implementation choices for non-communicating agent, whereas the [fourth one](#with-communication-and-improved-movement) deals with our implementation choices for the method communication between agents. The [fifth part](#simulations-results-interpretation) presents the results obtained for both approaches.
 
 ---
 
