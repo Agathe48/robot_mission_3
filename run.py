@@ -23,17 +23,15 @@ from model import (
 #############
 
 model = RobotMission(
-    nb_green_agents=4,
-    nb_yellow_agents=0,
-    nb_red_agents=0
+    nb_green_agents=2,
+    nb_yellow_agents=2,
+    nb_red_agents=2
 )
 
 counter_step = 0
 while True:
     bool_exit = model.step()
     counter_step += 1
-    if counter_step == 2:
-        break
     if bool_exit:
         break
 

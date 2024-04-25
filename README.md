@@ -105,14 +105,13 @@ pip install -r requirements.txt
 
 The grid size and the waste density are defined and can be modified in `tools/tools_constants.py`.
 
-
-The main code can be launched by running the following command:
+The main code can be launched by running the following command. It is advised to set the variable `DEBUG_MODE` in `tools/tools_constants.py` to false, to avoid many prints for debug.
 
 ```bash
 python run.py
 ```
 
-It can also be launched with the visualisation by running the following command:
+The main code can also be launched with the visualisation by running the following command:
 
 ```bash
 python server.py
@@ -122,13 +121,15 @@ python server.py
 
 ## Project presentation
 
-This project involves modeling the mission of robots tasked with collecting dangerous waste, transforming it, and transporting it to a secure area. The robots operate in an environment divided into zones with varying levels of radioactivity, from low to high. Not all robots have access to all areas of the environment. The environment consists of three zones, progressing from west to east: zone 1 (z1), an area with low radioactivity containing a random number of initial green waste; zone 2 (z2), an area with medium radioactivity; and zone 3 (z3), the last area with high radioactivity where completely transformed waste must be stored. There are three types of waste: green waste, yellow waste, and red waste. Additionally, there are three types of robots: Green Robots, Yellow Robots, and Red Robots, each with specific capabilities and restrictions based on their color and zone permissions.
+This project involves modeling the mission of robots tasked with collecting radioactivity wastes, transforming them, and transporting them to a secure area. The robots operate in an environment divided into three zones with varying levels of radioactivity, from low to high. Not all robots have access to all areas of the environment. The environment consists of three zones, progressing from west to east: zone 1 (z1), an area with low radioactivity containing a random number of initial green wastes; zone 2 (z2), an area with medium radioactivity with yellow wastes; and zone 3 (z3), the last area with high radioactivity where completely transformed wastes must be destroyed. There are three types of wastes: green wastes, yellow wastes, and red wastes. Additionally, there are three types of robots: Green Robots, Yellow Robots, and Red Robots, each with specific capabilities and restrictions based on their color and zone permissions.
 
 The Green Robots collect two initial green wastes, which they can then transform into one yellow waste. They transport the transformed waste to the rightmost side of zone z1, and they are restricted from moving beyond z1.
 
 The Yellow Robots collect two initial yellow wastes, which they can then transform into one red waste. They transport the transformed waste to the rightmost side of zone z2, and they are restricted from moving beyond z2 but are allowed to move to z1.
 
-The Red Robots collect only one red waste and immediatly transport it to the waste dispozal zone to put it away. They are allowed to move through all three zones.
+The Red Robots collect only one red waste and immediately transport it to the waste disposal zone to put it away. They are allowed to move through all three zones.
+
+---
 
 ## Our Objects
 
@@ -495,11 +496,11 @@ For each type of simulation we computed the mean of needed steps to complete the
 
 ![comparison_without_with_communication](results/results_mean_comparison.PNG)
 
-We thus remark that we divided in average by 3.5 the number of steps needed to clean the map for a given number of agents. The orders sent by the chiefs combined with the covering of the map at the beginning to locate all wastes was an efficient strategy. Furthermore, our communicating strategy permits to solve the problem of termination with simulations where two agents of the same zone were picking up the last two wastes. Indeed, all the forty simulations we launched for these results worked until the end.
+We thus remark that we **divided in average by 3.5 the number of steps** needed to clean the map for a given number of agents. The orders sent by the chiefs combined with the covering of the map at the beginning to locate all wastes was an efficient strategy. Furthermore, our communicating strategy permits to **solve the problem of termination** with simulations where two agents of the same zone were picking up the last two wastes. Indeed, all the forty simulations we launched for these results worked until the end.
 
 Moreover, with this new approach, we noticed the number of steps needed to clean the map depends a lot of the wastes distribution at the beginning, sometimes leading to 100 steps of difference: as a matter of fact, when there are more green wastes than others, the map is cleaned faster, which is logical as four green wastes give one red waste. The red agents, which are clearly the limiting factor of the simulation, thus need to perform less round trips to go pick up the wastes.
 
-Nevertheless, this approach with communication uses a lot of exchanged messages to work correctly. For simulation with one agent, roughly 200 messages are needed in average, mostly messages from chief to agent (*i.e.* from the chief to himself when setting its target position). The distribution of messages for each simulation can be found in the graphs in `results/graphics_with_communication`, by differentiating messages between chiefs, from chief to agent and from agent to chief. For simulations with more than one agent per zone, the number of messages is highly increasing due to exchanges from the agents to their chief, because the agents send at each step their percepts to the chief.
+Nevertheless, this approach with communication uses **a lot of exchanged messages** to work correctly. For simulation with one agent, roughly 200 messages are needed in average, mostly messages from chief to agent (*i.e.* from the chief to himself when setting its target position). The distribution of messages for each simulation can be found in the graphs in `results/graphics_with_communication`, by differentiating messages between chiefs, from chief to agent and from agent to chief. For simulations with more than one agent per zone, the number of messages is highly increasing due to exchanges from the agents to their chief, because the agents send at each step their percepts to the chief.
 
 ---
 
@@ -515,7 +516,7 @@ First of all, our chief currently sends picking up target position to our agents
 
 We could then further enhance this behavior for our yellow agents: the dropping position could be determine to be as close as possible to the waste disposal zone (while remaining in the rightmost column of course), which would give easier jobs to the red agents.
 
-To reduce the significant number of messages per simulation we could alter how the chiefs receive their targets positions. Currently, they send orders to themselves with the new target position. However, they could directly fix this new target in their knowledge, hence reducing the number of send messages. This modification would greatly decrease the number of send message in simulation with only one agent, leaving only chief-to-chief messages.
+To reduce the significant number of messages per simulation we could alter how the chiefs receive their targets positions. Currently, they send orders to themselves with the new target position. However, they could directly set this new target in their knowledge, hence reducing the number of sent messages. This modification would greatly decrease the number of sent message in simulation with only one agent, leaving only chief-to-chief messages.
 
 Our last area for improvement lies in addressing potential dead-end situations caused by our strict movements, particularly when many agents are involved; the agents could block each other in some very specific and rare cases. Implementing a more flexible movement strategy when reaching a target position could help reduce the occurrence of these issues, thereby ensuring smoother and more efficient solving of the initial problem.
 
